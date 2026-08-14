@@ -18,18 +18,11 @@ from app.agents.registry import ALL_ROLES, Tool, ToolResult, register
 from app.auth.rbac import visible_group_ids
 from app.models import Group, Schedule, User, UserRole
 
-NAME = "jadval_kor"
+# Pair times live in ONE place (S9): services/presence.py — the same table the
+# seed, the presence service and the internal regulations (3.1) use.
+from app.services.presence import PAIR_TIME_LABELS as PAIR_TIMES
 
-# Pair times — same table as seed/generate.py PAIR_TIMES and the internal
-# regulations document (3.1). S9/S10 presence logic must use the same values.
-PAIR_TIMES = {
-    1: ("08:30", "09:50"),
-    2: ("10:00", "11:20"),
-    3: ("11:30", "12:50"),
-    4: ("13:30", "14:50"),
-    5: ("15:00", "16:20"),
-    6: ("16:30", "17:50"),
-}
+NAME = "jadval_kor"
 
 WEEKDAYS = [
     "Dushanba",

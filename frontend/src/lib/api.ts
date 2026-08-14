@@ -375,3 +375,245 @@ export const paymentsApi = {
   confirm: (paymentId: number) =>
     api.post<ContractSummary>(`/payments/${paymentId}/confirm`),
 };
+
+// --- presence / attendance (S9 API) -----------------------------------------
+
+/** Where the turnstile last saw someone today. */
+export type PresenceState = "inside" | "left" | "not_arrived";
+
+export type AttendanceStatus = "present" | "absent" | "late";
+
+export type ClassSessionStatus = "held" | "cancelled" | "needs_clarification";
+
+/** The class someone is *supposed* to be in — a schedule-based inference, so
+ * the UI always shows it together with the "jadval bo'yicha" note. */
+export interface PresenceClass {
+  schedule_id: number;
+  pair_number: number;
+  subject: string;
+  room: string;
+  group_id: number;
+  group_name: string | null;
+  teacher_id: number;
+  teacher_name: string | null;
+  starts_at: string;
+  ends_at: string;
+  session_status: ClassSessionStatus | null;
+  attendance_status: AttendanceStatus | null;
+}
+
+export interface DayAttendance {
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+  percent: number | null;
+}
+
+export interface Presence {
+  user_id: number;
+  username: string;
+  full_name: string;
+  role: UserRole;
+  group_id: number | null;
+  group_name: string | null;
+  at: string;
+  state: PresenceState;
+  state_label: string;
+  in_building: boolean;
+  entered_at: string | null;
+  left_at: string | null;
+  last_event_at: string | null;
+  current_pair: number | null;
+  current_class: PresenceClass | null;
+  next_class: PresenceClass | null;
+  attendance_status: AttendanceStatus | null;
+  attendance_marked: boolean;
+  day: DayAttendance;
+  summary: string;
+  schedule_note: string;
+  sources: ChatSource[];
+  disclaimer: string;
+}
+
+export interface GroupPresenceRow {
+  student_id: number;
+  username: string;
+  full_name: string;
+  group_id: number | null;
+  group_name: string | null;
+  state: PresenceState;
+  state_label: string;
+  entered_at: string | null;
+  left_at: string | null;
+  pair_number: number | null;
+  subject: string | null;
+  room: string | null;
+  attendance_status: AttendanceStatus | null;
+  attendance_marked: boolean;
+  attendance_percent: number | null;
+  attended_count: number;
+  marked_count: number;
+  summary: string;
+}
+
+export interface GroupPresence {
+  group_ids: number[];
+  group_names: string[];
+  at: string;
+  current_pair: number | null;
+  pair_label: string | null;
+  rows: GroupPresenceRow[];
+  inside_count: number;
+  left_count: number;
+  absent_count: number;
+  in_class_count: number;
+  attendance_percent: number | null;
+  schedule_note: string;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export interface TeacherClass {
+  schedule_id: number;
+  pair_number: number;
+  subject: string;
+  room: string;
+  group_id: number;
+  group_name: string | null;
+  starts_at: string;
+  ends_at: string;
+  session_status: ClassSessionStatus | null;
+  session_label: string | null;
+  student_count: number;
+  marked_count: number;
+  present_count: number;
+  is_current: boolean;
+  is_past: boolean;
+}
+
+export interface TeacherDay {
+  date: string;
+  teacher_id: number;
+  teacher_name: string;
+  current_pair: number | null;
+  classes: TeacherClass[];
+  disclaimer: string;
+}
+
+/** One line of the marking sheet. `suggested` is the turnstile-based hint the
+ * "bir klik" button fills in; `status` is what the journal says right now. */
+export interface RosterStudent {
+  student_id: number;
+  username: string;
+  full_name: string;
+  status: AttendanceStatus | null;
+  suggested: AttendanceStatus;
+  state: PresenceState;
+  state_label: string;
+  entered_at: string | null;
+  left_at: string | null;
+}
+
+export interface ClassRoster {
+  schedule_id: number;
+  date: string;
+  pair_number: number;
+  pair_label: string;
+  subject: string;
+  room: string;
+  group_id: number;
+  group_name: string | null;
+  teacher_id: number;
+  teacher_name: string | null;
+  starts_at: string;
+  ends_at: string;
+  session_status: ClassSessionStatus | null;
+  session_label: string | null;
+  can_mark: boolean;
+  students: RosterStudent[];
+  marked_count: number;
+  present_count: number;
+  late_count: number;
+  absent_count: number;
+  schedule_note: string;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export interface SubjectAttendance {
+  subject: string;
+  total: number;
+  attended: number;
+  absent: number;
+  percent: number;
+}
+
+export interface AttendanceRow {
+  date: string;
+  pair_number: number;
+  subject: string;
+  room: string;
+  status: AttendanceStatus;
+  status_label: string;
+}
+
+export interface AttendanceSummary {
+  student_id: number;
+  username: string;
+  full_name: string;
+  group_id: number | null;
+  group_name: string | null;
+  days: number;
+  date_from: string;
+  date_to: string;
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+  percent: number | null;
+  by_subject: SubjectAttendance[];
+  recent: AttendanceRow[];
+  today: DayAttendance;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+function query(params: Record<string, string | number | null | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== null && value !== undefined && value !== "") {
+      search.set(key, String(value));
+    }
+  }
+  const text = search.toString();
+  return text ? `?${text}` : "";
+}
+
+export const attendanceApi = {
+  presence: (at?: string | null) =>
+    api.get<Presence>(`/attendance/presence${query({ at })}`),
+  userPresence: (userId: number, at?: string | null) =>
+    api.get<Presence>(`/attendance/presence/${userId}${query({ at })}`),
+  group: (groupId?: number | null, at?: string | null) =>
+    api.get<GroupPresence>(`/attendance/group${query({ group_id: groupId, at })}`),
+  summary: (studentId?: number | null, days?: number | null) =>
+    api.get<AttendanceSummary>(
+      `/attendance/summary${query({ student_id: studentId, days })}`,
+    ),
+  myClasses: (onDate?: string | null) =>
+    api.get<TeacherDay>(`/attendance/my-classes${query({ on_date: onDate })}`),
+  roster: (scheduleId: number, onDate?: string | null) =>
+    api.get<ClassRoster>(
+      `/attendance/class/${scheduleId}${query({ on_date: onDate })}`,
+    ),
+  mark: (
+    scheduleId: number,
+    marks: { student_id: number; status: AttendanceStatus }[],
+    onDate?: string | null,
+  ) =>
+    api.post<ClassRoster>(`/attendance/class/${scheduleId}/mark`, {
+      marks,
+      on_date: onDate ?? null,
+    }),
+};

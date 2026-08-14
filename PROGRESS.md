@@ -2,110 +2,110 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S9 (navbatda)
+## Joriy sessiya: S10 (navbatda)
 
-S8 yakunlandi (DoD 3/3: `pytest` **103/103** — S2 12 + S3 9 + S4 9 + S5 9 +
-S6 15 + S7 20 + S8 **29**; `npm run lint` va `npm run build` toza; jonli
-tekshiruv uvicorn+curl (aliyev qoldiq **0 so'm** / 100%, karimov **12 000 000
-so'm** qarzdor / 0 to'lov, tokensiz **401**, aliyev boshqa talabani so'rasa
-**403**; nazarova svodi — AT-24-01 + AT-24-02, 16 talaba, 12 to'langan /
-2 qisman / 2 qarzdor, umumiy qarz 36 000 000 so'm; qodirova IQ ning 14 talabasi;
-sharipova chekini qodirova tasdiqlolmadi (**403**), nazarova tasdiqladi →
-to'langan 7 200 000, qoldiq 4 800 000, ikkinchi urinish **409**; chatda
-"kontraktimdan qancha qoldi?" → aniq raqamlar + manba "To'lov jadvali —
-kontrakt 2025-2026, oxirgi chek CLK-66629388") va **brauzerda** (headless
-Chrome/CDP): talaba `/contract` — karta + 3 qatorli tarix + chek yuklash
-formasi ishladi (2 400 000 so'm CHK-DEMO88 → "Tasdiq kutilmoqda: 2 400 000
-so'm"); tyutor `/group` — 16 qator, ranglar, saralash, Sharipova qatoridan
-kontrakt paneli → chek modali → "Tasdiqlash" → qator 60% / 4 800 000 ga
-yangilandi; konsolda xato yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga
-qaytarildi** (payment id 32 yana `uploaded`, CHK-DEMO88 o'chirildi).
+S9 yakunlandi (DoD 3/3: `pytest` **142/142** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15 + S7 20 + S8 29 + S9 **39**; `npm run lint` va `npm run build` toza;
+jonli tekshiruv uvicorn+curl (nazarova guruh mavjudligi `?at=11:40` — 16 talaba,
+binoda 12 / chiqib ketgan 0 / kelmagan 2 / darsda tasdiqlangan 6, bugungi
+davomat 83%; **aliyev** binoda 10:02, jadval bo'yicha 214-xona, davomatda
+kelgan, 100%; **mahmudov** binoda 08:07, davomatda kelmagan, 50%;
+**karimov** kelmagan, 0%; `?at=15:10` da **sodiqova** — chiqib ketgan 13:15;
+qodirova→aliyev **403**, aliyev→karimov **403**, aliyev `/attendance/group`
+**403**, tokensiz **401**; umarov `/attendance/my-classes` → 1 dars (3-juftlik,
+214, 8/8 belgilangan), davomat belgilash ishladi (mahmudov absent→present→
+qaytarildi), bekmurodov o'sha darsni belgilay olmadi **403** va ro'yxatini ham
+ko'rolmadi **403**, nazarova belgilay olmadi **403**; chatda
+`use_tool:mavjudlik_tekshir:{"talaba":"Aliyev","vaqt":"11:40"}` →
+"binoda, 10:02 da kirgan, **jadval bo'yicha** 3-juftlik 214-xona, davomatda
+belgilangan" + 4 manba (turnstile/schedule/attendance) + disclaimer) va
+**brauzerda** (headless Chrome/CDP, 1440x900): tyutor `/attendance` — 16 qatorli
+mavjudlik jadvali, 4 holat ko'rindi; o'qituvchi `/attendance` — dars tanlandi,
+"Turniket bo'yicha to'ldirish" + "Saqlash" → "Davomat saqlandi — dars 'o'tildi'
+deb belgilandi"; talaba `/attendance` — hozirgi holat + 22 darslik svod + fanlar
+kesimi; o'qituvchi `/chat` — dashboardda "Bugungi darslar" vidjeti; konsolda
+xato yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga qaytarildi**
+(mahmudov 3-4-juftlikda yana `absent`, session 18 `held` + eski
+`teacher_arrived_at`, tursunov 2 ta sessiyasi hamon `needs_clarification`,
+jadval satrlari soni o'zgarmadi).
 
-S9 (Davomat + mavjudlik) uchun izohlar:
+S10 (O'qituvchilar davomati) uchun izohlar:
 
-- **Modellar (`models.py`) — maydonlar aynan shunday:**
+- **`presence()` allaqachon o'qituvchi uchun ham ishlaydi** —
+  `app/services/presence.py`:
   ```python
-  TurnstileLog: id, user_id (FK users), timestamp (DateTime, index),
-                direction (TurnstileDirection: entry="in" / exit="out")
-  Attendance:   id, student_id (FK users), schedule_id (FK schedules),
-                date (Date), status (AttendanceStatus: present/absent/late),
-                marked_by_teacher_id (FK users)
-  ClassSession: id, schedule_id (FK schedules), date (Date),
-                status (ClassSessionStatus: held/cancelled/needs_clarification),
-                teacher_arrived_at (DateTime|None)
-  Schedule:     id, group_id, subject, room, weekday (0=Dushanba…6),
-                pair_number (1..6), teacher_id
+  presence(db, user: User, now: datetime | None = None) -> Presence
+  student_presence(db, actor, target, now=None)   # ensure_can_access_user + presence
   ```
-  Diqqat: `TurnstileDirection.entry` ning **qiymati `"in"`**, `exit` niki
-  `"out"` (enum nomi bilan qiymati boshqa — `direction == TurnstileDirection.entry`
-  deb yozing, `"entry"` bilan solishtirmang). `Attendance` da `schedule_id`
-  bor, `pair_number` yo'q — juftlik raqami `Schedule` dan olinadi.
-- **Seed'dagi bugungi holatlar (`FIXED_LOG_PLANS`, `create_turnstile_logs`,
-  `create_sessions_and_attendance`) — S9 DoD shularga tayanadi:**
-  - **aliyev**: `[(10:02, in)]` — binoda, chiqmagan; bugungi barcha
-    juftliklarda `present`. Guruh jadvali 2-juftlikdan boshlanadi (10:02 bilan
-    zid kelmasin), 3-juftlik = "Ma'lumotlar bazasi", 214-xona, umarov.
-  - **mahmudov**: `[(08:07, in)]` — binoda, lekin **3-juftlikdan boshlab
-    `absent`** (ataylab: "binoda + davomatda belgilanmagan" holati).
-  - **sodiqova**: `[(08:12, in), (13:15, out)]` — chiqib ketgan.
-  - **karimov**: `[]` — umuman kelmagan (bugungi davomati `absent`).
-  - **tursunov** (o'qituvchi): `[]` — S10 ssenariysi; uning bugungi
-    `ClassSession` lari `needs_clarification`, davomat umuman yozilmagan.
-  - Qolgan talabalar deterministik tasodifiy (15% kelmagan, 15% 3-juftlikdan
-    keyin chiqqan, 15% tushlikka chiqib qaytgan, 55% ertalab kirib qolgan).
-  - Bugungi davomat KUNNING HAMMA juftliklari uchun oldindan yozilgan
-    (`_attendance_status_today`: juftlik boshlanishidan +15 daqiqagacha
-    binoda bo'lsa `present`, +5 daqiqadan keyin kirgan bo'lsa `late`) —
-    demo istalgan soatda ishlaydi.
-- **`PAIR_TIMES` HOZIR IKKI JOYDA** — `seed/generate.py` (`time` obyektlari) va
-  `app/agents/tools/schedule_view.py` (satrlar, `{1: ("08:30","09:50"), …}`).
-  S9 uchinchi nusxa yasamasin: `app/services/presence.py` yoki `app/config.py`
-  ga **umumiy konstanta** qilib ko'chirilsin va `schedule_view.py` shundan
-  import qilsin (seed'ga tegmasdan ham bo'ladi — seed doiradan tashqarida).
-- **RBAC doira helperlari (`app/auth/rbac.py`) — YAGONA joy, qayta yozilmaydi:**
-  `get_current_user`, `require_role(*rollar)` (admin DOIM ruxsatli),
-  `visible_group_ids(db, user)` → `None` = cheklovsiz (admin), aks holda
-  guruh id lari to'plami (tyutor → `Group.tutor_id`, o'qituvchi → `Schedule`
-  orqali, staff → o'z fakulteti, talaba → o'z guruhi), `can_access_user` /
-  `ensure_can_access_user` (**403** ko'taradi). S8 shu naqshni ishlatdi:
-  "boshqa foydalanuvchining shaxsiy ma'lumoti" → 403, "ko'rinmaydigan hujjat/
-  suhbat" → 404.
-- **Endpoint + servis naqshi (S6-S8 dan tayyor):** router yupqa
-  (`app/api/attendance.py`), logika `app/services/presence.py` da, javobda
-  `source` (`schemas.ChatSource`) va `disclaimer` (`AGENT_DISCLAIMER`).
-  S8 `ChatSource.type` ga yangi qiymat qo'shdi — `"payment"`; S9 uchun
-  `"turnstile"` / `"attendance"` / `"schedule"` mos keladi. **`SourceChips`
-  faqat `type === "document"` chipini bosiladigan qiladi**, qolganlari oddiy
-  yorliq bo'lib chiqadi — hech narsa buzilmaydi.
-- **Domen qoidasi 6 (mavjudlik = xulosa):** "qaysi xonada" jadvaldan olingan
-  **taxmin** — javobda "jadval bo'yicha" deb belgilansin; turniket vaqti esa
-  fakt ("turniket logi, 10:02"). S8 dagi `format_contract_for_tool` naqshi
-  (matn oxirida "(Manba: …)" qatori) shu maqsadda qayta ishlatilsa bo'ladi.
-- **Tool qo'shish:** `agents/tools/` ga fayl + `agents/tools/__init__.py` ga
-  bitta import qatori. S8 birinchi **rol-cheklangan** vositani qo'shdi:
-  `payment_status.py`, `roles=(student, tutor, staff)` — o'qituvchi uchun
-  `registry.execute_tool` handlerni CHAQIRMASDAN `ok=False` qaytaradi.
-  `mavjudlik_tekshir` / `davomat_kor` uchun ehtimol `ALL_ROLES` to'g'ri keladi
-  (cheklov ma'lumot qatlamida: `visible_group_ids` + `can_access_user`).
-- **Frontend joylashuv:** `RoleDashboard.tsx` endi bo'sh placeholder EMAS —
-  tutor/staff/admin uchun to'lov vidjeti bor (`PAYMENT_ROLES`), teacher esa
-  hamon placeholder ko'radi (`dashboard.items.teacher` = "Guruhlar davomati va
-  darslar holati") — **S9/S10 o'sha joyni to'ldiradi**. Navigatsiya endi rolga
-  qarab filtrlanadi (`(protected)/layout.tsx` dagi `NAV` massivi, har elementda
-  `roles: UserRole[] | null`) — yangi sahifa qo'shish = `NAV` ga bitta qator +
-  `uz.json` → `nav` ga matn. Sahifalar: `(protected)/attendance/page.tsx`
-  (talaba/tyutor) va o'qituvchi uchun davomat belgilash ko'rinishi.
-- **Davomat belgilash oqimi (S9 ishlari ro'yxatidan):** o'qituvchi dars
-  boshida guruh ro'yxatini ko'radi → bir klik bilan `Attendance` yoziladi va
-  `ClassSession` `held` ga o'tadi. S8 dagi "tasdiqlash" endpointi naqsh
-  bo'lib xizmat qiladi (`POST /payments/{id}/confirm`: RBAC helperi servis
-  ICHIDA chaqiriladi, holat mos kelmasa **409**, javobda yangilangan svod
-  qaytadi — frontend qayta so'rov yubormaydi).
-- **`lib/api.ts` ga `attendanceApi` qo'shiladi** (frontend backendga FAQAT shu
-  fayl orqali murojaat qiladi). S8 u yerga `errorDetail(error)` yordamchisini
-  qo'shdi — FastAPI ning `{"detail": "..."}` xabarini UI da ko'rsatish uchun
-  (`ApiError` ni qo'lda ochib o'tirmang). Sana/summa formatlash
-  `src/lib/labels.ts` da (`formatDate`, `formatDateTime`, `formatAmount`).
+  Ichida rol bo'yicha ayirma FAQAT bitta joyda: joriy darsni topishda
+  `user.role == teacher` bo'lsa `Schedule.teacher_id == user.id`, aks holda
+  `Schedule.group_id == user.group_id`. Ya'ni **tursunov uchun
+  `presence(db, tursunov, now)` hozir ham to'g'ri javob beradi**: `state =
+  not_arrived`, `current_class` = 3-juftlik AT-24-02 "Kompyuter tarmoqlari"
+  103-lab, `attendance_status = None`. S10 shu natijadan "dars xavf ostida"
+  xulosasini yasashi kifoya — yangi so'rov yozish shart emas.
+- **`ClassSession` holat mantig'i uchun tayyor bloklar:**
+  - `teacher_classes(db, teacher, day=None, now=None) -> list[TeacherClass]` —
+    bir kunlik darslar + `session_status`, `session_label`, `marked_count`,
+    `present_count`, `student_count`, `is_current`, `is_past`.
+  - `mark_attendance(...)` `ClassSession` ni `held` ga o'tkazadi va
+    `teacher_arrived_at` ni **turniketdan** oladi (`_teacher_arrival`) —
+    kechikish hisobi uchun tayyor: `teacher_arrived_at > pair_start` = kechikkan.
+  - `pair_bounds(day, pair)` va `current_pair(now)` — vaqt oynasi hisoblari.
+  - Taklif qilingan S10 qoidasi (FUNKSIONALLIK 3.8 bilan bir xil):
+    binoga kirmagan + dars vaqti kelgan → "xavf ostida";
+    davomat belgilangan → `held`; binoda, davomat yo'q →
+    `needs_clarification`; `teacher_arrived_at` juftlik boshidan keyin →
+    "kechikkan".
+- **tursunov seed keysi (O'ZGARMAS, S10 shunga tayanadi):** turniket logi
+  **bo'sh**, bugun **2 ta** darsi bor (AT-24-02, 2-juftlik va 3-juftlik,
+  ikkalasi ham "Kompyuter tarmoqlari", 103-lab), ikkala `ClassSession` ham
+  `needs_clarification`, `teacher_arrived_at = None`, davomat umuman
+  yozilmagan. Dekanat (rashidova, yusupov) uchun `teacher_absence` turidagi
+  `Notification` yozuvlari seed'da allaqachon bor — S10 ularni O'QIYDI,
+  qayta yaratmasin (yangi hodisa uchun yozish esa S12 ishi).
+- **Dekanat UI qayerga:** `(protected)/attendance/page.tsx` endi **rolga qarab
+  uch ko'rinish** beradi (`TeacherView` / `TutorView` / `StudentView`) —
+  S10 o'sha faylga `staff` uchun to'rtinchi ko'rinish qo'shsin yoki
+  `TutorView` ni `staff` da kengaytirsin (hozir tyutor bilan bir xil).
+  Navigatsiyada "Davomat" havolasi hamma rolga ochiq (`layout.tsx` dagi `NAV`).
+  `RoleDashboard` da teacher uchun "Bugungi darslar" vidjeti bor — staff uchun
+  o'sha joyga "kelmagan o'qituvchilar" vidjeti mos keladi.
+- **`PAIR_TIMES` endi BITTA joyda:** `app/services/presence.py`.
+  `seed/generate.py` (`from app.services.presence import PAIR_TIMES`,
+  `time` obyektlari) va `app/agents/tools/schedule_view.py`
+  (`from app.services.presence import PAIR_TIME_LABELS as PAIR_TIMES`,
+  satrlar) shundan import qiladi — uchinchi nusxa YASALMASIN.
+- **Davomat API (`app/api/attendance.py`) — to'liq ro'yxat:**
+  ```
+  GET  /attendance/presence[?at=]              -> PresenceOut (o'zi)
+  GET  /attendance/presence/{user_id}[?at=]    -> PresenceOut (doira: 403)
+  GET  /attendance/group[?group_id=&at=]       -> GroupPresenceOut (tutor/staff)
+  GET  /attendance/summary[?student_id=&days=] -> AttendanceSummaryOut
+  GET  /attendance/my-classes[?on_date=&at=]   -> TeacherDayOut (teacher)
+  GET  /attendance/class/{schedule_id}         -> ClassRosterOut (teacher/tutor/staff)
+  POST /attendance/class/{schedule_id}/mark    -> ClassRosterOut (faqat o'z darsi)
+  ```
+  `at` (ISO datetime) va `on_date` (ISO sana) — **demo/what-if parametrlari**:
+  seed kunning hamma juftligini oldindan yozgani uchun istalgan soatda
+  "11:40 holati" ni ko'rsatish mumkin. Frontend ularni yubormaydi.
+  `mavjudlik_tekshir` toolida ham `vaqt` argumenti bor ("11:40" yoki ISO).
+- **Toollar:** `mavjudlik_tekshir` (`agents/tools/presence_check.py`) va
+  `davomat_kor` (`agents/tools/attendance_view.py`), ikkalasi ham
+  `roles=ALL_ROLES` — cheklov ma'lumot qatlamida (`can_access_user`).
+  `davomat_kor` argumentsiz: talaba → o'z svodi, **o'qituvchi → bugungi
+  darslari** (`format_teacher_day_for_tool`), tyutor/dekanat → guruh
+  mavjudlik svodi. S10 ning `oqituvchi_davomat` tooli faqat dekanat/admin
+  uchun bo'ladi — `payment_status.py` dagi rol-cheklangan naqshni oling.
+- **Frontend fayllar:** `components/PresenceList.tsx` (tyutor jadvali,
+  `sortPresenceRows`), `components/AttendanceMarker.tsx` (o'qituvchi belgilash
+  varag'i), `lib/api.ts` dagi `attendanceApi`, `lib/labels.ts` dagi
+  `presenceStateLabel/Class`, `attendanceStatusLabel/Class`,
+  `sessionStatusLabel`, `formatTime`. Matnlar `i18n/uz.json` → `attendance`.
+- **Domen qoidasi 6 backendda qotirilgan:** `SCHEDULE_HINT = "jadval bo'yicha"`
+  va `ROOM_NOTE` matnlari servisda; har javobda `schedule_note` maydoni
+  keladi va UI uni hardcode qilmaydi. `sources[]` da uch tur:
+  `turnstile` (fakt, vaqt bilan), `schedule` (xulosa), `attendance` (jurnal).
 
 **Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
 bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
@@ -151,6 +151,27 @@ Umumiy (o'zgarmaydigan) izohlar:
   `app/services/payments.py` da: `contract_summary`, `group_payment_summary`,
   `receipt_view`, `upload_receipt`, `confirm_payment`, `format_amount`,
   `format_contract_for_tool`, `format_group_for_tool`.
+- **Davomat/mavjudlik API (`app/api/attendance.py`) — to'liq ro'yxat (S9):**
+  ```
+  GET  /attendance/presence[?at=]              -> PresenceOut (o'zi)
+  GET  /attendance/presence/{user_id}[?at=]    -> PresenceOut (doira: 403)
+  GET  /attendance/group[?group_id=&at=]       -> GroupPresenceOut (tutor/staff)
+  GET  /attendance/summary[?student_id=&days=] -> AttendanceSummaryOut
+  GET  /attendance/my-classes[?on_date=&at=]   -> TeacherDayOut (teacher)
+  GET  /attendance/class/{schedule_id}         -> ClassRosterOut (teacher/tutor/staff)
+  POST /attendance/class/{schedule_id}/mark    -> ClassRosterOut (faqat o'z darsi)
+  ```
+  `PresenceOut`: `user_id, username, full_name, role, group_id, group_name, at,
+  state ("inside"|"left"|"not_arrived"), state_label, in_building, entered_at,
+  left_at, last_event_at, current_pair, current_class, next_class,
+  attendance_status, attendance_marked, day{total,present,late,absent,percent},
+  summary, schedule_note, sources[], disclaimer`. Biznes logika
+  `app/services/presence.py` da: `presence`, `student_presence`,
+  `group_presence`, `attendance_summary`, `student_attendance_summary`,
+  `teacher_classes`, `class_roster`, `mark_attendance`, `current_pair`,
+  `pair_bounds`, `building_state` + `format_*_for_tool` yordamchilari.
+  **`PAIR_TIMES` shu faylda** (yagona nusxa; `seed/generate.py` va
+  `agents/tools/schedule_view.py` shundan import qiladi).
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
@@ -233,7 +254,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S6 | Summarizatsiya | ✅ tugadi | DoD 3/3 o'tdi (pytest 54/54, lint+build toza, curl 3 rolda + brauzerda "Rezyume" tugmasi), commit "S6: role-aware document summarization" |
 | S7 | Tarjima moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 74/74, lint+build toza, curl bilan kesh/ruxsat + brauzerda yonma-yon rejim), commit "S7: document translation with original preserved" |
 | S8 | To'lovlar moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 103/103, lint+build toza, curl bilan raqamlar/doira/tasdiqlash + brauzerda talaba va tyutor sahifalari), commit "S8: payments module with receipt flow" |
-| S9 | Davomat + mavjudlik (talaba) | ⬜ boshlanmagan | |
+| S9 | Davomat + mavjudlik (talaba) | ✅ tugadi | DoD 3/3 o'tdi (pytest 142/142, lint+build toza, curl bilan 4 holat/doira/davomat belgilash + brauzerda o'qituvchi, tyutor va talaba sahifalari), commit "S9: student presence and attendance" |
 | S10 | O'qituvchilar davomati | ⬜ boshlanmagan | |
 | S11 | Hujjat almashinuvi | ⬜ boshlanmagan | |
 | S12 | Bildirishnomalar | ⬜ boshlanmagan | |
@@ -615,19 +636,77 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     qo'shimcha so'rov yubormasdan.
   - **`RoleDashboard` placeholderi to'ldirildi** (tutor/staff/admin uchun
     to'lov vidjeti: holatlar soni, eng katta 4 qarzdor, kutayotgan cheklar,
-    `/group` ga havola). Teacher uchun placeholder qoldi — S9/S10 uchun.
+    `/group` ga havola). Teacher uchun placeholder qolgan edi — **S9 uni
+    "Bugungi darslar" vidjeti bilan to'ldirdi**.
     Navigatsiya rolga qarab filtrlanadi: talaba "Kontrakt", tyutor/dekanat/
     admin "Guruh".
   - **`errorDetail(error)` yordamchisi `lib/api.ts` ga qo'shildi** — FastAPI
     ning `{"detail": "..."}` matnini UI da ko'rsatish uchun (masalan "summa
     kontrakt qoldig'idan ko'p: qoldiq 0 so'm"), har komponent `ApiError` ni
     o'zi ochib o'tirmasin.
+- **S9 qarorlar (davomat + mavjudlik):**
+  - **Yagona funksiya, uch manba:** `presence(db, user, now=None)` turniket
+    (fakt) → jadval (xulosa) → davomat (jurnal) tartibida ishlaydi va
+    `Presence` strukturasini qaytaradi. **Talaba ham, o'qituvchi ham shu
+    funksiyadan o'tadi** (rol farqi bitta joyda: joriy darsni topishda talaba
+    guruh bo'yicha, o'qituvchi `Schedule.teacher_id` bo'yicha) — S10 uchun
+    yangi mexanizm kerak emas. `now` in'ektsiya qilinadi: seed kunning hamma
+    juftligini oldindan yozgani uchun test va demo istalgan payt holatini
+    ko'rsata oladi.
+  - **Turniket loglari `timestamp <= now` bilan filtrlanadi** — aks holda
+    sodiqova soat 11:40 da ham "chiqib ketgan" bo'lib ko'rinardi (u 13:15 da
+    chiqadi). Shu tufayli 3-juftlikda u "binoda", 5-juftlikda "chiqib ketgan".
+  - **Kunlik davomat foizi faqat BOSHLANGAN juftliklarni sanaydi**
+    (`pair_start <= now`). Seed kunning hamma juftligini oldindan yozadi —
+    ularni ham qo'shsa "kelajakdagi dars" foizga ta'sir qilardi.
+    `late` kelgan deb hisoblanadi (`ATTENDED_STATUSES`).
+  - **Domen qoidasi 6 backendda qotirilgan:** `SCHEDULE_HINT =
+    "jadval bo'yicha"` va `ROOM_NOTE` — servisda; har javobda `schedule_note`
+    maydoni bor, UI matnni hardcode qilmaydi. Manba turlari: `turnstile`
+    (fakt + vaqt), `schedule` (xulosa), `attendance` (jurnal).
+    "Binoda, lekin darsda belgilanmagan" holati alohida ibora bilan
+    yoziladi (`_attendance_phrase`) — mahmudov keysi ko'zga tashlanadi.
+  - **Davomat belgilash — faqat o'sha darsning o'qituvchisi.** Router
+    `require_role(teacher)` (admin avtomatik), servis esa
+    `can_mark_class(actor, schedule)` bilan `Schedule.teacher_id == actor.id`
+    ni tekshiradi → **403**. Ro'yxatni o'qish kengroq: o'qituvchi faqat o'z
+    darsini, tyutor/dekanat `visible_group_ids` doirasidagi darsni
+    (`can_view_class`). Talaba ro'yxatni umuman ko'rmaydi (guruhdoshlarining
+    davomati — shaxsiy ma'lumot).
+  - **Belgilash mavjud yozuvni YANGILAYDI, dublikat yaratmaydi** — seed
+    bugungi davomatni oldindan yozgani uchun bu majburiy. Bir amalda
+    `Attendance` qatorlari + `ClassSession` (`held`, `teacher_arrived_at`
+    turniketdan) yoziladi va javobda yangilangan ro'yxat qaytadi (frontend
+    qayta so'rov yubormaydi — S8 dagi `confirm` naqshi).
+  - **"Bir klik" = turniket taklifi + saqlash:** har talaba uchun
+    `suggested` maydoni turniket logidan hisoblanadi (seed bilan bir xil
+    qoida: juftlik boshida binoda → `present`, +5 daqiqadan keyin kirgan →
+    `late`, aks holda `absent`), UI dagi "Turniket bo'yicha to'ldirish"
+    tugmasi butun ro'yxatni shu bilan to'ldiradi, o'qituvchi kerakli joyini
+    qo'lda o'zgartiradi va bitta "Saqlash" bilan yozadi.
+  - **`?at=` / `?on_date=` — demo/what-if parametrlari** (faqat o'qish).
+    Seed kunning hammasini yozgani uchun soat 23:00 da ham "11:40 holati" ni
+    ko'rsatish mumkin; `mavjudlik_tekshir` toolida shu maqsadda `vaqt`
+    argumenti bor. Frontend ularni yubormaydi.
+  - **Ikkala tool ham `ALL_ROLES`** (`tolov_holati` dan farqli o'laroq):
+    mavjudlik — "kuzatuv" emas, davomat vositasi, va cheklov ma'lumot
+    qatlamida (`can_access_user`): talaba faqat o'zini, o'qituvchi/tyutor
+    o'z guruhlarini, dekanat o'z fakultetini ko'radi.
+  - **`/attendance` sahifasi rolga qarab uch ko'rinish** beradi (teacher —
+    belgilash, tutor/staff — guruh mavjudligi, student — o'z holati va svodi).
+    Alohida uch marshrut yasalmadi: ma'lumot bir xil, savol boshqacha;
+    navigatsiyada bitta "Davomat" havolasi hamma rolga ochiq. `/group`
+    (to'lovlar) sahifasidan unga havola qo'yildi.
+  - **Sxema maydoni `on_date`, `date` emas** (`AttendanceMarkRequest`):
+    pydantic klass tanasida `date: date | None = None` yozilsa `date` nomi
+    tipni soya qiladi va `TypeError` beradi.
 - **S1 texnik qarorlar:**
-  - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
-    nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
-    3) 11:30-12:50, 4) 13:30-14:50, 5) 15:00-16:20, 6) 16:30-17:50.
-    S9/S10 presence servisi shu vaqtlarni ishlatsin (umumiy konstantaga
-    ko'chirish mumkin).
+  - Juftlik vaqtlari (ichki tartib nizomi 3.1-band bilan bir xil):
+    1) 08:30-09:50, 2) 10:00-11:20, 3) 11:30-12:50, 4) 13:30-14:50,
+    5) 15:00-16:20, 6) 16:30-17:50. **S9 dan beri yagona joyda:**
+    `app/services/presence.py` → `PAIR_TIMES` (`time` obyektlari) va
+    `PAIR_TIME_LABELS` (satrlar); seed ham, `jadval_kor` tooli ham shundan
+    import qiladi.
   - Jadval Dush-Shan (weekday 0-5), 1-4-juftlik (shanba 1-3), deterministik
     rotatsiya — o'qituvchi/xona to'qnashuvlari yo'q (SQL bilan tekshirilgan).
     Aliyev guruhining bugungi jadvali 2-juftlikdan boshlanadi (10:02 da
@@ -655,20 +734,33 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 - **Kichik ekran (mobil) layouti:** hujjat paneli va dashboard `lg:` dan
   kichik ekranda yashiringan — telefonda manba chipini bosish ko'zga
   ko'rinadigan natija bermaydi. S14 (sayqal) da modal/drawer qilinsin.
-- **`type: "schedule"` manba chipi bosilmaydi** (ochadigan ko'rinish yo'q).
-  S9/S10 jadval/davomat sahifasini qo'shganda shu chip ham havolaga
-  aylantirilsin.
+- **`type: "schedule"` / `"turnstile"` / `"attendance"` manba chiplari
+  bosilmaydi** — `SourceChips` faqat `document` chipini havolaga aylantiradi.
+  Endi ochadigan sahifa bor (`/attendance`), shuning uchun S14 (sayqal) da shu
+  uch tur ham havolaga aylantirilsin.
 - Suhbatni o'chirish/nomini o'zgartirish YO'Q (faqat ro'yxat + yangi suhbat).
   Kerak bo'lsa S13 (admin) yoki S14 da qo'shiladi.
 - `schemas.DocumentOut`, `ChunkOut`, `ContractOut`, `PaymentOut` (S0 dan
   qolgan) hech qayerda ishlatilmaydi — S5 va S8 o'z sxemalarini qo'shdi
   (`DocumentListItemOut`/`DocumentDetailOut`, `ContractSummaryOut`/
   `PaymentRowOut`). Kerak bo'lmasa S14 da tozalansin.
-- **Juftlik vaqtlari ikki joyda:** `seed/generate.py` dagi `PAIR_TIMES` va
-  `app/agents/tools/schedule_view.py` dagi `PAIR_TIMES` — bir xil jadval.
-  S9 (mavjudlik servisi) uchinchi nusxa yasamasin: o'sha sessiyada umumiy
-  konstantaga (masalan `app/services/presence.py` yoki `app/config.py`)
-  ko'chirilsin.
+- **Davomat belgilash bildirishnoma yozmaydi:** `mark_attendance` faqat
+  `Attendance` + `ClassSession` yozadi. "Farzandingiz darsga kelmadi" /
+  "dars xavf ostida" bildirishnomalari S12 ishi — o'sha yerda
+  `services/presence.mark_attendance` va S10 ning holat hisoblagichiga
+  bittadan chaqiruv qo'shilsa yetadi.
+- **`/attendance` sahifasi kichik ekranda siqiladi:** o'qituvchi ko'rinishi
+  ikki ustunli (`w-80` ro'yxat + varaq), telefonda tor bo'ladi. S14 da
+  ro'yxat drawer/accordion ga o'tkazilsin (chat va `/group` bilan bir xil
+  muammo).
+- **Guruh mavjudligida fakultet kesimi yo'q:** `attendance_percent` faqat
+  chaqiruvchi doirasi bo'yicha hisoblanadi. FUNKSIONALLIK 3.7 dagi
+  "fakultet kesimida: bugun davomat 87%" dekanat ko'rinishi S10 da
+  qo'shilsin (ma'lumot allaqachon `group_presence` da bor, faqat guruhlar
+  bo'yicha guruhlash kerak).
+- **Davomat tarixida sana filtri yo'q:** `?days=` (default 7, maksimum 60)
+  oxirgi N kunni beradi, oraliq tanlash (`from`/`to`) yo'q. Oylik hisobot
+  (S10 dagi "oylik svod") kerak bo'lsa endpointga qo'shiladi.
 - **Rezyume keshlanmaydi** — bitta hujjatga har bosishda LLM qayta
   chaqiriladi (rol bo'yicha farq qilgani uchun kesh kaliti
   `(document_id, role)` bo'lishi kerak). S7 da `Translation` keshi yozildi

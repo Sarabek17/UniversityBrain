@@ -2,9 +2,12 @@
 
 import type {
   AccessLevel,
+  AttendanceStatus,
+  ClassSessionStatus,
   DocumentType,
   PaymentState,
   PaymentStatus,
+  PresenceState,
 } from "@/lib/api";
 import uz from "@/i18n/uz.json";
 
@@ -51,3 +54,44 @@ export const paymentStateClass = (state: PaymentState): string =>
     partial: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
     debtor: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
   })[state] ?? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+
+// --- presence / attendance (S9) ---------------------------------------------
+
+const NEUTRAL_CHIP =
+  "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+
+/** `"2026-08-14T10:02:00"` -> `"10:02"`. */
+export function formatTime(iso: string | null): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export const presenceStateLabel = (state: PresenceState): string =>
+  uz.attendance.states[state] ?? state;
+
+/** Green inside, amber left the building, red never came today. */
+export const presenceStateClass = (state: PresenceState): string =>
+  ({
+    inside: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+    left: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+    not_arrived: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  })[state] ?? NEUTRAL_CHIP;
+
+export const attendanceStatusLabel = (status: AttendanceStatus): string =>
+  uz.attendance.statuses[status] ?? status;
+
+export const attendanceStatusClass = (status: AttendanceStatus | null): string =>
+  status === null
+    ? NEUTRAL_CHIP
+    : ({
+        present:
+          "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+        late: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+        absent: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+      })[status] ?? NEUTRAL_CHIP;
+
+export const sessionStatusLabel = (status: ClassSessionStatus): string =>
+  uz.attendance.sessions[status] ?? status;

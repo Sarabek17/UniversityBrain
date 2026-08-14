@@ -23,7 +23,8 @@
     "chat": "Suhbat",
     "documents": "Hujjatlar",
     "contract": "Kontrakt",
-    "group": "Guruh"
+    "group": "Guruh",
+    "attendance": "Davomat"
   },
   "roles": {
     "student": "Talaba",
@@ -118,6 +119,8 @@
     "placeholder": "Bu bo'lim keyingi sessiyalarda to'ldiriladi.",
     "paymentsTitle": "To'lovlar",
     "openGroup": "Guruh svodini ochish",
+    "attendanceTitle": "Bugungi darslar",
+    "openAttendance": "Davomat sahifasi",
     "items": {
       "teacher": "Guruhlar davomati va darslar holati",
       "tutor": "Guruh monitoringi: to'lov, davomat, mavjudlik",
@@ -185,6 +188,75 @@
       "automatic": "Avtomatik",
       "uploaded": "Tasdiq kutilmoqda",
       "confirmed": "Tasdiqlangan"
+    }
+  },
+  "attendance": {
+    "titleTeacher": "Davomat belgilash",
+    "titleTutor": "Guruh mavjudligi",
+    "titleStudent": "Mening davomatim",
+    "loadError": "Davomat ma'lumotini yuklab bo'lmadi",
+    "noAccess": "Bu ma'lumotni ko'rish huquqingiz yo'q",
+    "scheduleNote": "jadval bo'yicha",
+    "scheduleNoteFull": "Xona va dars ma'lumoti dars jadvaliga asoslangan xulosa — qat'iy fakt emas.",
+    "source": "Manba",
+    "refresh": "Yangilash",
+    "asOf": "holati",
+    "myClasses": "Bugungi darslarim",
+    "noClasses": "Bugun jadvalda darsingiz yo'q",
+    "selectClass": "Dars tanlang — guruh ro'yxati shu yerda ochiladi",
+    "pair": "juftlik",
+    "room": "xona",
+    "group": "Guruh",
+    "subject": "Fan",
+    "student": "Talaba",
+    "students": "talaba",
+    "now": "hozir",
+    "marked": "belgilangan",
+    "notMarked": "belgilanmagan",
+    "markedOf": "belgilangan",
+    "markTitle": "Davomat",
+    "fillFromTurnstile": "Turniket bo'yicha to'ldirish",
+    "fillHint": "Turniket logiga qarab taklif qilingan holat qo'yiladi — keyin qo'lda o'zgartirishingiz mumkin.",
+    "save": "Saqlash",
+    "saving": "Saqlanmoqda...",
+    "saveSuccess": "Davomat saqlandi — dars \"o'tildi\" deb belgilandi",
+    "saveError": "Davomatni saqlab bo'lmadi",
+    "sessionStatus": "Dars holati",
+    "turnstile": "Turniket",
+    "entered": "kirgan",
+    "leftAt": "chiqqan",
+    "noEntry": "yozuv yo'q",
+    "presenceTitle": "Hozirgi holat",
+    "currentClass": "Joriy dars",
+    "nextClass": "Keyingi dars",
+    "noCurrentClass": "Hozir jadval bo'yicha dars yo'q",
+    "dayAttendance": "Bugungi davomat",
+    "percent": "foiz",
+    "historyTitle": "Oxirgi kunlar",
+    "bySubject": "Fanlar kesimida",
+    "recent": "So'nggi darslar",
+    "date": "Sana",
+    "status": "Holat",
+    "empty": "Davomat yozuvi yo'q",
+    "groupEmpty": "Doirangizda talaba topilmadi",
+    "inside": "Binoda",
+    "left": "Chiqib ketgan",
+    "notArrived": "Kelmagan",
+    "inClass": "Darsda (tasdiqlangan)",
+    "states": {
+      "inside": "Binoda",
+      "left": "Chiqib ketgan",
+      "not_arrived": "Bugun kelmagan"
+    },
+    "statuses": {
+      "present": "Kelgan",
+      "absent": "Kelmagan",
+      "late": "Kechikkan"
+    },
+    "sessions": {
+      "held": "O'tildi",
+      "cancelled": "Qoldirildi",
+      "needs_clarification": "Aniqlashtirish kerak"
     }
   }
 }

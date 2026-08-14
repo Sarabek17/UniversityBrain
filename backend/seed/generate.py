@@ -27,21 +27,16 @@ from app import models as m
 from app.auth.passwords import hash_password
 from app.db import SessionLocal, init_db
 
+# Pair times live in ONE place (S9): the presence service imports nothing from
+# the seed, so this is a plain shared constant, not a dependency inversion.
+from app.services.presence import PAIR_TIMES
+
 RND = Random(42)
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 DOCUMENTS_DIR = BACKEND_DIR / "seed" / "documents"
 
 DEMO_PASSWORD = "demo123"  # every demo user logs in with this password
-
-PAIR_TIMES = {
-    1: (time(8, 30), time(9, 50)),
-    2: (time(10, 0), time(11, 20)),
-    3: (time(11, 30), time(12, 50)),
-    4: (time(13, 30), time(14, 50)),
-    5: (time(15, 0), time(16, 20)),
-    6: (time(16, 30), time(17, 50)),
-}
 
 # --- static rosters ---------------------------------------------------------
 

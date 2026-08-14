@@ -403,3 +403,235 @@ class ReceiptUploadIn(BaseModel):
 
     amount: float
     receipt_number: str | None = None
+
+
+# --- presence / attendance (S9) ---------------------------------------------
+
+# `state` is one of "inside" | "left" | "not_arrived" (services/presence.py).
+# Everything schedule-derived (`current_class.room`, `room`, `subject`) is an
+# INFERENCE, never a measured fact: the UI shows it with "jadval bo'yicha"
+# (domain rule 6) and `schedule_note` carries that sentence from the backend.
+
+
+class PresenceClassOut(BaseModel):
+    """The class someone is *supposed* to be in — read with `schedule_note`."""
+
+    schedule_id: int
+    pair_number: int
+    subject: str
+    room: str
+    group_id: int
+    group_name: str | None
+    teacher_id: int
+    teacher_name: str | None
+    starts_at: datetime
+    ends_at: datetime
+    session_status: ClassSessionStatus | None = None
+    attendance_status: AttendanceStatus | None = None
+
+
+class DayAttendanceOut(BaseModel):
+    """Today's attendance over the pairs that already started."""
+
+    total: int
+    present: int
+    late: int
+    absent: int
+    percent: int | None
+
+
+class PresenceOut(BaseModel):
+    """GET /attendance/presence[/{user_id}] — turnstile + schedule + journal."""
+
+    user_id: int
+    username: str
+    full_name: str
+    role: UserRole
+    group_id: int | None
+    group_name: str | None
+    at: datetime
+    state: str
+    state_label: str
+    in_building: bool
+    entered_at: datetime | None
+    left_at: datetime | None
+    last_event_at: datetime | None
+    current_pair: int | None
+    current_class: PresenceClassOut | None
+    next_class: PresenceClassOut | None
+    attendance_status: AttendanceStatus | None
+    attendance_marked: bool
+    day: DayAttendanceOut
+    summary: str
+    schedule_note: str
+    sources: list[ChatSource] = []
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class GroupPresenceRowOut(BaseModel):
+    """One student row of the tutor's presence list."""
+
+    student_id: int
+    username: str
+    full_name: str
+    group_id: int | None
+    group_name: str | None
+    state: str
+    state_label: str
+    entered_at: datetime | None
+    left_at: datetime | None
+    pair_number: int | None
+    subject: str | None
+    room: str | None
+    attendance_status: AttendanceStatus | None
+    attendance_marked: bool
+    attendance_percent: int | None
+    attended_count: int
+    marked_count: int
+    summary: str
+
+
+class GroupPresenceOut(BaseModel):
+    """GET /attendance/group — who is inside, who is in class, who never came."""
+
+    group_ids: list[int]
+    group_names: list[str]
+    at: datetime
+    current_pair: int | None
+    pair_label: str | None
+    rows: list[GroupPresenceRowOut] = []
+    inside_count: int
+    left_count: int
+    absent_count: int
+    in_class_count: int
+    attendance_percent: int | None
+    schedule_note: str
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class TeacherClassOut(BaseModel):
+    """One row of the teacher's day: the class plus how far marking got."""
+
+    schedule_id: int
+    pair_number: int
+    subject: str
+    room: str
+    group_id: int
+    group_name: str | None
+    starts_at: datetime
+    ends_at: datetime
+    session_status: ClassSessionStatus | None
+    session_label: str | None
+    student_count: int
+    marked_count: int
+    present_count: int
+    is_current: bool
+    is_past: bool
+
+
+class TeacherDayOut(BaseModel):
+    """GET /attendance/my-classes — the teacher's classes for one day."""
+
+    date: date
+    teacher_id: int
+    teacher_name: str
+    current_pair: int | None
+    classes: list[TeacherClassOut] = []
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class RosterStudentOut(BaseModel):
+    """One student on the marking sheet. `suggested` is the turnstile hint."""
+
+    student_id: int
+    username: str
+    full_name: str
+    status: AttendanceStatus | None
+    suggested: AttendanceStatus
+    state: str
+    state_label: str
+    entered_at: datetime | None
+    left_at: datetime | None
+
+
+class ClassRosterOut(BaseModel):
+    """GET/POST /attendance/class/{schedule_id}[/mark] — the marking sheet."""
+
+    schedule_id: int
+    date: date
+    pair_number: int
+    pair_label: str
+    subject: str
+    room: str
+    group_id: int
+    group_name: str | None
+    teacher_id: int
+    teacher_name: str | None
+    starts_at: datetime
+    ends_at: datetime
+    session_status: ClassSessionStatus | None
+    session_label: str | None
+    can_mark: bool
+    students: list[RosterStudentOut] = []
+    marked_count: int
+    present_count: int
+    late_count: int
+    absent_count: int
+    schedule_note: str
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class AttendanceMarkIn(BaseModel):
+    student_id: int
+    status: AttendanceStatus
+
+
+class AttendanceMarkRequest(BaseModel):
+    """POST /attendance/class/{schedule_id}/mark — one click from the teacher."""
+
+    marks: list[AttendanceMarkIn]
+    # Named `on_date` (not `date`): a field called `date` would shadow the
+    # `date` type in this class body.
+    on_date: date | None = None  # default: today
+
+
+class SubjectAttendanceOut(BaseModel):
+    subject: str
+    total: int
+    attended: int
+    absent: int
+    percent: int
+
+
+class AttendanceRowOut(BaseModel):
+    date: date
+    pair_number: int
+    subject: str
+    room: str
+    status: AttendanceStatus
+    status_label: str
+
+
+class AttendanceSummaryOut(BaseModel):
+    """GET /attendance/summary — one student's attendance over the last N days."""
+
+    student_id: int
+    username: str
+    full_name: str
+    group_id: int | None
+    group_name: str | None
+    days: int
+    date_from: date
+    date_to: date
+    total: int
+    present: int
+    late: int
+    absent: int
+    percent: int | None
+    by_subject: list[SubjectAttendanceOut] = []
+    recent: list[AttendanceRowOut] = []
+    today: DayAttendanceOut
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER

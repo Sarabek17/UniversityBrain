@@ -6,6 +6,7 @@
 // anyone for a photo of a receipt again.
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   errorDetail,
   paymentsApi,
@@ -92,20 +93,28 @@ export default function GroupPage() {
               </p>
             )}
           </div>
-          <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-            {uz.payments.sortBy}
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as GroupSort)}
-              className="rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+          <div className="flex items-center gap-3">
+            <Link
+              href="/attendance"
+              className="text-xs text-blue-700 hover:underline dark:text-blue-300"
             >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              {uz.attendance.titleTutor}
+            </Link>
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+              {uz.payments.sortBy}
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as GroupSort)}
+                className="rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         {!summary && !error && (
