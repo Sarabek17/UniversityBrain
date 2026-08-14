@@ -7,6 +7,8 @@
     GET  /attendance/my-classes[?on_date=]     -> the teacher's classes for a day
     GET  /attendance/class/{schedule_id}       -> marking sheet (roster)
     POST /attendance/class/{schedule_id}/mark  -> write attendance + hold session
+    GET  /attendance/teachers[?on_date=&at=]   -> today's teacher roll-call (staff)
+    GET  /attendance/teachers/monthly[?days=]  -> held-class percentages (staff)
 
 Two permission layers, as everywhere in this project: `require_role` decides
 *who may call*, and the scope helpers of `auth/rbac.py` decide *about whom*.
@@ -33,6 +35,8 @@ from app.schemas import (
     GroupPresenceOut,
     PresenceOut,
     TeacherDayOut,
+    TeacherDayOverviewOut,
+    TeacherMonthOut,
 )
 from app.services import presence as presence_service
 
@@ -144,6 +148,36 @@ def my_classes(
         current_pair=presence_service.current_pair(moment),
         classes=[c.__dict__ for c in classes],
     )
+
+
+@router.get("/teachers", response_model=TeacherDayOverviewOut)
+def teacher_overview(
+    on_date: date | None = None,
+    at: datetime | None = None,
+    user: User = Depends(require_role(UserRole.staff)),
+    db: Session = Depends(get_db),
+) -> TeacherDayOverviewOut:
+    """Dean's roll-call: every teacher of the faculty + the state of their classes.
+
+    A class that is at risk right now also writes a `Notification` for the
+    faculty's dean's office (never a duplicate) — S12 renders those.
+    Teachers and tutors get 403: this view is the dean's oversight tool
+    (FUNKSIONALLIK 3.8 "maxfiylik").
+    """
+    overview = presence_service.teacher_day_overview(db, user, on_date, at)
+    return TeacherDayOverviewOut.model_validate(asdict(overview))
+
+
+@router.get("/teachers/monthly", response_model=TeacherMonthOut)
+def teacher_monthly(
+    days: int = presence_service.DEFAULT_MONTH_DAYS,
+    at: datetime | None = None,
+    user: User = Depends(require_role(UserRole.staff)),
+    db: Session = Depends(get_db),
+) -> TeacherMonthOut:
+    """Report view: held / cancelled / unclear classes per teacher, in percent."""
+    summary = presence_service.teacher_month_summary(db, user, days, at)
+    return TeacherMonthOut.model_validate(asdict(summary))
 
 
 @router.get("/class/{schedule_id}", response_model=ClassRosterOut)

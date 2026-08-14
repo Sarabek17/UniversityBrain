@@ -4,6 +4,7 @@ import type {
   AccessLevel,
   AttendanceStatus,
   ClassSessionStatus,
+  ClassState,
   DocumentType,
   PaymentState,
   PaymentStatus,
@@ -95,3 +96,31 @@ export const attendanceStatusClass = (status: AttendanceStatus | null): string =
 
 export const sessionStatusLabel = (status: ClassSessionStatus): string =>
   uz.attendance.sessions[status] ?? status;
+
+// --- teacher attendance (S10) ------------------------------------------------
+
+export const classStateLabel = (state: ClassState): string =>
+  uz.attendance.classStates[state] ?? state;
+
+/** The dean's traffic light: green held, red at risk, amber unclear,
+ * orange late, grey not started / cancelled. */
+export const classStateClass = (state: ClassState): string =>
+  ({
+    held: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+    at_risk: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+    needs_clarification:
+      "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+    late: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
+    upcoming: NEUTRAL_CHIP,
+    cancelled: NEUTRAL_CHIP,
+  })[state] ?? NEUTRAL_CHIP;
+
+/** Percentage colouring for the monthly report (same threshold as students). */
+export const percentClass = (percent: number | null): string =>
+  percent === null
+    ? "text-gray-500 dark:text-gray-400"
+    : percent >= 90
+      ? "text-emerald-700 dark:text-emerald-300"
+      : percent >= 75
+        ? "text-amber-700 dark:text-amber-300"
+        : "text-red-700 dark:text-red-300";

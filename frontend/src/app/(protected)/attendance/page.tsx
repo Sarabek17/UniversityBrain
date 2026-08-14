@@ -1,10 +1,12 @@
 "use client";
 
-// "Davomat" — one route, three views, because the same three sources (turnstile,
-// schedule, journal) answer three different questions:
+// "Davomat" — one route, four views, because the same three sources (turnstile,
+// schedule, journal) answer four different questions:
 //
 //   teacher      -> today's classes -> roster -> mark attendance in one click
-//   tutor/staff  -> the group presence list (inside / in class / left / absent)
+//   tutor        -> the group presence list (inside / in class / left / absent)
+//   staff/admin  -> the teachers of the faculty (S10) + the student list + the
+//                   monthly report
 //   student      -> own presence right now + own attendance history
 //
 // Everything schedule-derived is labelled "jadval bo'yicha" (domain rule 6) and
@@ -20,6 +22,9 @@ import {
   type GroupPresence,
   type Presence,
   type TeacherDay,
+  type TeacherDayOverview,
+  type TeacherMonth,
+  type TeacherPresenceRow,
 } from "@/lib/api";
 import AttendanceMarker from "@/components/AttendanceMarker";
 import PresenceList, {
@@ -31,8 +36,11 @@ import { useAuth } from "@/lib/auth";
 import {
   attendanceStatusClass,
   attendanceStatusLabel,
+  classStateClass,
+  classStateLabel,
   formatDate,
   formatTime,
+  percentClass,
   presenceStateClass,
   presenceStateLabel,
 } from "@/lib/labels";
@@ -43,6 +51,7 @@ export default function AttendancePage() {
   if (!user) return null;
   if (user.role === "teacher") return <TeacherView />;
   if (user.role === "student") return <StudentView />;
+  if (user.role === "staff" || user.role === "admin") return <StaffView />;
   return <TutorView />;
 }
 
@@ -193,7 +202,336 @@ function TeacherView() {
   );
 }
 
-// --- tutor / dean's office --------------------------------------------------
+// --- dean's office (S10) ----------------------------------------------------
+
+type StaffTab = "teachers" | "monthly" | "students";
+
+const STAFF_TABS: { value: StaffTab; label: string }[] = [
+  { value: "teachers", label: uz.attendance.tabTeachers },
+  { value: "monthly", label: uz.attendance.tabMonthly },
+  { value: "students", label: uz.attendance.tabStudents },
+];
+
+function StaffView() {
+  const [tab, setTab] = useState<StaffTab>("teachers");
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <nav className="flex shrink-0 gap-1 border-b border-gray-200 px-4 pt-4 dark:border-gray-700">
+        {STAFF_TABS.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            onClick={() => setTab(item.value)}
+            className={
+              "rounded-t-md px-3 py-1.5 text-sm " +
+              (tab === item.value
+                ? "border-b-2 border-blue-600 font-medium text-blue-700 dark:text-blue-300"
+                : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800")
+            }
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      {tab === "teachers" && <TeacherMonitorView />}
+      {tab === "monthly" && <TeacherMonthlyView />}
+      {tab === "students" && <TutorView />}
+    </div>
+  );
+}
+
+/** One class of one teacher: the traffic light the dean reads the day from. */
+function ClassChip({ item }: { item: TeacherPresenceRow["classes"][number] }) {
+  return (
+    <li
+      className={
+        "rounded-md px-2 py-1 text-[11px] " + classStateClass(item.state)
+      }
+      title={item.summary}
+    >
+      <span className="font-medium">
+        {item.pair_number}-{uz.attendance.pair}
+      </span>{" "}
+      {item.subject} · {item.group_name} · {item.room}{" "}
+      <span className="italic">({uz.attendance.scheduleNote})</span> ·{" "}
+      {classStateLabel(item.state)}
+    </li>
+  );
+}
+
+function TeacherMonitorView() {
+  const [overview, setOverview] = useState<TeacherDayOverview | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(
+    () =>
+      attendanceApi
+        .teachers()
+        .then((data) => {
+          setOverview(data);
+          setError(null);
+        })
+        .catch(() => setError(uz.attendance.loadError)),
+    [],
+  );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-semibold">{uz.attendance.titleStaff}</h1>
+          {overview && (
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              {overview.teacher_count} {uz.attendance.teachers} ·{" "}
+              {formatDate(overview.date)} · {formatTime(overview.at)}{" "}
+              {uz.attendance.asOf}
+              {overview.pair_label
+                ? ` · ${overview.pair_label} (${uz.attendance.scheduleNote})`
+                : ""}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="rounded-md border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+        >
+          {uz.attendance.refresh}
+        </button>
+      </div>
+
+      {!overview && !error && (
+        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+      )}
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+      {overview && (
+        <>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            <span
+              className={
+                "rounded-full px-2.5 py-1 " + presenceStateClass("inside")
+              }
+            >
+              {uz.attendance.inside}: {overview.inside_count}
+            </span>
+            <span
+              className={
+                "rounded-full px-2.5 py-1 " + presenceStateClass("not_arrived")
+              }
+            >
+              {uz.attendance.notArrived}: {overview.absent_count}
+            </span>
+            <span
+              className={"rounded-full px-2.5 py-1 " + classStateClass("at_risk")}
+            >
+              {uz.attendance.atRisk}: {overview.at_risk_count}
+            </span>
+            <span
+              className={
+                "rounded-full px-2.5 py-1 " +
+                classStateClass("needs_clarification")
+              }
+            >
+              {uz.attendance.unclear}: {overview.unclear_count}
+            </span>
+            <span className={"rounded-full px-2.5 py-1 " + classStateClass("held")}>
+              {uz.attendance.heldClasses}: {overview.held_count}/
+              {overview.class_count}
+            </span>
+            {overview.late_count > 0 && (
+              <span
+                className={"rounded-full px-2.5 py-1 " + classStateClass("late")}
+              >
+                {uz.attendance.lateClasses}: {overview.late_count}
+              </span>
+            )}
+          </div>
+
+          {overview.rows.length === 0 && (
+            <p className="mt-3 text-sm text-gray-500">
+              {uz.attendance.noTeachers}
+            </p>
+          )}
+
+          <ul className="mt-3 flex flex-col gap-2">
+            {overview.rows.map((row) => (
+              <li
+                key={row.teacher_id}
+                className={
+                  "rounded-lg border px-3 py-2 " +
+                  // Red card: a class is at risk right now, or the teacher has
+                  // classes today and the turnstile never saw them.
+                  (row.at_risk_count > 0 ||
+                  (row.state === "not_arrived" && row.class_count > 0)
+                    ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30"
+                    : "border-gray-200 dark:border-gray-700")
+                }
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">{row.full_name}</span>
+                  <span
+                    className={
+                      "rounded-full px-2 py-0.5 text-[11px] " +
+                      presenceStateClass(row.state)
+                    }
+                  >
+                    {presenceStateLabel(row.state)}
+                    {row.entered_at ? ` · ${formatTime(row.entered_at)}` : ""}
+                    {row.left_at ? ` → ${formatTime(row.left_at)}` : ""}
+                  </span>
+                  {row.at_risk_count > 0 && (
+                    <span
+                      className={
+                        "rounded-full px-2 py-0.5 text-[11px] " +
+                        classStateClass("at_risk")
+                      }
+                    >
+                      {uz.attendance.atRisk}: {row.at_risk_count}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                  {row.summary}
+                </p>
+                {row.classes.length === 0 ? (
+                  <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                    {uz.attendance.noTeacherClasses}
+                  </p>
+                ) : (
+                  <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                    {row.classes.map((item) => (
+                      <ClassChip key={item.schedule_id} item={item} />
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+            {uz.attendance.source}: {overview.source.label}
+          </p>
+          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+            {overview.schedule_note}
+          </p>
+          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+            {overview.disclaimer}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TeacherMonthlyView() {
+  const [summary, setSummary] = useState<TeacherMonth | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(
+    () =>
+      attendanceApi
+        .teachersMonthly()
+        .then((data) => {
+          setSummary(data);
+          setError(null);
+        })
+        .catch(() => setError(uz.attendance.loadError)),
+    [],
+  );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
+      <h1 className="text-lg font-semibold">{uz.attendance.monthlyTitle}</h1>
+      {summary && (
+        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          {uz.attendance.monthlyPeriod}: {formatDate(summary.date_from)} –{" "}
+          {formatDate(summary.date_to)} · {uz.attendance.monthlyTotal}:{" "}
+          {summary.total}
+          {summary.percent !== null ? ` · ${summary.percent}%` : ""}
+        </p>
+      )}
+
+      {!summary && !error && (
+        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+      )}
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+      {summary &&
+        (summary.rows.length === 0 || summary.total === 0 ? (
+          <p className="mt-3 text-sm text-gray-500">
+            {uz.attendance.monthlyEmpty}
+          </p>
+        ) : (
+          <>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                    <th className="py-2 pr-3 font-medium">
+                      {uz.attendance.teacher}
+                    </th>
+                    <th className="py-2 pr-3 font-medium">
+                      {uz.attendance.monthlyHeld}
+                    </th>
+                    <th className="py-2 pr-3 font-medium">
+                      {uz.attendance.monthlyPercent}
+                    </th>
+                    <th className="py-2 pr-3 font-medium">
+                      {uz.attendance.lateClasses}
+                    </th>
+                    <th className="py-2 pr-3 font-medium">
+                      {uz.attendance.monthlyCancelled}
+                    </th>
+                    <th className="py-2 font-medium">{uz.attendance.unclear}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {summary.rows.map((row) => (
+                    <tr key={row.teacher_id}>
+                      <td className="py-1.5 pr-3">{row.full_name}</td>
+                      <td className="py-1.5 pr-3 whitespace-nowrap">
+                        {row.held}/{row.total}
+                      </td>
+                      <td
+                        className={
+                          "py-1.5 pr-3 whitespace-nowrap " +
+                          percentClass(row.percent)
+                        }
+                      >
+                        {row.percent === null ? "—" : `${row.percent}%`}
+                      </td>
+                      <td className="py-1.5 pr-3">{row.late}</td>
+                      <td className="py-1.5 pr-3">{row.cancelled}</td>
+                      <td className="py-1.5">{row.unclear}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+              {uz.attendance.source}: {summary.source.label}
+            </p>
+            <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+              {summary.disclaimer}
+            </p>
+          </>
+        ))}
+    </div>
+  );
+}
+
+// --- tutor / dean's office (students) ---------------------------------------
 
 function TutorView() {
   const [summary, setSummary] = useState<GroupPresence | null>(null);

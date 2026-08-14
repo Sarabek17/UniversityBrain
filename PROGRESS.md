@@ -2,110 +2,95 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S10 (navbatda)
+## Joriy sessiya: S11 (navbatda)
 
-S9 yakunlandi (DoD 3/3: `pytest` **142/142** — S2 12 + S3 9 + S4 9 + S5 9 +
-S6 15 + S7 20 + S8 29 + S9 **39**; `npm run lint` va `npm run build` toza;
-jonli tekshiruv uvicorn+curl (nazarova guruh mavjudligi `?at=11:40` — 16 talaba,
-binoda 12 / chiqib ketgan 0 / kelmagan 2 / darsda tasdiqlangan 6, bugungi
-davomat 83%; **aliyev** binoda 10:02, jadval bo'yicha 214-xona, davomatda
-kelgan, 100%; **mahmudov** binoda 08:07, davomatda kelmagan, 50%;
-**karimov** kelmagan, 0%; `?at=15:10` da **sodiqova** — chiqib ketgan 13:15;
-qodirova→aliyev **403**, aliyev→karimov **403**, aliyev `/attendance/group`
-**403**, tokensiz **401**; umarov `/attendance/my-classes` → 1 dars (3-juftlik,
-214, 8/8 belgilangan), davomat belgilash ishladi (mahmudov absent→present→
-qaytarildi), bekmurodov o'sha darsni belgilay olmadi **403** va ro'yxatini ham
-ko'rolmadi **403**, nazarova belgilay olmadi **403**; chatda
-`use_tool:mavjudlik_tekshir:{"talaba":"Aliyev","vaqt":"11:40"}` →
-"binoda, 10:02 da kirgan, **jadval bo'yicha** 3-juftlik 214-xona, davomatda
-belgilangan" + 4 manba (turnstile/schedule/attendance) + disclaimer) va
-**brauzerda** (headless Chrome/CDP, 1440x900): tyutor `/attendance` — 16 qatorli
-mavjudlik jadvali, 4 holat ko'rindi; o'qituvchi `/attendance` — dars tanlandi,
-"Turniket bo'yicha to'ldirish" + "Saqlash" → "Davomat saqlandi — dars 'o'tildi'
-deb belgilandi"; talaba `/attendance` — hozirgi holat + 22 darslik svod + fanlar
-kesimi; o'qituvchi `/chat` — dashboardda "Bugungi darslar" vidjeti; konsolda
-xato yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga qaytarildi**
-(mahmudov 3-4-juftlikda yana `absent`, session 18 `held` + eski
-`teacher_arrived_at`, tursunov 2 ta sessiyasi hamon `needs_clarification`,
-jadval satrlari soni o'zgarmadi).
+S10 yakunlandi (DoD 3/3: `pytest` **166/166** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15 + S7 20 + S8 29 + S9 39 + S10 **24**; `npm run lint` va `npm run build`
+toza; jonli tekshiruv uvicorn+curl: rashidova svodi `?at=11:40` — 5 o'qituvchi
+(binoda 4, kelmagan 1), 11 dars (o'tilgan 9, **xavf ostida 1**, aniqlashtirish 1,
+kechikkan 0), **tursunov** 3-juftlik "Kompyuter tarmoqlari" 103-lab →
+"dars xavf ostida", 2-juftlik → "aniqlashtirish kerak"; oylik svod 64 dars 95%,
+tursunov **8/10 (80%)** eng past qatorda; yusupov faqat IQ o'qituvchilarini
+(saidova/ergashev/muminova) ko'radi, tursunov ro'yxatda yo'q; umarov
+`/attendance/teachers` **403**, tokensiz **401**; `?at=10:05` da xavf ostida
+hodisasi **1 ta yangi Notification** yozdi, ikkinchi so'rovda **0** (dublikat
+yo'q); chatda `use_tool:oqituvchi_davomat:{"vaqt":"11:40"}` → tursunov +
+3-juftlik + 103-lab + "jadval bo'yicha" + turniket manbasi) va **brauzerda**
+(headless Chrome/CDP, 1440x900): dekanat `/attendance` uch tabli
+("O'qituvchilar" / "Oylik jadval" / "Talabalar"), tursunov kartasi **qizil**
+(`border-red-300`) va "Bugun kelmagan" chipi qizil, brauzerda 11:40 in'ektsiyasi
+bilan 3-juftlik chipi **qizil "Xavf ostida"**, 2-juftlik sariq, boshqa
+o'qituvchilarniki yashil "O'tildi"; oylik jadvalda 5 qator (foiz rangi bilan);
+`/chat` dekanat vidjetida "Xavf ostidagi dars yo'q" ko'rsatkichi + tursunov
+qatori; o'qituvchi va tyutor ko'rinishlari o'zgarmagan; konsolda xato yo'q
+(faqat HMR/devtools infolari). **Demo bazasi tekshiruvdan keyin asl holatiga
+qaytarildi**: 15 bildirishnoma (shundan 2 ta `teacher_absence`), bugungi
+class_sessions 13 `held` + 2 `needs_clarification`.
 
-S10 (O'qituvchilar davomati) uchun izohlar:
+S11 (Hujjat almashinuvi) uchun izohlar:
 
-- **`presence()` allaqachon o'qituvchi uchun ham ishlaydi** —
-  `app/services/presence.py`:
+- **Modellar tayyor (`app/models.py`), o'zgartirish shart emas:**
   ```python
-  presence(db, user: User, now: datetime | None = None) -> Presence
-  student_presence(db, actor, target, now=None)   # ensure_can_access_user + presence
+  FlowDocument(id, doc_type: FlowDocumentType, template_id: str|None,
+               sender_id, recipient_role: UserRole|None,
+               recipient_user_id: int|None, body_text: Text,
+               file_path: str|None, due_date: date|None,
+               status: FlowStatus, created_at)      # history -> FlowHistory
+  FlowHistory(id, flow_document_id, status: FlowStatus, comment: str|None,
+              timestamp, changed_by_id)
   ```
-  Ichida rol bo'yicha ayirma FAQAT bitta joyda: joriy darsni topishda
-  `user.role == teacher` bo'lsa `Schedule.teacher_id == user.id`, aks holda
-  `Schedule.group_id == user.group_id`. Ya'ni **tursunov uchun
-  `presence(db, tursunov, now)` hozir ham to'g'ri javob beradi**: `state =
-  not_arrived`, `current_class` = 3-juftlik AT-24-02 "Kompyuter tarmoqlari"
-  103-lab, `attendance_status = None`. S10 shu natijadan "dars xavf ostida"
-  xulosasini yasashi kifoya — yangi so'rov yozish shart emas.
-- **`ClassSession` holat mantig'i uchun tayyor bloklar:**
-  - `teacher_classes(db, teacher, day=None, now=None) -> list[TeacherClass]` —
-    bir kunlik darslar + `session_status`, `session_label`, `marked_count`,
-    `present_count`, `student_count`, `is_current`, `is_past`.
-  - `mark_attendance(...)` `ClassSession` ni `held` ga o'tkazadi va
-    `teacher_arrived_at` ni **turniketdan** oladi (`_teacher_arrival`) —
-    kechikish hisobi uchun tayyor: `teacher_arrived_at > pair_start` = kechikkan.
-  - `pair_bounds(day, pair)` va `current_pair(now)` — vaqt oynasi hisoblari.
-  - Taklif qilingan S10 qoidasi (FUNKSIONALLIK 3.8 bilan bir xil):
-    binoga kirmagan + dars vaqti kelgan → "xavf ostida";
-    davomat belgilangan → `held`; binoda, davomat yo'q →
-    `needs_clarification`; `teacher_arrived_at` juftlik boshidan keyin →
-    "kechikkan".
-- **tursunov seed keysi (O'ZGARMAS, S10 shunga tayanadi):** turniket logi
-  **bo'sh**, bugun **2 ta** darsi bor (AT-24-02, 2-juftlik va 3-juftlik,
-  ikkalasi ham "Kompyuter tarmoqlari", 103-lab), ikkala `ClassSession` ham
-  `needs_clarification`, `teacher_arrived_at = None`, davomat umuman
-  yozilmagan. Dekanat (rashidova, yusupov) uchun `teacher_absence` turidagi
-  `Notification` yozuvlari seed'da allaqachon bor — S10 ularni O'QIYDI,
-  qayta yaratmasin (yangi hodisa uchun yozish esa S12 ishi).
-- **Dekanat UI qayerga:** `(protected)/attendance/page.tsx` endi **rolga qarab
-  uch ko'rinish** beradi (`TeacherView` / `TutorView` / `StudentView`) —
-  S10 o'sha faylga `staff` uchun to'rtinchi ko'rinish qo'shsin yoki
-  `TutorView` ni `staff` da kengaytirsin (hozir tyutor bilan bir xil).
-  Navigatsiyada "Davomat" havolasi hamma rolga ochiq (`layout.tsx` dagi `NAV`).
-  `RoleDashboard` da teacher uchun "Bugungi darslar" vidjeti bor — staff uchun
-  o'sha joyga "kelmagan o'qituvchilar" vidjeti mos keladi.
-- **`PAIR_TIMES` endi BITTA joyda:** `app/services/presence.py`.
-  `seed/generate.py` (`from app.services.presence import PAIR_TIMES`,
-  `time` obyektlari) va `app/agents/tools/schedule_view.py`
-  (`from app.services.presence import PAIR_TIME_LABELS as PAIR_TIMES`,
-  satrlar) shundan import qiladi — uchinchi nusxa YASALMASIN.
-- **Davomat API (`app/api/attendance.py`) — to'liq ro'yxat:**
-  ```
-  GET  /attendance/presence[?at=]              -> PresenceOut (o'zi)
-  GET  /attendance/presence/{user_id}[?at=]    -> PresenceOut (doira: 403)
-  GET  /attendance/group[?group_id=&at=]       -> GroupPresenceOut (tutor/staff)
-  GET  /attendance/summary[?student_id=&days=] -> AttendanceSummaryOut
-  GET  /attendance/my-classes[?on_date=&at=]   -> TeacherDayOut (teacher)
-  GET  /attendance/class/{schedule_id}         -> ClassRosterOut (teacher/tutor/staff)
-  POST /attendance/class/{schedule_id}/mark    -> ClassRosterOut (faqat o'z darsi)
-  ```
-  `at` (ISO datetime) va `on_date` (ISO sana) — **demo/what-if parametrlari**:
-  seed kunning hamma juftligini oldindan yozgani uchun istalgan soatda
-  "11:40 holati" ni ko'rsatish mumkin. Frontend ularni yubormaydi.
-  `mavjudlik_tekshir` toolida ham `vaqt` argumenti bor ("11:40" yoki ISO).
-- **Toollar:** `mavjudlik_tekshir` (`agents/tools/presence_check.py`) va
-  `davomat_kor` (`agents/tools/attendance_view.py`), ikkalasi ham
-  `roles=ALL_ROLES` — cheklov ma'lumot qatlamida (`can_access_user`).
-  `davomat_kor` argumentsiz: talaba → o'z svodi, **o'qituvchi → bugungi
-  darslari** (`format_teacher_day_for_tool`), tyutor/dekanat → guruh
-  mavjudlik svodi. S10 ning `oqituvchi_davomat` tooli faqat dekanat/admin
-  uchun bo'ladi — `payment_status.py` dagi rol-cheklangan naqshni oling.
-- **Frontend fayllar:** `components/PresenceList.tsx` (tyutor jadvali,
-  `sortPresenceRows`), `components/AttendanceMarker.tsx` (o'qituvchi belgilash
-  varag'i), `lib/api.ts` dagi `attendanceApi`, `lib/labels.ts` dagi
-  `presenceStateLabel/Class`, `attendanceStatusLabel/Class`,
-  `sessionStatusLabel`, `formatTime`. Matnlar `i18n/uz.json` → `attendance`.
-- **Domen qoidasi 6 backendda qotirilgan:** `SCHEDULE_HINT = "jadval bo'yicha"`
-  va `ROOM_NOTE` matnlari servisda; har javobda `schedule_note` maydoni
-  keladi va UI uni hardcode qilmaydi. `sources[]` da uch tur:
-  `turnstile` (fakt, vaqt bilan), `schedule` (xulosa), `attendance` (jurnal).
+  Enumlar: `FlowDocumentType = application | report | order | letter`,
+  `FlowStatus = sent | seen | in_progress | approved | rejected`.
+  **Qabul qiluvchi ikki xil:** `recipient_role` (butun dekanat) YOKI
+  `recipient_user_id` (aniq shaxs) — ro'yxat so'rovi ikkalasini ham qamrashi
+  kerak (`or_(FlowDocument.recipient_user_id == user.id,
+  FlowDocument.recipient_role == user.role)`).
+- **Seed'dagi 4 ta ariza (O'ZGARMAS, `seed/generate.py: create_flow_documents`):**
+  1. **aliyev** → dekanat (`recipient_role=staff`), `template_id="malumotnoma"`,
+     status **approved**, tarixi 3 yozuv (sent 2 kun oldin → seen → approved,
+     rashidova izohi "Dekanatdan (204-xona) olib ketishingiz mumkin") —
+     "arizam qayerda?" demo ssenariysi shu.
+  2. **abdullayev** → dekanat, `qayta_topshirish`, status **seen** (2 yozuv).
+  3. **umarov** (o'qituvchi) → dekanat, `semestr_hisobot`, doc_type **report**,
+     status **sent** (1 yozuv) — "o'qituvchi hujjat topshiradi" yo'li.
+  4. **rashidova** → **tursunov** (`recipient_user_id`), `buyruq_topshiriq`,
+     doc_type **order**, `due_date = bugun + 5 kun`, status **in_progress**
+     (3 yozuv) — "muddati yaqinlashayotgan" saralash uchun tayyor keys.
+  Shablon id'lari satr (`template_id`), alohida jadval YO'Q — S11 shablonlar
+  ro'yxatini kodda (konstanta) saqlashi mumkin; ISH_REJA 5 ta shablon so'raydi,
+  seed'da 4 tasi ishlatilgan (`malumotnoma`, `qayta_topshirish`,
+  `semestr_hisobot`, `buyruq_topshiriq`) — beshinchisi (masalan
+  `akademik_tatil`) qo'shilsa seed'ga TEGMASDAN faqat shablon ro'yxatiga
+  qo'shilsin.
+- **Bildirishnomalar allaqachon bor:** seed `flow_status` (aliyev — ariza
+  tasdiqlandi; abdullayev — ko'rildi) va `flow_incoming` (rashidova — yangi
+  hisobot) turlarini yozgan, `link_type="flow_document"`, `link_id=<flow id>`.
+  S11 har status o'zgarishida shu formatda yangi yozuv qo'shsin (S10 dagi
+  `record_risk_notifications` naqshi: dublikatni tekshirib yozish).
+- **RBAC doirasi:** yangi mexanizm kerak emas —
+  `require_role(...)` + `can_access_user(db, actor, target)` (talaba faqat
+  o'zining arizasi; staff → o'z fakulteti; admin — hammasi). Begona ariza →
+  **404** (hujjat/suhbat qoidasi bilan bir xil: mavjudligi ham oshkor
+  bo'lmasin), status o'zgartirishga ruxsat yo'q bo'lsa → **403** (S8/S9 dagi
+  "shaxsiy ma'lumot" qoidasi).
+- **Servis qayerga:** `app/services/docflow.py` (CLAUDE.md arxitekturasida
+  shu nom yozilgan), router `app/api/docflow.py` — yupqa. Sxemalar
+  `schemas.py` oxiriga (`FlowDocumentOut`, `FlowHistoryOut`,
+  `FlowCreateRequest`, `FlowStatusRequest`, ...). Frontend: `lib/api.ts` ga
+  `docflowApi`, sahifa `(protected)/docflow/page.tsx`, navigatsiyaga havola
+  (`(protected)/layout.tsx` dagi `NAV` — rolga qarab filtrlangan).
+- **`ariza_holati` tooli:** `agents/tools/flow_status.py` + `tools/__init__.py`
+  ga bitta import. Ruxsat: hamma rolga ochiq (`ALL_ROLES`) bo'lishi mumkin,
+  chunki cheklov ma'lumot qatlamida (talaba faqat o'zinikini ko'radi) —
+  `mavjudlik_tekshir` naqshi; agar faqat xodimga ochilsa `oqituvchi_davomat`
+  (`roles=(UserRole.staff,)`) naqshi olinadi. Javobda **manba** majburiy:
+  "Ariza №{id}, {sana}, holat: {status}" + oxirgi `FlowHistory` izohi.
+- **Rezyume tooli bilan bog'lanish:** kelgan hujjatni qisqartirish uchun
+  `services/summarization.summarize_document(db, document, user)` **Document**
+  obyektini kutadi — `FlowDocument` unga to'g'ridan-to'g'ri berilmaydi.
+  Eng arzon yo'l: `summarization.summarize_text(...)` ko'rinishidagi kichik
+  qayta ishlanish YOKI `body_text` ni to'g'ridan-to'g'ri promptga berish
+  (S6 servisidagi `build_summary_prompt` qayta ishlatiladi).
 
 **Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
 bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
@@ -113,6 +98,14 @@ bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
 (`MockLLMClient` + 40 ms `sleep`): 1-chaqiruv **1.020 s / 25 LLM chaqiruvi**,
 2-chaqiruv **0.001 s / 0 chaqiruv**. Keyingi sessiyalarda kesh o'lchansa shu
 usul ishlatilsin.
+
+**Mock chatda vositani majburlash:** `use_tool:<nom>:{json}` markeri
+xabarning **oxirida** turishi kerak — `_marker_tool_call` markerdan keyingi
+butun matnni JSON deb o'qiydi, orqasida so'z qolsa argumentlar bo'sh
+`{}` bo'lib qoladi (S10 da shunga duch kelindi). Va marker faqat **rolga
+ochiq** vositani chaqira oladi: umarov `use_tool:oqituvchi_davomat:{}` yozsa
+mock uni umuman tanlamaydi (ro'yxatda yo'q) va `hujjat_qidir` ga tushadi —
+registr blokining o'zi pytest bilan isbotlanadi (`execute_tool` to'g'ridan).
 
 Umumiy (o'zgarmaydigan) izohlar:
 
@@ -151,7 +144,7 @@ Umumiy (o'zgarmaydigan) izohlar:
   `app/services/payments.py` da: `contract_summary`, `group_payment_summary`,
   `receipt_view`, `upload_receipt`, `confirm_payment`, `format_amount`,
   `format_contract_for_tool`, `format_group_for_tool`.
-- **Davomat/mavjudlik API (`app/api/attendance.py`) — to'liq ro'yxat (S9):**
+- **Davomat/mavjudlik API (`app/api/attendance.py`) — to'liq ro'yxat (S9+S10):**
   ```
   GET  /attendance/presence[?at=]              -> PresenceOut (o'zi)
   GET  /attendance/presence/{user_id}[?at=]    -> PresenceOut (doira: 403)
@@ -160,7 +153,20 @@ Umumiy (o'zgarmaydigan) izohlar:
   GET  /attendance/my-classes[?on_date=&at=]   -> TeacherDayOut (teacher)
   GET  /attendance/class/{schedule_id}         -> ClassRosterOut (teacher/tutor/staff)
   POST /attendance/class/{schedule_id}/mark    -> ClassRosterOut (faqat o'z darsi)
+  GET  /attendance/teachers[?on_date=&at=]     -> TeacherDayOverviewOut (staff)  (S10)
+  GET  /attendance/teachers/monthly[?days=&at=]-> TeacherMonthOut (staff)        (S10)
   ```
+  `TeacherDayOverviewOut`: `date, at, current_pair, pair_label, faculty_ids,
+  rows[TeacherPresenceRowOut], teacher_count, inside_count, left_count,
+  absent_count, class_count, held_count, late_count, at_risk_count,
+  unclear_count, schedule_note, source, disclaimer`;
+  `TeacherPresenceRowOut`: `teacher_id, username, full_name, faculty_id, state
+  ("inside"|"left"|"not_arrived"), state_label, in_building, entered_at,
+  left_at, classes[TeacherClassStateOut], class_count, held_count, late_count,
+  at_risk_count, unclear_count, summary`;
+  `TeacherClassStateOut.state`: **hisoblangan** holat —
+  `held | late | at_risk | needs_clarification | upcoming | cancelled`
+  (DB dagi `session_status` yonida keladi, uni almashtirmaydi).
   `PresenceOut`: `user_id, username, full_name, role, group_id, group_name, at,
   state ("inside"|"left"|"not_arrived"), state_label, in_building, entered_at,
   left_at, last_event_at, current_pair, current_class, next_class,
@@ -170,6 +176,11 @@ Umumiy (o'zgarmaydigan) izohlar:
   `group_presence`, `attendance_summary`, `student_attendance_summary`,
   `teacher_classes`, `class_roster`, `mark_attendance`, `current_pair`,
   `pair_bounds`, `building_state` + `format_*_for_tool` yordamchilari.
+  S10 shu faylga qo'shdi: `teachers_in_scope`, `class_state` (hisoblangan
+  holat), `teacher_day_overview`, `record_risk_notifications`,
+  `teacher_month_summary`, `teacher_row_sources`,
+  `format_teacher_overview_for_tool`, `format_teacher_row_for_tool`,
+  `format_teacher_month_for_tool`.
   **`PAIR_TIMES` shu faylda** (yagona nusxa; `seed/generate.py` va
   `agents/tools/schedule_view.py` shundan import qiladi).
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
@@ -255,7 +266,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S7 | Tarjima moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 74/74, lint+build toza, curl bilan kesh/ruxsat + brauzerda yonma-yon rejim), commit "S7: document translation with original preserved" |
 | S8 | To'lovlar moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 103/103, lint+build toza, curl bilan raqamlar/doira/tasdiqlash + brauzerda talaba va tyutor sahifalari), commit "S8: payments module with receipt flow" |
 | S9 | Davomat + mavjudlik (talaba) | ✅ tugadi | DoD 3/3 o'tdi (pytest 142/142, lint+build toza, curl bilan 4 holat/doira/davomat belgilash + brauzerda o'qituvchi, tyutor va talaba sahifalari), commit "S9: student presence and attendance" |
-| S10 | O'qituvchilar davomati | ⬜ boshlanmagan | |
+| S10 | O'qituvchilar davomati | ✅ tugadi | DoD 3/3 o'tdi (pytest 166/166, lint+build toza, curl bilan svod/oylik/doira/403 + bildirishnoma dublikati va brauzerda dekanat ko'rinishi — tursunov qizil), commit "S10: teacher attendance monitoring" |
 | S11 | Hujjat almashinuvi | ⬜ boshlanmagan | |
 | S12 | Bildirishnomalar | ⬜ boshlanmagan | |
 | S13 | Admin panel + reset | ⬜ boshlanmagan | |
@@ -700,6 +711,89 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   - **Sxema maydoni `on_date`, `date` emas** (`AttendanceMarkRequest`):
     pydantic klass tanasida `date: date | None = None` yozilsa `date` nomi
     tipni soya qiladi va `TypeError` beradi.
+- **S10 qarorlar (o'qituvchilar davomati):**
+  - **Holat hisoblanadi, saqlanmaydi.** `ClassSessionStatus` (DB enumi) —
+    `held/cancelled/needs_clarification` — O'ZGARTIRILMADI; dekanat ko'radigan
+    "xavf ostida" va "kechikkan" esa `class_state(session, building_state,
+    starts_at, ends_at, marked_count, now)` funksiyasining **xulosasi**:
+    ```
+    session.cancelled                         -> cancelled
+    davomat belgilangan yoki session.held      -> held  (kirish qo'ng'iroqdan
+                                                 keyin bo'lsa -> late)
+    now < start - 10 daq                       -> upcoming
+    binoda emas, now <= end                    -> at_risk
+    binoda emas, now > end                     -> needs_clarification
+    binoda, davomat yo'q                       -> needs_clarification
+    ```
+    Shu sabab tursunovning AYNAN o'sha satri 11:40 da "xavf ostida",
+    13:00 da "aniqlashtirish kerak" bo'lib ko'rinadi (ikkalasi ham test bilan
+    qotirilgan). `RISK_LEAD_MINUTES = 10` (qo'ng'iroqdan 10 daqiqa oldin
+    ogohlantirish boshlanadi), `LATE_GRACE_MINUTES = 5` (talaba `suggested`
+    qoidasi bilan bir xil).
+  - **Doira — `visible_group_ids` EMAS, `can_access_user`.** O'qituvchi
+    guruhga tegishli emas, fakultetga tegishli; shuning uchun
+    `teachers_in_scope(db, actor)` barcha o'qituvchilarni olib
+    `rbac.can_access_user(db, actor, teacher)` bilan filtrlaydi (staff → o'z
+    fakulteti, admin → hammasi). Yangi RBAC qoidasi yozilmadi.
+  - **Endpoint faqat dekanatga:** `require_role(UserRole.staff)` (admin
+    avtomatik) — o'qituvchi ham, **tyutor** ham 403 oladi (FUNKSIONALLIK 3.8
+    "maxfiylik: o'qituvchi davomatini faqat dekanat/admin ko'radi").
+    O'qituvchi o'z kunini S9 dagi `/attendance/my-classes` orqali ko'radi.
+  - **`oqituvchi_davomat` — loyihadagi ikkinchi rol-cheklangan vosita**
+    (`roles=(UserRole.staff,)`, `tolov_holati` naqshi): registr handlerni
+    umuman chaqirmaydi. Test buni `presence_service.teacher_day_overview` ni
+    "chaqirilsa yiqiladigan" spy bilan almashtirib isbotlaydi.
+    Argumentlar: `oqituvchi` (bo'sh bo'lsa — butun fakultet svodi),
+    `davr` ("oy" → oylik foizlar), `vaqt` (demo soati; `parse_moment`
+    `presence_check.py` dan import qilinadi — ikkinchi nusxa yasalmadi).
+  - **Bildirishnoma svod so'ralganda yoziladi** (`teacher_day_overview(...,
+    notify=True)` → `record_risk_notifications`): har "xavf ostida" dars
+    uchun o'sha o'qituvchi **fakultetidagi** har bir `staff` ga bitta yozuv,
+    kalit `(user_id, link_id=schedule_id, notif_type="teacher_absence")` +
+    o'sha kun. Seed yozgan qatorlar shu kalit bo'yicha tanib olinadi va
+    dublikat yaratilmaydi (jonli tekshiruvda: 1-so'rov 1 yangi yozuv,
+    2-so'rov 0). Matn seed bilan bir xil formatda. **Servis
+    `services/notifications.py` da EMAS, `presence.py` da** — S12 uni o'sha
+    faylga ko'chirib, `mark_attendance` va deadline triggerlarini ham shu
+    yerga yig'sin (bu S10 doirasidan tashqarida edi).
+  - **`Notification.created_at` — UTC, qolgan hamma narsa lokal vaqt.**
+    `server_default=func.now()` SQLite'da `CURRENT_TIMESTAMP` ga aylanadi,
+    u esa **UTC** yozadi; O'zbekiston UTC+5, ya'ni lokal 00:00-05:00 oralig'ida
+    yaratilgan yozuvning `created_at` sanasi **kechagi kun** bo'ladi.
+    Shu sabab dublikat tekshiruvi oynasi kechagi yarim tundan boshlanadi
+    (`day_start - 1 kun`); jadval satri haftada bir marta takrorlangani uchun
+    bu oyna hech qachon haqiqiy yangi ogohlantirishni yashira olmaydi.
+    (Bu tuzoq soat 00:00 dan keyin testlar yiqilishi bilan topildi — S12
+    boshqa bildirishnoma turlarini yozganda ham shu qoidaga amal qilsin.)
+  - **Testlar hafta kuniga bog'liq emas:** `tests/test_s10_teacher_attendance.py`
+    daqiqalarni `pair_bounds(TODAY, 3)` dan oladi va tursunov/umarovning
+    **3-juftlik** darsiga tayanadi (seed uni har kuni pin qiladi), juftliklar
+    ro'yxatini qattiq yozmaydi — shanba (1-3 juftlik) va boshqa kunlarda ham
+    o'tadi. Oylik test `?at=` bilan kun oxirini beradi: yarim tunda hali
+    birorta juftlik boshlanmagani uchun bugungi darslar aks holda sanalmaydi.
+  - **Oylik svod = `ClassSession` hisobi:** `teacher_month_summary(db, actor,
+    days=30)` oxirgi N kun (`MAX_MONTH_DAYS = 180`) ichidagi, **boshlangan**
+    juftliklarning sessiyalarini sanaydi: `held` (shundan `late` — kirish
+    qo'ng'iroqdan keyin), `cancelled`, `needs_clarification`; foiz =
+    `held/total`. Eng past foiz **birinchi** qatorda (dekanat aynan shuni
+    qidiradi) — demo'da tursunov 8/10 (80%), umumiy 95%.
+  - **Xona matni:** `_room_text()` faqat raqam bilan tugaydigan xonaga
+    "-xona" qo'shadi (`214-xona`, lekin `103-lab` o'zicha qoladi). S9 dagi
+    eski matnlarga tegilmadi.
+  - **UI: `/attendance` dekanat uchun uch tab** ("O'qituvchilar" /
+    "Oylik jadval" / "Talabalar") — S9 ning guruh mavjudligi ko'rinishi
+    yo'qolmadi, `TutorView` uchinchi tabda o'sha holicha ishlatiladi.
+    Ranglar `lib/labels.ts` da: `classStateClass` (o'tildi yashil, xavf
+    ostida qizil, aniqlashtirish sariq, kechikkan to'q sariq, boshlanmagan/
+    qoldirilgan kulrang) va `percentClass` (≥90 yashil, ≥75 sariq, past
+    qizil).
+  - **Qizil karta soat 23:00 da ham ko'rinadi:** karta ramkasi
+    `at_risk_count > 0` YOKI "bugun binoga kirmagan + bugun darsi bor"
+    bo'lganda qizil bo'ladi. Sabab: dars vaqtidan keyin holat
+    "aniqlashtirish kerak" (sariq) ga o'tadi, lekin demo istalgan soatda
+    ko'rsatiladi — kelmagan o'qituvchi baribir ko'zga tashlanishi kerak.
+  - **Frontend `?at=` yubormaydi** (S9 qarori kuchda): demo soati faqat
+    backend/curl darajasida in'ektsiya qilinadi.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (ichki tartib nizomi 3.1-band bilan bir xil):
     1) 08:30-09:50, 2) 10:00-11:20, 3) 11:30-12:50, 4) 13:30-14:50,
@@ -731,6 +825,24 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Keyinga qoldirilganlar
 
+- **Bildirishnoma yozish `services/presence.py` da qoldi** (S10:
+  `record_risk_notifications`). S12 da `services/notifications.py` yaratilib,
+  bu funksiya + `mark_attendance` (S9 qaydi) + to'lov triggerlari (S8 qaydi)
+  bitta joyga yig'ilsin; hozircha faqat `teacher_absence` turi yoziladi.
+- **"Xavf ostida" bildirishnomasi faqat svod so'ralganda yoziladi**
+  (GET yon ta'siri). Fon vazifasi/scheduler yo'q — hech kim dekanat
+  sahifasini ochmasa yozuv ham paydo bo'lmaydi. S12 da trigger ro'yxati
+  qilinsa (FUNKSIONALLIK 3.10) shu ham o'sha mexanizmga o'tkazilsin.
+- **Oylik svodda sana oralig'ini tanlash yo'q:** `?days=` (default 30,
+  maksimum 180) faqat "oxirgi N kun" beradi; seed esa atigi 5 ish kuni +
+  bugungi `ClassSession` yozadi, ya'ni "oylik" jadval amalda 6 kunlik.
+  Haqiqiy oy kesimi kerak bo'lsa seed tarixini uzaytirish kerak (S13/S14).
+- **Eksport (P2) qilinmadi:** FUNKSIONALLIK 3.8 dagi "hisobot uchun eksport"
+  **[P2]** deb belgilangan — CSV/XLSX yuklab olish S14 ga qoldirildi.
+- **Dekanat ko'rinishida fakultet kesimidagi talaba davomati foizi hamon
+  yo'q** (S9 dan qolgan qayd): `/attendance/teachers` faqat o'qituvchilarni
+  qamraydi, "fakultet bo'yicha bugun davomat 87%" ko'rsatkichi
+  `group_presence` ma'lumotidan S13/S14 da yig'ilsin.
 - **Kichik ekran (mobil) layouti:** hujjat paneli va dashboard `lg:` dan
   kichik ekranda yashiringan — telefonda manba chipini bosish ko'zga
   ko'rinadigan natija bermaydi. S14 (sayqal) da modal/drawer qilinsin.

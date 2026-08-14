@@ -635,3 +635,102 @@ class AttendanceSummaryOut(BaseModel):
     today: DayAttendanceOut
     source: ChatSource
     disclaimer: str = AGENT_DISCLAIMER
+
+
+# --- S10: teacher attendance (dean's office) --------------------------------
+# `state` here is a *derived* class state (held / late / at_risk /
+# needs_clarification / upcoming / cancelled), not the stored DB enum — that one
+# still travels as `session_status`.
+
+
+class TeacherClassStateOut(BaseModel):
+    schedule_id: int
+    pair_number: int
+    subject: str
+    room: str
+    group_id: int
+    group_name: str | None
+    starts_at: datetime
+    ends_at: datetime
+    session_status: ClassSessionStatus | None
+    session_label: str | None
+    state: str
+    state_label: str
+    teacher_arrived_at: datetime | None
+    student_count: int
+    marked_count: int
+    present_count: int
+    is_current: bool
+    is_past: bool
+    summary: str
+
+
+class TeacherPresenceRowOut(BaseModel):
+    teacher_id: int
+    username: str
+    full_name: str
+    faculty_id: int | None
+    state: str
+    state_label: str
+    in_building: bool
+    entered_at: datetime | None
+    left_at: datetime | None
+    classes: list[TeacherClassStateOut] = []
+    class_count: int
+    held_count: int
+    late_count: int
+    at_risk_count: int
+    unclear_count: int
+    summary: str
+
+
+class TeacherDayOverviewOut(BaseModel):
+    """GET /attendance/teachers — today's teacher roll-call for the dean."""
+
+    date: date
+    at: datetime
+    current_pair: int | None
+    pair_label: str | None
+    faculty_ids: list[int] = []
+    rows: list[TeacherPresenceRowOut] = []
+    teacher_count: int
+    inside_count: int
+    left_count: int
+    absent_count: int
+    class_count: int
+    held_count: int
+    late_count: int
+    at_risk_count: int
+    unclear_count: int
+    schedule_note: str
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class TeacherMonthRowOut(BaseModel):
+    teacher_id: int
+    username: str
+    full_name: str
+    total: int
+    held: int
+    late: int
+    cancelled: int
+    unclear: int
+    percent: int | None
+
+
+class TeacherMonthOut(BaseModel):
+    """GET /attendance/teachers/monthly — held classes per teacher, in percent."""
+
+    date_from: date
+    date_to: date
+    days: int
+    rows: list[TeacherMonthRowOut] = []
+    total: int
+    held: int
+    late: int
+    cancelled: int
+    unclear: int
+    percent: int | None
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER

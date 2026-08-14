@@ -579,6 +579,107 @@ export interface AttendanceSummary {
   disclaimer: string;
 }
 
+// --- teacher attendance, dean's view (S10 API) ------------------------------
+
+/** Derived state of one scheduled class — a conclusion drawn at a moment in
+ * time, not the stored `session_status` (which travels alongside it). */
+export type ClassState =
+  | "held"
+  | "late"
+  | "at_risk"
+  | "needs_clarification"
+  | "upcoming"
+  | "cancelled";
+
+export interface TeacherClassState {
+  schedule_id: number;
+  pair_number: number;
+  subject: string;
+  room: string;
+  group_id: number;
+  group_name: string | null;
+  starts_at: string;
+  ends_at: string;
+  session_status: ClassSessionStatus | null;
+  session_label: string | null;
+  state: ClassState;
+  state_label: string;
+  teacher_arrived_at: string | null;
+  student_count: number;
+  marked_count: number;
+  present_count: number;
+  is_current: boolean;
+  is_past: boolean;
+  summary: string;
+}
+
+export interface TeacherPresenceRow {
+  teacher_id: number;
+  username: string;
+  full_name: string;
+  faculty_id: number | null;
+  state: PresenceState;
+  state_label: string;
+  in_building: boolean;
+  entered_at: string | null;
+  left_at: string | null;
+  classes: TeacherClassState[];
+  class_count: number;
+  held_count: number;
+  late_count: number;
+  at_risk_count: number;
+  unclear_count: number;
+  summary: string;
+}
+
+export interface TeacherDayOverview {
+  date: string;
+  at: string;
+  current_pair: number | null;
+  pair_label: string | null;
+  faculty_ids: number[];
+  rows: TeacherPresenceRow[];
+  teacher_count: number;
+  inside_count: number;
+  left_count: number;
+  absent_count: number;
+  class_count: number;
+  held_count: number;
+  late_count: number;
+  at_risk_count: number;
+  unclear_count: number;
+  schedule_note: string;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export interface TeacherMonthRow {
+  teacher_id: number;
+  username: string;
+  full_name: string;
+  total: number;
+  held: number;
+  late: number;
+  cancelled: number;
+  unclear: number;
+  percent: number | null;
+}
+
+export interface TeacherMonth {
+  date_from: string;
+  date_to: string;
+  days: number;
+  rows: TeacherMonthRow[];
+  total: number;
+  held: number;
+  late: number;
+  cancelled: number;
+  unclear: number;
+  percent: number | null;
+  source: ChatSource;
+  disclaimer: string;
+}
+
 function query(params: Record<string, string | number | null | undefined>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -616,4 +717,11 @@ export const attendanceApi = {
       marks,
       on_date: onDate ?? null,
     }),
+  // Dean's office only (403 for every other role).
+  teachers: (onDate?: string | null, at?: string | null) =>
+    api.get<TeacherDayOverview>(
+      `/attendance/teachers${query({ on_date: onDate, at })}`,
+    ),
+  teachersMonthly: (days?: number | null) =>
+    api.get<TeacherMonth>(`/attendance/teachers/monthly${query({ days })}`),
 };

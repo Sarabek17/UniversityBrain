@@ -27,13 +27,14 @@ from datetime import date, datetime, time, timedelta
 from sqlalchemy.orm import Session
 
 from app.agents.orchestrator import DISCLAIMER
-from app.auth.rbac import ensure_can_access_user, visible_group_ids
+from app.auth.rbac import can_access_user, ensure_can_access_user, visible_group_ids
 from app.models import (
     Attendance,
     AttendanceStatus,
     ClassSession,
     ClassSessionStatus,
     Group,
+    Notification,
     Schedule,
     TurnstileDirection,
     TurnstileLog,
@@ -83,6 +84,42 @@ SESSION_LABELS = {
     ClassSessionStatus.cancelled: "qoldirildi",
     ClassSessionStatus.needs_clarification: "aniqlashtirish kerak",
 }
+
+# --- S10: derived state of one scheduled class (the dean's traffic light) -----
+# The DB enum (`ClassSessionStatus`) stays untouched: "xavf ostida" and
+# "kechikkan" are *conclusions* drawn from three sources at a given moment
+# (schedule window + teacher turnstile + whether attendance was marked), not new
+# stored statuses. So the same row reads "xavf ostida" at 11:35 and
+# "aniqlashtirish kerak" at 13:00 — that is the point.
+
+CLASS_HELD = "held"  # o'tildi: attendance marked / session held
+CLASS_LATE = "late"  # kechikkan: held, but the teacher entered after the bell
+CLASS_AT_RISK = "at_risk"  # xavf ostida: class time, teacher not in the building
+CLASS_UNCLEAR = "needs_clarification"  # aniqlashtirish kerak
+CLASS_UPCOMING = "upcoming"  # scheduled, not started yet
+CLASS_CANCELLED = "cancelled"  # qoldirildi (explicitly recorded)
+
+CLASS_STATE_LABELS = {
+    CLASS_HELD: "o'tildi",
+    CLASS_LATE: "kechikkan",
+    CLASS_AT_RISK: "dars xavf ostida",
+    CLASS_UNCLEAR: "aniqlashtirish kerak",
+    CLASS_UPCOMING: "hali boshlanmagan",
+    CLASS_CANCELLED: "qoldirildi",
+}
+
+# States the dean's office has to act on.
+CLASS_ALERT_STATES = (CLASS_AT_RISK, CLASS_UNCLEAR, CLASS_LATE)
+
+# A class counts as "at risk" from this many minutes before the bell.
+RISK_LEAD_MINUTES = 10
+# Entering later than this after the bell is a late arrival.
+LATE_GRACE_MINUTES = 5
+
+DEFAULT_MONTH_DAYS = 30
+MAX_MONTH_DAYS = 180
+
+TEACHER_ABSENCE_NOTIF = "teacher_absence"
 
 # Domain rule 6: the room is an inference drawn from the schedule.
 SCHEDULE_HINT = "jadval bo'yicha"
@@ -1386,5 +1423,682 @@ def format_group_presence_for_tool(summary: GroupPresence) -> str:
     if not flagged:
         lines.append("  Diqqat talab qiladigan holat yo'q.")
     lines.append(f"({ROOM_NOTE})")
+    lines.append(f"(Manba: {summary.source['label']}.)")
+    return "\n".join(lines)
+
+
+# =============================================================================
+# S10 — teacher attendance (dean's office view)
+#
+# Same three sources as everywhere else, one more question: was the class
+# actually held? The answer is *derived* at a given moment, never stored:
+#
+#     attendance marked / session held      -> o'tildi (late if the teacher
+#                                              entered after the bell)
+#     class time, teacher not in building   -> xavf ostida
+#     class time over, nothing marked       -> aniqlashtirish kerak
+#     in the building, nothing marked       -> aniqlashtirish kerak
+#
+# Scope comes from `auth/rbac.can_access_user` — staff see their own faculty,
+# admin everyone. Teachers are not group members, so `visible_group_ids` is the
+# wrong tool here (a teacher belongs to a faculty, not to a group).
+# =============================================================================
+
+
+@dataclass
+class TeacherClassState:
+    """One scheduled class of one teacher, with the conclusion drawn about it."""
+
+    schedule_id: int
+    pair_number: int
+    subject: str
+    room: str
+    group_id: int
+    group_name: str | None
+    starts_at: datetime
+    ends_at: datetime
+    session_status: ClassSessionStatus | None
+    session_label: str | None
+    state: str  # CLASS_HELD | CLASS_LATE | CLASS_AT_RISK | ...
+    state_label: str
+    teacher_arrived_at: datetime | None
+    student_count: int
+    marked_count: int
+    present_count: int
+    is_current: bool
+    is_past: bool
+    summary: str
+
+
+@dataclass
+class TeacherPresenceRow:
+    """One teacher on the dean's daily list."""
+
+    teacher_id: int
+    username: str
+    full_name: str
+    faculty_id: int | None
+    state: str  # INSIDE | LEFT | NOT_ARRIVED
+    state_label: str
+    in_building: bool
+    entered_at: datetime | None
+    left_at: datetime | None
+    classes: list[TeacherClassState]
+    class_count: int
+    held_count: int
+    late_count: int
+    at_risk_count: int
+    unclear_count: int
+    summary: str
+
+
+@dataclass
+class TeacherDayOverview:
+    """GET /attendance/teachers — today's teacher roll-call for the dean."""
+
+    date: date
+    at: datetime
+    current_pair: int | None
+    pair_label: str | None
+    faculty_ids: list[int]
+    rows: list[TeacherPresenceRow]
+    teacher_count: int
+    inside_count: int
+    left_count: int
+    absent_count: int
+    class_count: int
+    held_count: int
+    late_count: int
+    at_risk_count: int
+    unclear_count: int
+    schedule_note: str = ROOM_NOTE
+    source: dict = field(default_factory=dict)
+    disclaimer: str = DISCLAIMER
+
+
+@dataclass
+class TeacherMonthRow:
+    teacher_id: int
+    username: str
+    full_name: str
+    total: int
+    held: int
+    late: int
+    cancelled: int
+    unclear: int
+    percent: int | None
+
+
+@dataclass
+class TeacherMonthSummary:
+    """GET /attendance/teachers/monthly — held/missed percentages per teacher."""
+
+    date_from: date
+    date_to: date
+    days: int
+    rows: list[TeacherMonthRow]
+    total: int
+    held: int
+    late: int
+    cancelled: int
+    unclear: int
+    percent: int | None
+    source: dict = field(default_factory=dict)
+    disclaimer: str = DISCLAIMER
+
+
+# --- scope -------------------------------------------------------------------
+
+
+def teachers_in_scope(db: Session, actor: User) -> list[User]:
+    """Teachers this user may look at — decided by `rbac.can_access_user` only.
+
+    staff -> own faculty, admin -> everybody. Nothing is re-implemented here.
+    """
+    rows = (
+        db.query(User)
+        .filter(User.role == UserRole.teacher)
+        .order_by(User.full_name)
+        .all()
+    )
+    return [row for row in rows if can_access_user(db, actor, row)]
+
+
+def _room_text(room: str) -> str:
+    """`214` -> `214-xona`; `103-lab` already carries its own name."""
+    return f"{room}-xona" if room and room[-1].isdigit() else room
+
+
+# --- the conclusion ----------------------------------------------------------
+
+
+def class_state(
+    session: ClassSession | None,
+    building: BuildingState,
+    starts_at: datetime,
+    ends_at: datetime,
+    marked_count: int,
+    now: datetime,
+) -> str:
+    """Derived state of one class. The stored `ClassSessionStatus` is an input."""
+    if session is not None and session.status == ClassSessionStatus.cancelled:
+        return CLASS_CANCELLED
+
+    held = marked_count > 0 or (
+        session is not None and session.status == ClassSessionStatus.held
+    )
+    if held:
+        arrived = (
+            session.teacher_arrived_at if session else None
+        ) or building.entered_at
+        if arrived and arrived > starts_at + timedelta(minutes=LATE_GRACE_MINUTES):
+            return CLASS_LATE
+        return CLASS_HELD
+
+    if now < starts_at - timedelta(minutes=RISK_LEAD_MINUTES):
+        return CLASS_UPCOMING
+    if not building.in_building:
+        # The bell is about to ring (or already did) and the turnstile has not
+        # seen the teacher: this is the alert the dean's office needs.
+        return CLASS_AT_RISK if now <= ends_at else CLASS_UNCLEAR
+    if now < starts_at:
+        return CLASS_UPCOMING
+    return CLASS_UNCLEAR
+
+
+def _class_sentence(state: str, room: str, marked: int, total: int) -> str:
+    """Why the class is in that state — the label itself is never repeated here."""
+    if state == CLASS_AT_RISK:
+        return "dars vaqti keldi, o'qituvchi turniketdan o'tmagan"
+    if state == CLASS_LATE:
+        return f"o'qituvchi qo'ng'iroqdan keyin kirgan, davomat {marked}/{total}"
+    if state == CLASS_HELD:
+        return f"davomat belgilangan ({marked}/{total})"
+    if state == CLASS_CANCELLED:
+        return "dars qoldirildi deb yozilgan"
+    if state == CLASS_UPCOMING:
+        return f"dars hali boshlanmagan ({SCHEDULE_HINT} {_room_text(room)})"
+    return "davomat belgilanmagan"
+
+
+def _teacher_sentence(building: BuildingState, states: list[str]) -> str:
+    parts: list[str] = []
+    if building.state == INSIDE:
+        parts.append(f"Binoda — {_hhmm(building.entered_at)} da kirgan")
+    elif building.state == LEFT:
+        parts.append(f"Binodan chiqib ketgan — {_hhmm(building.left_at)} da chiqqan")
+    else:
+        parts.append("Bugun binoga kirmagan (turniketda yozuv yo'q)")
+
+    if not states:
+        parts.append("bugun jadvalda darsi yo'q")
+    else:
+        at_risk = states.count(CLASS_AT_RISK)
+        unclear = states.count(CLASS_UNCLEAR)
+        late = states.count(CLASS_LATE)
+        held = states.count(CLASS_HELD) + late
+        detail = [f"{len(states)} ta dars"]
+        if held:
+            detail.append(f"o'tilgan {held}")
+        if late:
+            detail.append(f"kechikkan {late}")
+        if at_risk:
+            detail.append(f"xavf ostida {at_risk}")
+        if unclear:
+            detail.append(f"aniqlashtirish kerak {unclear}")
+        parts.append(", ".join(detail))
+    return "; ".join(parts) + "."
+
+
+# --- the flow: today's teacher roll-call --------------------------------------
+
+
+def teacher_day_overview(
+    db: Session,
+    actor: User,
+    day: date | None = None,
+    now: datetime | None = None,
+    notify: bool = True,
+) -> TeacherDayOverview:
+    """Every teacher in scope: in the building or not, and how their classes go.
+
+    `notify=True` writes a `Notification` for each class that is at risk right
+    now (S12 renders them; duplicates are never written).
+    """
+    moment = now or datetime.now()
+    on_date = day or moment.date()
+    teachers = teachers_in_scope(db, actor)
+    teacher_ids = [t.id for t in teachers]
+
+    logs = _logs_by_user(db, teacher_ids, on_date, moment)
+    schedule_rows = (
+        db.query(Schedule)
+        .filter(
+            Schedule.weekday == on_date.weekday(),
+            Schedule.teacher_id.in_(teacher_ids),
+        )
+        .order_by(Schedule.pair_number, Schedule.group_id)
+        .all()
+        if teacher_ids
+        else []
+    )
+    sessions = _sessions_by_schedule(db, [row.id for row in schedule_rows], on_date)
+    names = _group_names(db, {row.group_id for row in schedule_rows})
+
+    student_counts: dict[int, int] = {}
+    for group_id in {row.group_id for row in schedule_rows}:
+        student_counts[group_id] = (
+            db.query(User)
+            .filter(User.role == UserRole.student, User.group_id == group_id)
+            .count()
+        )
+
+    marks = (
+        db.query(Attendance)
+        .filter(
+            Attendance.schedule_id.in_([row.id for row in schedule_rows]),
+            Attendance.date == on_date,
+        )
+        .all()
+        if schedule_rows
+        else []
+    )
+    marked: dict[int, int] = {}
+    present: dict[int, int] = {}
+    for mark in marks:
+        marked[mark.schedule_id] = marked.get(mark.schedule_id, 0) + 1
+        if mark.status in ATTENDED_STATUSES:
+            present[mark.schedule_id] = present.get(mark.schedule_id, 0) + 1
+
+    by_teacher: dict[int, list[Schedule]] = {}
+    for row in schedule_rows:
+        by_teacher.setdefault(row.teacher_id, []).append(row)
+
+    pair = current_pair(moment) if on_date == moment.date() else None
+    rows: list[TeacherPresenceRow] = []
+    for teacher in teachers:
+        building = building_state(logs.get(teacher.id, []))
+        classes: list[TeacherClassState] = []
+        for schedule in by_teacher.get(teacher.id, []):
+            starts_at, ends_at = pair_bounds(on_date, schedule.pair_number)
+            session = sessions.get(schedule.id)
+            marked_count = marked.get(schedule.id, 0)
+            state = class_state(
+                session, building, starts_at, ends_at, marked_count, moment
+            )
+            total = student_counts.get(schedule.group_id, 0)
+            classes.append(
+                TeacherClassState(
+                    schedule_id=schedule.id,
+                    pair_number=schedule.pair_number,
+                    subject=schedule.subject,
+                    room=schedule.room,
+                    group_id=schedule.group_id,
+                    group_name=names.get(schedule.group_id),
+                    starts_at=starts_at,
+                    ends_at=ends_at,
+                    session_status=session.status if session else None,
+                    session_label=SESSION_LABELS[session.status] if session else None,
+                    state=state,
+                    state_label=CLASS_STATE_LABELS[state],
+                    teacher_arrived_at=session.teacher_arrived_at if session else None,
+                    student_count=total,
+                    marked_count=marked_count,
+                    present_count=present.get(schedule.id, 0),
+                    is_current=schedule.pair_number == pair,
+                    is_past=ends_at < moment,
+                    summary=_class_sentence(state, schedule.room, marked_count, total),
+                )
+            )
+        states = [c.state for c in classes]
+        rows.append(
+            TeacherPresenceRow(
+                teacher_id=teacher.id,
+                username=teacher.username,
+                full_name=teacher.full_name,
+                faculty_id=teacher.faculty_id,
+                state=building.state,
+                state_label=building.label,
+                in_building=building.in_building,
+                entered_at=building.entered_at,
+                left_at=building.left_at,
+                classes=classes,
+                class_count=len(classes),
+                held_count=states.count(CLASS_HELD) + states.count(CLASS_LATE),
+                late_count=states.count(CLASS_LATE),
+                at_risk_count=states.count(CLASS_AT_RISK),
+                unclear_count=states.count(CLASS_UNCLEAR),
+                summary=_teacher_sentence(building, states),
+            )
+        )
+
+    # Problems first: the demo has to open on the teacher who never came.
+    rows.sort(
+        key=lambda r: (
+            0 if r.at_risk_count else 1,
+            0 if r.unclear_count or r.late_count else 1,
+            0 if r.state == NOT_ARRIVED else 1,
+            r.full_name,
+        )
+    )
+
+    faculty_ids = sorted({t.faculty_id for t in teachers if t.faculty_id is not None})
+    where = (
+        ", ".join(f"{fid}-fakultet" for fid in faculty_ids)
+        if faculty_ids
+        else "doirangiz"
+    )
+    overview = TeacherDayOverview(
+        date=on_date,
+        at=moment,
+        current_pair=pair,
+        pair_label=pair_label(pair) if pair else None,
+        faculty_ids=faculty_ids,
+        rows=rows,
+        teacher_count=len(rows),
+        inside_count=sum(1 for r in rows if r.state == INSIDE),
+        left_count=sum(1 for r in rows if r.state == LEFT),
+        absent_count=sum(1 for r in rows if r.state == NOT_ARRIVED),
+        class_count=sum(r.class_count for r in rows),
+        held_count=sum(r.held_count for r in rows),
+        late_count=sum(r.late_count for r in rows),
+        at_risk_count=sum(r.at_risk_count for r in rows),
+        unclear_count=sum(r.unclear_count for r in rows),
+        source={
+            "type": TURNSTILE_SOURCE,
+            "label": (
+                "Turniket logi + dars jadvali + davomat jurnali — "
+                f"{where} o'qituvchilari, "
+                f"{moment.strftime('%d.%m.%Y %H:%M')} holati"
+            ),
+        },
+    )
+    if notify:
+        record_risk_notifications(db, overview)
+    return overview
+
+
+# --- "dars xavf ostida" -> Notification (S12 renders them) --------------------
+
+
+def risk_notification_text(row: TeacherPresenceRow, item: TeacherClassState) -> str:
+    """The seed's wording, so demo rows and runtime rows read alike."""
+    return (
+        f"Dars xavf ostida: {row.full_name} bugun {item.pair_number}-juftlikdagi "
+        f"darsiga ({item.group_name or '?'}, {item.subject}, {item.room}) "
+        "hali binoga kirmagan."
+    )
+
+
+def record_risk_notifications(db: Session, overview: TeacherDayOverview) -> int:
+    """One notification per (dean, class) per day — never a duplicate.
+
+    Recipients are the staff of the teacher's own faculty. The seed already
+    wrote today's row for the pinned class; it is recognised and kept.
+    """
+    risky = [
+        (row, item)
+        for row in overview.rows
+        for item in row.classes
+        if item.state == CLASS_AT_RISK
+    ]
+    if not risky:
+        return 0
+
+    by_faculty: dict[int | None, list[User]] = {}
+    for person in db.query(User).filter(User.role == UserRole.staff):
+        by_faculty.setdefault(person.faculty_id, []).append(person)
+
+    # `Notification.created_at` is written by SQLite's CURRENT_TIMESTAMP (UTC)
+    # while everything else here reasons in local time, so the "already
+    # notified" window starts at the *previous* midnight. A schedule row recurs
+    # weekly, so a window this wide can never hide a genuinely new alert.
+    window_start = datetime.combine(overview.date, time.min) - timedelta(days=1)
+    day_end = datetime.combine(overview.date, time.max)
+    seen = {
+        (row.user_id, row.link_id)
+        for row in db.query(Notification).filter(
+            Notification.notif_type == TEACHER_ABSENCE_NOTIF,
+            Notification.created_at >= window_start,
+            Notification.created_at <= day_end,
+        )
+    }
+
+    written = 0
+    for row, item in risky:
+        for recipient in by_faculty.get(row.faculty_id, []):
+            key = (recipient.id, item.schedule_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            db.add(
+                Notification(
+                    user_id=recipient.id,
+                    notif_type=TEACHER_ABSENCE_NOTIF,
+                    text=risk_notification_text(row, item),
+                    link_type="schedule",
+                    link_id=item.schedule_id,
+                )
+            )
+            written += 1
+    if written:
+        db.commit()
+    return written
+
+
+# --- the flow: monthly percentages -------------------------------------------
+
+
+def teacher_month_summary(
+    db: Session,
+    actor: User,
+    days: int = DEFAULT_MONTH_DAYS,
+    now: datetime | None = None,
+) -> TeacherMonthSummary:
+    """Held / missed classes per teacher over the last N days (report view)."""
+    moment = now or datetime.now()
+    day = moment.date()
+    window = max(1, min(int(days or DEFAULT_MONTH_DAYS), MAX_MONTH_DAYS))
+    date_from = day - timedelta(days=window - 1)
+
+    teachers = teachers_in_scope(db, actor)
+    teacher_ids = [t.id for t in teachers]
+    rows = (
+        db.query(ClassSession, Schedule)
+        .join(Schedule, Schedule.id == ClassSession.schedule_id)
+        .filter(
+            Schedule.teacher_id.in_(teacher_ids),
+            ClassSession.date >= date_from,
+            ClassSession.date <= day,
+        )
+        .all()
+        if teacher_ids
+        else []
+    )
+
+    buckets: dict[int, dict[str, int]] = {
+        t.id: {"total": 0, "held": 0, "late": 0, "cancelled": 0, "unclear": 0}
+        for t in teachers
+    }
+    for session, schedule in rows:
+        starts_at, _ends_at = pair_bounds(session.date, schedule.pair_number)
+        if starts_at > moment:
+            continue  # the seed writes the whole day ahead of time
+        bucket = buckets[schedule.teacher_id]
+        bucket["total"] += 1
+        if session.status == ClassSessionStatus.held:
+            bucket["held"] += 1
+            arrived = session.teacher_arrived_at
+            if arrived and arrived > starts_at + timedelta(minutes=LATE_GRACE_MINUTES):
+                bucket["late"] += 1
+        elif session.status == ClassSessionStatus.cancelled:
+            bucket["cancelled"] += 1
+        else:
+            bucket["unclear"] += 1
+
+    result = [
+        TeacherMonthRow(
+            teacher_id=t.id,
+            username=t.username,
+            full_name=t.full_name,
+            total=buckets[t.id]["total"],
+            held=buckets[t.id]["held"],
+            late=buckets[t.id]["late"],
+            cancelled=buckets[t.id]["cancelled"],
+            unclear=buckets[t.id]["unclear"],
+            percent=(
+                round(buckets[t.id]["held"] * 100 / buckets[t.id]["total"])
+                if buckets[t.id]["total"]
+                else None
+            ),
+        )
+        for t in teachers
+    ]
+    # Worst first — that is the row a dean opens the report for.
+    result.sort(
+        key=lambda r: (r.percent if r.percent is not None else 101, r.full_name)
+    )
+
+    total = sum(r.total for r in result)
+    held = sum(r.held for r in result)
+    return TeacherMonthSummary(
+        date_from=date_from,
+        date_to=day,
+        days=window,
+        rows=result,
+        total=total,
+        held=held,
+        late=sum(r.late for r in result),
+        cancelled=sum(r.cancelled for r in result),
+        unclear=sum(r.unclear for r in result),
+        percent=round(held * 100 / total) if total else None,
+        source=attendance_source(
+            day,
+            f"{date_from.strftime('%d.%m.%Y')}-{day.strftime('%d.%m.%Y')} oralig'i, "
+            f"{len(result)} o'qituvchi, {total} dars",
+        ),
+    )
+
+
+# --- agent-facing text (`oqituvchi_davomat`) ---------------------------------
+
+
+def class_state_source(item: TeacherClassState) -> dict:
+    return {
+        "type": SCHEDULE_SOURCE,
+        "label": (
+            f"Dars jadvali ({SCHEDULE_HINT}) — {pair_label(item.pair_number)}, "
+            f"{item.subject}, {item.room}, {item.group_name or '?'}"
+        ),
+    }
+
+
+def teacher_row_sources(row: TeacherPresenceRow, day: date) -> list[dict]:
+    """Citations for one teacher: the turnstile fact + the schedule inference."""
+    building = BuildingState(row.state, row.entered_at, row.left_at, None)
+    sources = [turnstile_source(building, day)]
+    for item in row.classes:
+        if item.state in CLASS_ALERT_STATES:
+            sources.append(class_state_source(item))
+    return sources
+
+
+def _class_line(item: TeacherClassState) -> str:
+    return (
+        f"    {pair_label(item.pair_number)} — \"{item.subject}\", "
+        f"{item.group_name or '?'}, {item.room} ({SCHEDULE_HINT}): "
+        f"{item.state_label} — {item.summary}"
+    )
+
+
+def _is_flagged(row: TeacherPresenceRow) -> bool:
+    return bool(
+        row.at_risk_count
+        or row.unclear_count
+        or row.late_count
+        or row.state == NOT_ARRIVED
+    )
+
+
+def format_teacher_overview_for_tool(overview: TeacherDayOverview) -> str:
+    """The dean's answer: who is missing, in which class, and from which source."""
+    if not overview.rows:
+        return "Doirangizda o'qituvchi topilmadi — svod bo'sh."
+
+    lines = [
+        f"O'qituvchilar davomati — {overview.date.strftime('%d.%m.%Y')}, "
+        f"{overview.at.strftime('%H:%M')} holati: {overview.teacher_count} "
+        f"o'qituvchi — binoda {overview.inside_count}, chiqib ketgan "
+        f"{overview.left_count}, kelmagan {overview.absent_count}.",
+        f"Bugungi darslar: {overview.class_count} ta — o'tilgan "
+        f"{overview.held_count}, xavf ostida {overview.at_risk_count}, "
+        f"aniqlashtirish kerak {overview.unclear_count}, kechikkan "
+        f"{overview.late_count}.",
+    ]
+    if overview.pair_label:
+        lines.append(f"Hozir {SCHEDULE_HINT} {overview.pair_label}.")
+
+    flagged = [row for row in overview.rows if _is_flagged(row)]
+    if not flagged:
+        lines.append("Diqqat talab qiladigan o'qituvchi yo'q.")
+    for row in flagged[:MAX_FLAGGED_ROWS]:
+        lines.append(f"  {row.full_name} — {row.summary}")
+        for item in row.classes:
+            if item.state in CLASS_ALERT_STATES:
+                lines.append(_class_line(item))
+    if len(flagged) > MAX_FLAGGED_ROWS:
+        lines.append(f"  … va yana {len(flagged) - MAX_FLAGGED_ROWS} o'qituvchi.")
+
+    lines.append(f"({ROOM_NOTE})")
+    labels = [overview.source["label"]]
+    for row in flagged[:MAX_FLAGGED_ROWS]:
+        if row.state == NOT_ARRIVED or row.at_risk_count:
+            building = BuildingState(row.state, row.entered_at, row.left_at, None)
+            labels.append(
+                f"{turnstile_source(building, overview.date)['label']} "
+                f"({row.full_name})"
+            )
+    lines.append("(Manba: " + "; ".join(labels) + ".)")
+    return "\n".join(lines)
+
+
+def format_teacher_row_for_tool(
+    row: TeacherPresenceRow, overview: TeacherDayOverview
+) -> str:
+    """One named teacher ("Tursunov bugun darsga keldimi?")."""
+    lines = [
+        f"{row.full_name} — {overview.date.strftime('%d.%m.%Y')}, "
+        f"{overview.at.strftime('%H:%M')} holatiga ko'ra: {row.summary}"
+    ]
+    if not row.classes:
+        lines.append(f"    Bugun {SCHEDULE_HINT} darsi yo'q.")
+    for item in row.classes:
+        lines.append(_class_line(item))
+    lines.append(f"  Eslatma: {ROOM_NOTE}")
+    lines.append(
+        "(Manba: "
+        + "; ".join(s["label"] for s in teacher_row_sources(row, overview.date))
+        + ".)"
+    )
+    return "\n".join(lines)
+
+
+def format_teacher_month_for_tool(summary: TeacherMonthSummary) -> str:
+    lines = [
+        "O'qituvchilar bo'yicha svod "
+        f"({summary.date_from.strftime('%d.%m.%Y')}-"
+        f"{summary.date_to.strftime('%d.%m.%Y')}): {summary.total} dars, "
+        f"o'tilgan {summary.held}"
+        + (f" ({summary.percent}%)" if summary.percent is not None else "")
+        + "."
+    ]
+    for row in summary.rows[:MAX_FLAGGED_ROWS]:
+        lines.append(
+            f"  {row.full_name}: {row.held}/{row.total}"
+            + (f" ({row.percent}%)" if row.percent is not None else "")
+            + (f", kechikkan {row.late}" if row.late else "")
+            + (f", qoldirilgan {row.cancelled}" if row.cancelled else "")
+            + (f", aniqlashtirish kerak {row.unclear}" if row.unclear else "")
+        )
     lines.append(f"(Manba: {summary.source['label']}.)")
     return "\n".join(lines)
