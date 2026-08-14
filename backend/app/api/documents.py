@@ -1,8 +1,9 @@
 """Document endpoints. Thin layer: access logic lives in services/documents.py.
 
-    GET  /documents              -> documents this user may see
-    GET  /documents/{id}         -> metadata + full text (404 when not visible)
-    POST /documents/{id}/summary -> role-angled summary (S6, "Rezyume" button)
+    GET  /documents                -> documents this user may see
+    GET  /documents/{id}           -> metadata + full text (404 when not visible)
+    POST /documents/{id}/summary   -> role-angled summary (S6, "Rezyume" button)
+    POST /documents/{id}/translate -> aligned original+translation (S7)
 
 RBAC: every authenticated role may list documents; *which* documents is decided
 by `rag.search.allowed_access_levels` — the same rule the RAG search applies, so
@@ -16,9 +17,16 @@ from sqlalchemy.orm import Session
 from app.auth.rbac import get_current_user
 from app.db import get_db
 from app.models import User
-from app.schemas import ChatSource, DocumentDetailOut, DocumentListItemOut, DocumentSummaryOut
+from app.schemas import (
+    ChatSource,
+    DocumentDetailOut,
+    DocumentListItemOut,
+    DocumentSummaryOut,
+    DocumentTranslationOut,
+    TranslationParagraph,
+)
 from app.services import documents as documents_service
-from app.services import summarization
+from app.services import summarization, translation
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -83,6 +91,58 @@ def summarize_document(
         summary=result.summary,
         parts=result.parts,
         truncated=result.truncated,
+        source=ChatSource(**result.source),
+        disclaimer=result.disclaimer,
+    )
+
+
+@router.post("/{document_id}/translate", response_model=DocumentTranslationOut)
+def translate_document(
+    document_id: int,
+    target_language: str = translation.DEFAULT_LANGUAGE,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> DocumentTranslationOut:
+    """Original + translation, paragraph by paragraph (S7, "Tarjima" button).
+
+    Same access rule and same 404 policy as the viewer. The answer always
+    carries the original text next to the translation — the client renders the
+    two columns, it never has to fetch the document again (domain rule 4).
+    Repeat requests are served from the `translations` cache with no LLM call.
+    """
+    document = documents_service.get_visible_document(db, user, document_id)
+    if document is None:
+        raise _NOT_FOUND
+    try:
+        result = translation.translate_document(db, document, user, target_language)
+    except translation.UnsupportedLanguageError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Qo'llab-quvvatlanmaydigan til. Mavjud: "
+                f"{', '.join(translation.SUPPORTED_LANGUAGES)}"
+            ),
+        ) from None
+    except translation.EmptyDocumentError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Hujjat matni topilmadi",
+        ) from None
+    return DocumentTranslationOut(
+        document_id=result.document_id,
+        title=result.title,
+        source_language=result.source_language,
+        target_language=result.target_language,
+        paragraph_count=len(result.paragraphs),
+        paragraphs=[
+            TranslationParagraph(
+                index=p.index, original=p.original, translated=p.translated
+            )
+            for p in result.paragraphs
+        ],
+        cached=result.cached,
+        truncated=result.truncated,
+        same_language=result.same_language,
         source=ChatSource(**result.source),
         disclaimer=result.disclaimer,
     )

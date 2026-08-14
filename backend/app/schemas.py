@@ -220,6 +220,39 @@ class DocumentSummaryOut(BaseModel):
     disclaimer: str = AGENT_DISCLAIMER
 
 
+class TranslationParagraph(BaseModel):
+    """One aligned row of the side-by-side view (S7).
+
+    The original travels with the translation, never instead of it — that is
+    what lets the UI put them in the same row (domain rule 4).
+    """
+
+    index: int  # 1-based position in the document
+    original: str
+    translated: str
+
+
+class DocumentTranslationOut(BaseModel):
+    """POST /documents/{id}/translate (S7) — original + translation, aligned.
+
+    `paragraphs` always has exactly as many rows as the document has
+    paragraphs. `cached` is True when the answer came from the `translations`
+    table (no LLM call was made).
+    """
+
+    document_id: int
+    title: str
+    source_language: str
+    target_language: str
+    paragraph_count: int
+    paragraphs: list[TranslationParagraph]
+    cached: bool
+    truncated: bool
+    same_language: bool  # document already in the target language
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
 class ChatIn(BaseModel):
     message: str
     conversation_id: int | None = None

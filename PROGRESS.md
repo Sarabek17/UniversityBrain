@@ -2,99 +2,122 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S7 (navbatda)
+## Joriy sessiya: S8 (navbatda)
 
-S6 yakunlandi (DoD 3/3: `pytest` **54/54** — S2 12 + S3 9 + S4 9 + S5 9 +
-S6 15; `npm run lint` va `npm run build` toza; jonli tekshiruv uvicorn+curl
-bilan (bitta hujjat 3 rolda — promptdagi rakurs uchchalasida boshqacha;
-ML hujjati → `parts: 2` map-reduce; talaba 91-M rezyumesini so'rasa **404**,
-dekanat 200; chat orqali `use_tool:hujjat_rezyume:{...}` markeri manba +
-disclaimer bilan ishlaydi) va **brauzerda** (headless Chrome/CDP): "Rezyume"
-tugmasi → blok, manba + disclaimer + "Yopish", original matn joyida qoladi,
-konsolda xato yo'q).
-S7 (Tarjima moduli) uchun izohlar:
+S7 yakunlandi (DoD 3/3: `pytest` **74/74** — S2 12 + S3 9 + S4 9 + S5 9 + S6 15
++ S7 20; `npm run lint` va `npm run build` toza; jonli tekshiruv uvicorn+curl
+(inglizcha ML hujjati: 23 paragraf → 23 juftlik, 2-chaqiruvda `cached=true` va
+juftliklar aynan bir xil; talaba 91-M ni tarjima qilmoqchi bo'lsa **404**,
+dekanat **200**; noma'lum til **400**; o'zbek hujjati → uz da `same_language`,
+LLM chaqirilmaydi; chatda `use_tool:tarjima_qil:{...}` markeri asl+tarjima
+juftliklarini manba va disclaimer bilan qaytaradi) va **brauzerda** (headless
+Chrome/CDP): "Tarjima" tugmasi → 23 ta juftlik qatori, chapda inglizcha
+original, o'ngda tarjima, ikkinchi bosishda "keshdan" belgisi, kutish
+indikatori 10 ms da ko'rindi, konsolda xato yo'q).
 
-- **Hujjat matni qayerdan olinadi:** `app/services/documents.py` —
-  `document_text(db, document)` (avval `Document.file_path` fayli, bo'sh
-  bo'lsa `Chunk` lardan yig'iladi). Ruxsat: `get_visible_document(db, user,
-  id)` → None bo'lsa **404**. Tarjima servisi ham SHU ikkitasidan foydalansin,
-  o'z filtri/o'qishini yozmasin. Nomga qarab topish uchun tayyor helper ham
-  bor: `find_visible_document_by_title(db, user, nom)` (S6 da qo'shildi).
-- **Paragrafga bo'lish tayyor:** `app/services/summarization.py` dagi
-  `split_parts(text, part_chars, max_parts) -> (parts, truncated)` —
-  paragraf chegarasini buzmaydi. Tarjima paragraf-paragraf ketadi, shuning
-  uchun uni import qilib ishlatish yoki shu naqshni takrorlash mumkin
-  (yangi nusxa yasamasdan).
-- **`Translation` jadvali (`models.py:157`, kesh uchun tayyor):**
-  `id`, `document_id` (nullable, FK documents), `chunk_id` (nullable, FK
-  chunks), `language` (String(8) — MAQSAD tili), `translated_text` (Text),
-  `created_at`. Sxema `schemas.TranslationOut` da bor (hozircha
-  ishlatilmaydi). Butun hujjat tarjimasi = `document_id` to'ldirilgan qator;
-  bo'lak tarjimasi = `chunk_id`. Jadval `seed/generate.py` dagi `ALL_MODELS`
-  ro'yxatida bor — demo reset keshni ham tozalaydi.
-- **Endpoint naqshi (S6 dan nusxa oling):** `POST /documents/{id}/summary`
-  — router yupqa (`app/api/documents.py`), ruxsat `get_visible_document`,
-  logika `services/` da, javobda `source` (`schemas.ChatSource`) va
-  `disclaimer` (`AGENT_DISCLAIMER`). Tarjima uchun ham xuddi shu naqsh:
-  `POST /documents/{id}/translate?til=uz` yoki body bilan.
-- **LLM klient interfeysi:** `app/llm/client.py` —
-  `get_llm_client().chat(messages, tools=None, system=None) -> LLMResponse`.
-  Tarjima chaqiruvi `tools` bermaydi (vosita kerak emas), faqat
-  `messages=[{"role": "user", "content": prompt}]` + `system`.
-- **Mock rejimda tarjimani qanday test qilish (S6 da ishlagan usul):**
-  mock provayder `tools=None` bo'lganda `[mock:<digest>] Echo: <promptning
-  ilk 600 belgisi>` qaytaradi — ya'ni tarjima MATNI haqiqiy tarjima emas.
-  Shuning uchun testlar mexanikani tekshiradi: `monkeypatch.setattr(
-  <servis moduli>, "get_llm_client", lambda: RecordingClient())` bilan
-  promptlar va chaqiruvlar soni yoziladi (namuna:
-  `tests/test_s6_summary.py` dagi `RecordingClient` + `recorder` fixture).
-  Kesh testi: ikkinchi chaqiruvda LLM chaqiruvlari soni **0** bo'lishi kerak.
-- **DocumentPanel tuzilishi (`frontend/src/components/DocumentPanel.tsx`):**
-  `documentId` propi → `useEffect` da `documentsApi.get(id)`; holat id
-  bo'yicha **derivatsiya** qilinadi (`loaded.id === documentId`), effektda
-  sinxron `setState` YO'Q (Next 16 eslint qoidasi). Header'da amal tugmalari
-  qatori bor (hozir: "Rezyume" + "Yopish") — "Tarjima" tugmasi shu qatorga
-  qo'shiladi. Kontent maydonida avval rezyume bloki (`<section>`), keyin
-  `<Markdown text={document.text} />`. Yonma-yon ko'rinish uchun shu
-  kontent maydonini ikki ustunga bo'lish kerak (chapda `document.text`,
-  o'ngda tarjima) — original hech qachon almashtirilmaydi (domen qoidasi 4).
-- **`lib/api.ts`:** `documentsApi = { list, get, summary }` — tarjima metodi
-  shu obyektga qo'shiladi, UI matnlari `src/i18n/uz.json` → `documents.*`.
-- **Hujjatlar API (S5 da qo'shildi, `app/api/documents.py`):**
+**Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
+bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
+(~0.21 s). Haqiqiy isbot — kechikishi simulyatsiya qilingan klient bilan
+(`MockLLMClient` + 40 ms `sleep`): 1-chaqiruv **1.020 s / 25 LLM chaqiruvi**,
+2-chaqiruv **0.001 s / 0 chaqiruv**. Keyingi sessiyalarda kesh o'lchansa shu
+usul ishlatilsin.
+
+S8 (To'lovlar moduli) uchun izohlar:
+
+- **Modellar (`models.py`) — maydonlar aynan shunday:**
+  ```python
+  Contract: id, student_id (FK users), total_amount (Numeric(14,2)),
+            academic_year (String(16), "2025-2026")
+  Payment:  id, student_id (FK users), amount (Numeric(14,2)),
+            paid_at (DateTime), receipt_number (String(64)|None),
+            receipt_file (String(512)|None), status (PaymentStatus),
+            academic_year (String(16))
   ```
-  GET  /documents              -> [{id, title, doc_type, language, access_level, uploaded_at}]
-  GET  /documents/{id}         -> yuqoridagilar + text (to'liq matn)
-  POST /documents/{id}/summary -> {document_id, title, summary, parts,
-                                   truncated, source, disclaimer}   (S6)
+  `PaymentStatus` enumi: `automatic` (sintetik Click/Payme orqali keldi),
+  `uploaded` (talaba chek yukladi, tasdiq kutilmoqda), `confirmed` (tyutor
+  tasdiqladi). **Qoldiq maydon YO'Q** — `total_amount - sum(payments)` servisda
+  hisoblanadi. Sxemalar `schemas.py` da hali yo'q, S8 o'zi qo'shadi
+  (`ContractOut`/`PaymentOut` naqshi `DocumentSummaryOut` kabi).
+- **Seed to'lov ssenariylari (`seed/generate.py`, `create_contracts_and_payments`):**
+  kontrakt summasi fakultet bo'yicha — fakultet 1 → 12 000 000, fakultet 2 →
+  10 500 000 so'm (`FACULTY_CONTRACT_TOTALS`).
+  - **QARZDORLAR (0 so'm to'lagan):** `DEBTOR_USERNAMES = {karimov, olimov,
+    hamidov, tosheva}` — umuman `Payment` qatori yo'q.
+  - **QISMAN (50%):** `PARTIAL_USERNAMES = {sodiqova, sharipova, roziyeva,
+    berdiyeva, boboyev}` — 30% (`automatic`, 2025-09) + 20% (`confirmed`,
+    2025-12).
+  - **sharipova** qo'shimcha: **kecha** 10% `uploaded` statusi bilan
+    (`receipt_number = CHK-…`, `receipt_file = uploads/receipts/chek_sharipova_<oy>.jpg`)
+    — tyutor **nazarova** tasdig'i kutilmoqda. S8 demo tugunining o'zi.
+  - **TO'LIQ:** qolgan barcha talabalar (jumladan **aliyev**) — 40% + 30% + 30%
+    (oxirgisi 25% ehtimol bilan `confirmed`, aks holda `automatic`).
+  - Chek raqamlari: `CLK-…` avtomatik to'lovda (`receipt_file = None`),
+    `CHK-…` qo'lda yuklanganda.
+- **Chek FAYLLARI mavjud emas** (`receipt_file` — faqat yo'l-platzholder,
+  `uploads/` papkasi yo'q). S8 "chek ochish" UI si uchun qaror kerak: yo
+  placeholder rasm generatsiya qilinadi (masalan seed'da bitta SVG/PNG), yo
+  UI faqat `receipt_number` + sana + summa ko'rsatadi va "chek fayli demo
+  ma'lumotda yo'q" deb yozadi. **Endpoint fayl yo'qligida 404 bermasin** —
+  demo yiqilmasin.
+- **RBAC doira helperlari (`app/auth/rbac.py`) — YAGONA joy, qayta yozilmaydi:**
+  `get_current_user`, `require_role(*rollar)` (admin DOIM ruxsatli),
+  `visible_group_ids(db, user)` → `None` = cheklovsiz (admin), aks holda
+  guruh id lari ro'yxati (tyutor → `Group.tutor_id` guruhlari, o'qituvchi →
+  `Schedule` orqali, staff → o'z fakulteti), va `can_access_user(db, user,
+  target)` / `ensure_can_access_user(...)` (403 ko'taradi). Talaba boshqa
+  talabaning to'lovini so'rasa — shu helperlar rad etadi, qo'lda rol
+  tekshirmang.
+- **Endpoint + servis naqshi (S6/S7 dan tayyor):** router yupqa
+  (`app/api/payments.py`), biznes logika `app/services/payments.py` da,
+  javobda `source` (`schemas.ChatSource`) va `disclaimer` (`AGENT_DISCLAIMER`)
+  — to'lov javobi ham faktik javob (domen qoidalari 3 va 5). Ruxsati yo'q
+  resurs → **404** (403 emas) hujjatlardagi qoida bilan bir xil; lekin
+  "boshqa talabaning ma'lumoti" holatida `ensure_can_access_user` **403**
+  beradi — S8 qaysi biri qayerda ishlatilishini bir marta hal qilsin.
+- **Tool qo'shish:** `agents/tools/` ga fayl + `agents/tools/__init__.py` ga
+  bitta import qatori. `tolov_holati` — S4-S7 dagi 4 vositadan farqli o'laroq
+  ehtimol rol-cheklangan bo'ladi (`roles=(UserRole.student, UserRole.tutor,
+  UserRole.staff)`); `registry.execute_tool` ruxsatni handler CHAQIRILMASDAN
+  oldin tekshiradi va `ToolResult(ok=False, "Ruxsat yo'q…")` qaytaradi.
+- **Frontend layout — dashboard placeholderi qayerda:**
+  `frontend/src/components/RoleDashboard.tsx` (+ `hasDashboard(role)`) —
+  hozir bo'sh placeholder, matnlari `i18n/uz.json` → `dashboard.items.tutor`
+  ("Guruh monitoringi: to'lov, davomat, mavjudlik"). U chat sahifasining
+  o'ng panelida ko'rinadi (`src/app/(protected)/chat/page.tsx`, hujjat
+  ochilmagan bo'lsa) va faqat teacher/tutor/staff/admin uchun. Talaba
+  "Kontrakt" sahifasi yangi marshrut bo'ladi:
+  `src/app/(protected)/contract/page.tsx` + navigatsiyaga havola
+  (`(protected)/layout.tsx` dagi `nav`, matnlar `uz.json` → `nav`).
+- **`lib/api.ts` ga `paymentsApi` qo'shiladi** (frontend backendga FAQAT shu
+  fayl orqali murojaat qiladi). Pul formatlash uchun `src/lib/labels.ts` da
+  hozircha helper YO'Q — S8 o'zi qo'shsin (`formatAmount`), UI matnlari
+  `i18n/uz.json` → yangi `payments` bo'limi.
+- **Keshlash naqshi (S7 da yozildi, kerak bo'lsa qayta ishlatiladi):**
+  `services/translation.py` dagi `cached_row` / `store_translation` — upsert +
+  `db.commit()` servisda (`get_db` commit qilmaydi). To'lov ma'lumoti
+  keshlanmaydi (u DB dan to'g'ridan-to'g'ri o'qiladi), lekin agar S8 og'ir
+  hisob-kitob qilsa shu naqsh tayyor.
+
+Umumiy (o'zgarmaydigan) izohlar:
+
+- **Hujjatlar API (`app/api/documents.py`) — to'liq ro'yxat:**
   ```
-  Sxemalar: `schemas.DocumentListItemOut` / `DocumentDetailOut` /
-  `DocumentSummaryOut`.
-  `file_path` ATAYLAB chiqarilmaydi (ichki yo'l). Rol filtri —
-  `rag.search.allowed_access_levels(user)`, biznes logika
-  `app/services/documents.py` da (`visible_documents`, `get_visible_document`,
-  `find_visible_document_by_title`, `document_text`). Ko'rish huquqi yo'q yoki
-  mavjud bo'lmagan hujjat → **404** (403 emas: mavjudligi ham oshkor
-  bo'lmaydi). Matn `Document.file_path` dan o'qiladi, bo'sh bo'lsa `Chunk`
-  lardan yig'iladi.
-- **Frontend fayllari (S5):** sahifalar `src/app/(protected)/chat/page.tsx`
-  (suhbat holati SHU YERDA: `messages`, `activeId`, `openDocumentId`) va
-  `.../documents/page.tsx`; komponentlar `src/components/` da: `ChatWindow`
-  (faqat ko'rinish), `ConversationList`, `SourceChips`, `DocumentPanel`,
-  `DocumentList`, `RoleDashboard` (+ `hasDashboard(role)`), `Markdown`
-  (o'z yozganimiz, kutubxonasiz). Yordamchilar: `src/lib/chat.ts`
-  (`ViewMessage`, `toViewMessages`), `src/lib/labels.ts` (enum → o'zbekcha
-  yorliq, sana formati).
-- **Hujjat paneli qanday ochiladi:** chatdagi manba chipi (`SourceChips`,
-  faqat `type === "document"` va `document_id != null` bo'lganda tugma) →
-  `onOpenDocument(document_id)` → chat sahifasi `openDocumentId` ni
-  o'rnatadi → o'ng panelda `DocumentPanel` chiqadi (o'sha panelning aynan
-  o'zi `/documents` sahifasida ham ishlatiladi).
-- **MUHIM (Next 16 + React eslint):** `react-hooks/set-state-in-effect`
-  qoidasi `useEffect` ichida **sinxron** `setState` ni XATO deb hisoblaydi
-  (`npm run lint` yiqiladi). Yechim: holatni hodisa ishlovchilarida (klik,
-  submit) yangilash, effektda esa faqat `.then()/.catch()` ichida; "propdan
-  kelgan id o'zgarganda tozalash" o'rniga holatni **derivatsiya** qilish
-  (`DocumentPanel` da shunday). S6+ frontend ishlarida shu naqsh saqlansin.
+  GET  /documents                -> [{id, title, doc_type, language, access_level, uploaded_at}]
+  GET  /documents/{id}           -> yuqoridagilar + text (to'liq matn)
+  POST /documents/{id}/summary   -> {document_id, title, summary, parts,
+                                     truncated, source, disclaimer}          (S6)
+  POST /documents/{id}/translate?target_language=uz
+                                 -> {document_id, title, source_language,
+                                     target_language, paragraph_count,
+                                     paragraphs[{index, original, translated}],
+                                     cached, truncated, same_language,
+                                     source, disclaimer}                     (S7)
+  ```
+  Biznes logika `app/services/documents.py` da: `visible_documents`,
+  `get_visible_document` (None → **404**), `find_visible_document_by_title`,
+  `document_text`. Rol filtri — `rag.search.allowed_access_levels(user)`,
+  ya'ni qidiruvda ko'rinmaydigan hujjat ro'yxatda ham, ko'ruvchida ham,
+  rezyumeda ham, tarjimada ham ko'rinmaydi (bitta qoida, bitta joy).
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
@@ -106,50 +129,63 @@ S7 (Tarjima moduli) uchun izohlar:
   `label` (tayyor sitata matni — chipga shu yoziladi), `document_id`, `title`,
   `heading`, `order_index`, `chunk_id` (oxirgi 5 tasi ixtiyoriy/None).
   `messages[]` elementi: `role` ("user"/"assistant"/"tool"), `content`,
-  `tool_name` (faqat tool xabarida), `sources`, `created_at` — "qaysi vosita
-  ishlatildi" ko'rsatkichi shundan olinadi. Hamma endpoint `Bearer` token
-  talab qiladi; begona suhbat → **404** (mavjudligini ham oshkor qilmaydi).
-  `conversation_id` berilmasa yangi suhbat ochiladi, sarlavhasi — birinchi
-  xabarning 80 belgisi.
+  `tool_name`, `sources`, `created_at`. Hamma endpoint `Bearer` token talab
+  qiladi; begona suhbat → **404**.
 - **Disclaimer matni backenddan keladi** (`orchestrator.DISCLAIMER`) —
-  frontend uni hardcode qilmasin. `POST /chat` javobida ham,
-  `GET /chat/conversations/{id}` javobida ham `disclaimer` maydoni bor
-  (S5 da qo'shildi, tarixdan qayta yuklangan javoblar ostida ham ko'rinsin).
+  frontend uni hardcode qilmasin.
 - Mock rejimda javob matni `[mock] '<vosita>' vositasi natijasi asosida: …`
   ko'rinishida bo'ladi (deterministik). UI buni "chiroyli javob" deb emas,
-  oqim tirikligi belgisi deb qabul qilsin — Gemini ulangach matn o'zgaradi,
-  format (manbalar, disclaimer) o'zgarmaydi.
+  oqim tirikligi belgisi deb qabul qilsin.
 - **Qidiruv imzosi (`hujjat_qidir` tooli shuni chaqiradi):**
   ```python
   from app.rag.search import search, SearchResult
   results: list[SearchResult] = search(query: str, user: User, top_k: int = 5)
   ```
-  `SearchResult` — dataclass: `document_id`, `title`, `text` (bo'lak matni),
-  `order_index` (bo'lak tartibi), `score` (0..1, katta = yaxshi), `heading`
-  (hujjat bo'limi/bo'limlari), `language`, `doc_type`, `access_level`,
-  `chunk_id`. `.as_dict()` bor — tool javobini JSON qilish uchun.
-  `user` — SQLAlchemy `User` obyekti (rol shundan olinadi), DB sessiyasi
-  KERAK EMAS. Bo'sh so'rov yoki bo'sh indeks → `[]`.
-- **Ruxsat filtri qidiruv ICHIDA** (Chroma metadata filtri), natijadan keyin
-  emas: ko'rish huquqi yo'q bo'lak umuman skorlanmaydi va LLM ga bormaydi.
-  Qoida: `public` hammaga, rol-darajali hujjat faqat o'sha rolga, admin —
-  hammasi (`search.allowed_access_levels(user)`).
-- RBAC faqat `app/auth/rbac.py` da: `get_current_user`, `require_role(*rollar)`
-  (admin DOIM ruxsatli), doira helperlari `visible_group_ids(db, user)`
-  (None = cheklovsiz/admin) va `can_access_user` / `ensure_can_access_user`
-  (403 ko'taradi). Keyingi sessiyalar FAQAT shularni ishlatadi.
-- RBAC namunasi: `GET /auth/test-staff-only` (`auth/router.py`) — doimiy
-  qoladi, S2 testlari unga tayanadi.
+  `SearchResult` — dataclass: `document_id`, `title`, `text`, `order_index`,
+  `score`, `heading`, `language`, `doc_type`, `access_level`, `chunk_id`,
+  `.as_dict()`. DB sessiyasi KERAK EMAS. Ruxsat filtri qidiruv ICHIDA
+  (Chroma metadata filtri), natijadan keyin emas.
+- **LLM klient interfeysi:** `app/llm/client.py` —
+  `get_llm_client().chat(messages, tools=None, system=None) -> LLMResponse`.
+  LLM chaqiruvi FAQAT shu modul orqali.
+- **MUHIM (Next 16 + React eslint):** `react-hooks/set-state-in-effect`
+  qoidasi `useEffect` ichida **sinxron** `setState` ni XATO deb hisoblaydi
+  (`npm run lint` yiqiladi). Yechim: holatni hodisa ishlovchilarida (klik,
+  submit) yangilash, effektda esa faqat `.then()/.catch()` ichida; "propdan
+  kelgan id o'zgarganda tozalash" o'rniga holatni **derivatsiya** qilish
+  (`DocumentPanel` da rezyume `id` bo'yicha, tarjima `id:til` kaliti bo'yicha
+  shunday qilingan). Keyingi frontend ishlarida shu naqsh saqlansin.
+- **Frontend fayllari:** sahifalar `src/app/(protected)/chat/page.tsx` va
+  `.../documents/page.tsx`; komponentlar `src/components/` da: `ChatWindow`,
+  `ConversationList`, `SourceChips`, `DocumentPanel`, `DocumentList`,
+  `RoleDashboard`, `Markdown` (o'z yozganimiz, kutubxonasiz). Yordamchilar:
+  `src/lib/chat.ts`, `src/lib/labels.ts` (enum → o'zbekcha yorliq, sana
+  formati, `languageLabel`).
 - Testlar uchun `tests/conftest.py`: alohida `backend/test_app.db`
   (`DATABASE_URL` env orqali) va alohida `backend/test_chroma_data/`
   (`CHROMA_PATH` env orqali) — ikkisi ham app importidan OLDIN o'rnatiladi.
   Fixturelar: `seeded_db` (to'liq seed, autouse), `client` (TestClient),
   `db_session` (DB sessiyasi) va `indexed_corpus` (korpusni bir marta
-  indekslaydi — embedding modelini yuklaydi, ~10 s).
+  indekslaydi — embedding modelini yuklaydi, ~10 s). **Eslatma:** `db_session`
+  endpoint yozganidan keyin eski snapshotni ushlab qolishi mumkin — qayta
+  o'qishdan oldin `db_session.rollback()` chaqiring (S7 testlarida shunday).
+- **LLM chaqiruvlarini sanash retsepti (S6/S7 da ishlagan):**
+  `monkeypatch.setattr(<servis moduli>, "get_llm_client", lambda: RecordingClient())`
+  — namunalar `tests/test_s6_summary.py` va `tests/test_s7_translation.py` da
+  (ikkinchisida klient prompt formatiga bo'ysunadigan/bo'ysunmaydigan ikki
+  rejimda ishlaydi).
 - **Demo/reset ketma-ketligi ikki buyruq:** `python -m seed.generate --reset`
-  (Chunk jadvalini ham tozalaydi) → `python -m seed.ingest_documents --reset`
-  (Chroma kolleksiyasini qayta quradi). S13 dagi "demo reset" tugmasi
-  IKKALASINI ham chaqirishi kerak.
+  (Chunk va Translation jadvallarini ham tozalaydi) → `python -m
+  seed.ingest_documents --reset` (Chroma kolleksiyasini qayta quradi). S13
+  dagi "demo reset" tugmasi IKKALASINI ham chaqirishi kerak.
+- **Jonli tekshiruv retsepti:** CORS faqat `http://localhost:3000` ga ochiq va
+  `NEXT_PUBLIC_API_URL` build paytida qotadi — backend **8000**, frontend
+  **3000** portida. Brauzer sinovi Chrome'ni `--headless=new
+  --remote-debugging-port=9222 --user-data-dir=<vaqtinchalik> --window-size=1440,900`
+  bilan ishga tushirib, Node 22 ning ichki `WebSocket` i orqali CDP bilan
+  qilinadi (npm paketi kerak emas). Viewport 1440x900 qilinmasa `lg:` paneli
+  yashirin qoladi. Ro'yxatdan element tanlashda `querySelectorAll("button")`
+  ishlating — o'rab turgan `li` ni bosish React `onClick` ni ishga tushirmaydi.
 
 ## Sessiyalar holati
 
@@ -162,7 +198,7 @@ S7 (Tarjima moduli) uchun izohlar:
 | S4 | Agent yadrosi + tools | ✅ tugadi | DoD 3/3 o'tdi, commit "S4: agent core with tool calling" |
 | S5 | Chat UI | ✅ tugadi | DoD 3/3 o'tdi (pytest 39/39, lint+build toza, 4 rolda brauzer tekshiruvi), commit "S5: chat UI and document panel" |
 | S6 | Summarizatsiya | ✅ tugadi | DoD 3/3 o'tdi (pytest 54/54, lint+build toza, curl 3 rolda + brauzerda "Rezyume" tugmasi), commit "S6: role-aware document summarization" |
-| S7 | Tarjima moduli | ⬜ boshlanmagan | |
+| S7 | Tarjima moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 74/74, lint+build toza, curl bilan kesh/ruxsat + brauzerda yonma-yon rejim), commit "S7: document translation with original preserved" |
 | S8 | To'lovlar moduli | ⬜ boshlanmagan | |
 | S9 | Davomat + mavjudlik (talaba) | ⬜ boshlanmagan | |
 | S10 | O'qituvchilar davomati | ⬜ boshlanmagan | |
@@ -453,6 +489,61 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     almashtirilmaydi. Holat S5 naqshi bilan — id bo'yicha derivatsiya
     (`summary.id === documentId`), `setState` faqat hodisa ishlovchisida va
     `.then()/.catch()` ichida (Next 16 `react-hooks/set-state-in-effect`).
+- **S7 qarorlar (tarjima):**
+  - **Yagona kod yo'li: `app/services/translation.py`.** `tarjima_qil` tooli
+    ham, `POST /documents/{id}/translate` ham AYNAN shu servisni chaqiradi
+    (`translate_document(db, document, user, target_language)`). Tool faqat
+    "qaysi hujjat" savolini hal qiladi (S6 dagi `find_visible_document_by_title`
+    / `get_visible_document` bilan) va natijani `ToolResult` ga o'raydi.
+  - **Paragraf sonining tengligi — kafolat, ishonch emas.** Javob paragraf
+    juftliklari ro'yxati (`{index, original, translated}`), va tarjima paragraf
+    soni HAR DOIM original bilan teng. Buni model formatga rioya qilishiga
+    tashlab qo'yilmadi: paragraflar `[[n]]` markerlari bilan **to'plam bo'lib**
+    (`BATCH_CHARS = 3000`) yuboriladi, javob qat'iy tekshiriladi
+    (`parse_batch_response`), marker soni/tartibi mos kelmasa yoki bo'sh bo'lsa
+    — o'sha to'plam **paragrafma-paragraf** qayta tarjima qilinadi. Ya'ni
+    yomon model tezlikni yo'qotadi, tekislikni emas. Gemini formatga rioya
+    qilsa bitta hujjat ~2 chaqiruv, mock (formatni bilmaydi) 25 chaqiruv.
+  - **Nega to'plam + zaxira yo'l, sof "har paragrafga bitta chaqiruv" emas:**
+    korpusdagi eng uzun hujjatda 38 paragraf bor — jonli demoda Gemini bilan
+    38 ketma-ket chaqiruv ~1 daqiqa bo'lardi. To'plam buni ~2 chaqiruvga
+    tushiradi, zaxira yo'l esa domen qoidasini saqlaydi.
+  - **Kesh `Translation` jadvalida, kalit `(document_id, language)`**
+    (`chunk_id` bo'sh — u bo'lak tarjimasi uchun zaxirada qoladi).
+    `translated_text` — paragraflar bo'sh qator bilan birlashtirilgan matn;
+    shuning uchun har paragraf `normalize_paragraph` bilan ichki bo'sh
+    qatorlaridan tozalanadi (aks holda kesh ko'proq paragrafga bo'linib
+    ketardi). O'qishda paragraf soni original bilan solishtiriladi —
+    mos kelmasa kesh **eskirgan** deb hisoblanadi va qayta quriladi.
+    Ikkinchi so'rov: **0 LLM chaqiruvi**, `cached=true`.
+  - **Atama qoidasi promptda (`TERM_RULE`)** — "mashinaviy o'qitish (machine
+    learning)" naqshi HAM tizim promptida, HAM to'plam promptida, HAM bitta
+    paragraf promptida takrorlanadi (provayder tizim promptini qanchalik
+    hisobga olishidan qat'i nazar yo'qolmaydi). Test bilan qotirilgan.
+  - **`same_language` qisqa tutashuvi:** hujjat tili maqsad tiliga teng bo'lsa
+    LLM umuman chaqirilmaydi va keshga hech narsa yozilmaydi — ikkala ustunda
+    original turadi, UI "tarjima kerak emas" deb yozadi. Demo korpusining
+    8 ta hujjati o'zbekcha, shuning uchun bu holat tez-tez uchraydi.
+  - **Maqsad tili tanlanadi:** `uz` / `ru` / `en` (`SUPPORTED_LANGUAGES`),
+    default `uz`. Endpoint `?target_language=` so'rov parametri bilan
+    (body emas — curl bilan tekshirish oson), noma'lum til → **400**.
+    Tool `til` argumentini oladi, berilmasa `user.language` dan foydalanadi.
+    Bu tufayli o'zbekcha hujjatni ham inglizchaga o'girib demo qilish mumkin.
+  - **Ruxsat hujjat qatlamida:** vosita hamma rolga ochiq (`ALL_ROLES`),
+    chunki cheklov `services/documents` da — talaba 91-M ni tarjima qila
+    olmaydi (**404**, nom bo'yicha esa "topilmadi": mavjudligi oshkor
+    bo'lmaydi), dekanat oladi.
+  - **`agents/prompts/umumiy.md` ga 7-qoida qo'shildi** (tillar aro javob):
+    javob foydalanuvchi tilida, sitata va atama manba tilida qavsda, to'liq
+    matn kerak bo'lsa `tarjima_qil`. Rol fayllari o'zgarmadi.
+  - **Frontend:** "Tarjima" tugmasi + til tanlagichi `DocumentPanel`
+    header'ida; natija — bitta skroll konteynerida paragraf juftliklari
+    qatorlari (`sm:grid-cols-2`), chapda original, o'ngda tarjima.
+    **Alohida ikki skroll panel qilinmadi** — bitta konteynerda juftliklar
+    qatori sinxronlikni o'z-o'zidan beradi va skroll sinxronlash kodi
+    (hamda uning bugi) umuman kerak emas. Ustun sarlavhalari `sticky`.
+    Holat `id:til` kaliti bo'yicha derivatsiya qilinadi (Next 16 eslint
+    qoidasi), til o'zgarsa ko'rinish o'z-o'zidan oddiy rejimga qaytadi.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -501,9 +592,28 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   ko'chirilsin.
 - **Rezyume keshlanmaydi** — bitta hujjatga har bosishda LLM qayta
   chaqiriladi (rol bo'yicha farq qilgani uchun kesh kaliti
-  `(document_id, role)` bo'lishi kerak). S7 da `Translation` keshi
-  yozilgandan keyin xuddi shu naqshni rezyumega ham qo'llash mumkin
-  (yoki S14 da) — hozircha demo tezligi yetarli.
+  `(document_id, role)` bo'lishi kerak). S7 da `Translation` keshi yozildi
+  (`services/translation.py` dagi `cached_row`/`store_translation` naqshi) —
+  S14 da xuddi shuni rezyumega qo'llash mumkin; hozircha demo tezligi yetarli.
+- **Tarjima sifati Gemini bilan tekshirilmagan:** mock rejimda tarjima MATNI
+  deterministik echo, shuning uchun ISH_REJA S7 DoD dagi "inglizcha maqola
+  yonma-yon o'zbekchada o'qiladi" bandini faqat mexanika darajasida
+  (paragraf tekisligi, kesh, ruxsat, prompt) tasdiqlash mumkin bo'ldi.
+  S14 da kalit ulangach ko'rilsin: (a) atama naqshi ("… (machine learning)")
+  haqiqatan chiqyaptimi, (b) model `[[n]]` markerlariga rioya qiladimi —
+  qilsa chaqiruvlar soni 25 dan 2 ga tushadi (`translate_document` natijasidagi
+  `llm_calls` shuni ko'rsatadi), qilmasa `BATCH_CHARS` ni kichraytirish yoki
+  prompt matnini kuchaytirish kerak.
+- **Bo'lak (chunk) tarjimasi ishlatilmaydi:** `Translation.chunk_id` bo'sh
+  qoladi — chatdagi sitata tarjimasi hozircha alohida keshlanmaydi (butun
+  hujjat tarjimasi kifoya). Kerak bo'lsa S14 da.
+- **`MAX_PARAGRAPHS = 80` chegarasi demo korpusida hech qachon urilmaydi**
+  (eng uzun hujjatda 38 paragraf), ya'ni `truncated=true` yo'li jonli
+  ko'rilmagan — faqat testda. PDF/DOCX qo'shilsa (S13) qayta ko'rilsin.
+- **Tarjima keshi rolga bog'liq emas** (tarjima rakursi yo'q, rezyumeda bor).
+  Bu ataylab: bir hujjatning bir tildagi tarjimasi hamma uchun bir xil.
+  Agar S14 da "fan bo'yicha lug'at" (FUNKSIONALLIK 3.5 dagi **[?]**) qo'shilsa,
+  kesh kalitiga lug'at versiyasi qo'shilishi kerak bo'ladi.
 - **Rezyume sifati Gemini bilan tekshirilmagan:** ISH_REJA S6 DoD dagi
   "2 sahifalik buyruq 5-6 qatorli aniq rezyumega tushadi" bandi mock
   rejimda o'lchab bo'lmaydi (matn — deterministik echo). S14 da kalit

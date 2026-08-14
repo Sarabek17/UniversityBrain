@@ -219,9 +219,40 @@ export interface DocumentSummary {
   disclaimer: string;
 }
 
+/** One aligned row of the side-by-side view (S7).
+ *
+ * The original always travels with the translation, so the viewer can put them
+ * in the same row and never has to replace the source text (domain rule 4). */
+export interface TranslationParagraph {
+  index: number;
+  original: string;
+  translated: string;
+}
+
+/** Translation of one document (S7). `cached` = served without an LLM call. */
+export interface DocumentTranslation {
+  document_id: number;
+  title: string;
+  source_language: string;
+  target_language: string;
+  paragraph_count: number;
+  paragraphs: TranslationParagraph[];
+  cached: boolean;
+  truncated: boolean;
+  same_language: boolean;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export const TRANSLATION_LANGUAGES = ["uz", "ru", "en"] as const;
+
 export const documentsApi = {
   list: () => api.get<DocumentListItem[]>("/documents"),
   get: (id: number) => api.get<DocumentDetail>(`/documents/${id}`),
   summary: (id: number) =>
     api.post<DocumentSummary>(`/documents/${id}/summary`),
+  translate: (id: number, targetLanguage: string) =>
+    api.post<DocumentTranslation>(
+      `/documents/${id}/translate?target_language=${encodeURIComponent(targetLanguage)}`,
+    ),
 };
