@@ -1,0 +1,34 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import get_settings
+from app.db import init_db
+from app.schemas import HealthOut
+
+settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Module routers (auth, chat, documents, ...) are wired here in later sessions.
+
+
+@app.get("/health", response_model=HealthOut)
+def health() -> HealthOut:
+    return HealthOut(status="ok", app=settings.app_name)
