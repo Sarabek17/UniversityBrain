@@ -21,7 +21,9 @@
   },
   "nav": {
     "chat": "Suhbat",
-    "documents": "Hujjatlar"
+    "documents": "Hujjatlar",
+    "contract": "Kontrakt",
+    "group": "Guruh"
   },
   "roles": {
     "student": "Talaba",
@@ -114,11 +116,75 @@
   "dashboard": {
     "title": "Boshqaruv paneli",
     "placeholder": "Bu bo'lim keyingi sessiyalarda to'ldiriladi.",
+    "paymentsTitle": "To'lovlar",
+    "openGroup": "Guruh svodini ochish",
     "items": {
       "teacher": "Guruhlar davomati va darslar holati",
       "tutor": "Guruh monitoringi: to'lov, davomat, mavjudlik",
       "staff": "Dekanat: o'qituvchilar davomati, hujjat aylanmasi",
       "admin": "Tizim boshqaruvi: foydalanuvchilar, hujjatlar, demo reset"
+    }
+  },
+  "payments": {
+    "contractTitle": "Kontrakt to'lovi",
+    "groupTitle": "Guruh to'lov svodi",
+    "academicYear": "O'quv yili",
+    "total": "Jami kontrakt",
+    "paid": "To'langan",
+    "pending": "Tasdiq kutilmoqda",
+    "remaining": "Qoldiq",
+    "percent": "to'langan",
+    "loadError": "To'lov ma'lumotini yuklab bo'lmadi",
+    "noContract": "Sizda kontrakt yozuvi topilmadi",
+    "noAccess": "Bu ma'lumotni ko'rish huquqingiz yo'q",
+    "historyTitle": "To'lovlar tarixi",
+    "empty": "Hozircha to'lov yozuvi yo'q",
+    "date": "Sana",
+    "amount": "Summa",
+    "receiptNumber": "Chek raqami",
+    "status": "Holat",
+    "actions": "Amal",
+    "openReceipt": "Chekni ochish",
+    "receiptTitle": "Chek",
+    "receiptStudent": "Talaba",
+    "receiptMethod": "To'lov usuli",
+    "receiptYear": "O'quv yili",
+    "receiptLoadError": "Chekni ochib bo'lmadi",
+    "receiptNoFile": "Chek fayli demo ma'lumotda yo'q — quyida to'lov yozuvining o'zi ko'rsatilgan.",
+    "uploadTitle": "Chek yuklash",
+    "uploadHint": "To'lov avtomatik tushmagan bo'lsa chek ma'lumotini kiriting — tyutor tasdiqlaydi.",
+    "uploadAmount": "Summa (so'm)",
+    "uploadReceiptNumber": "Chek raqami (ixtiyoriy)",
+    "uploadSubmit": "Yuborish",
+    "uploadSubmitting": "Yuborilmoqda...",
+    "uploadSuccess": "Chek yuborildi — tyutor tasdig'i kutilmoqda",
+    "uploadError": "Chekni yuborib bo'lmadi",
+    "uploadInvalid": "Summani to'g'ri kiriting",
+    "confirm": "Tasdiqlash",
+    "confirming": "Tasdiqlanmoqda...",
+    "confirmError": "Chekni tasdiqlab bo'lmadi",
+    "confirmSuccess": "Chek tasdiqlandi",
+    "student": "Talaba",
+    "group": "Guruh",
+    "groupEmpty": "Doirangizda talaba topilmadi",
+    "selectStudentHint": "Ro'yxatdan talabani tanlang — kontrakti shu yerda ochiladi",
+    "groupCounts": "to'langan / qisman / qarzdor",
+    "groupPending": "tasdiq kutayotgan chek",
+    "groupDebtTotal": "Umumiy qarz",
+    "sortRemaining": "Qoldiq bo'yicha",
+    "sortName": "Ism bo'yicha",
+    "sortGroup": "Guruh bo'yicha",
+    "sortBy": "Saralash",
+    "source": "Manba",
+    "states": {
+      "paid": "To'langan",
+      "partial": "Qisman",
+      "debtor": "Qarzdor"
+    },
+    "statuses": {
+      "automatic": "Avtomatik",
+      "uploaded": "Tasdiq kutilmoqda",
+      "confirmed": "Tasdiqlangan"
     }
   }
 }

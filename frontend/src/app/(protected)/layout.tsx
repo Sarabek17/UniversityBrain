@@ -8,11 +8,17 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import type { UserRole } from "@/lib/api";
 import uz from "@/i18n/uz.json";
 
-const NAV = [
-  { href: "/chat", label: uz.nav.chat },
-  { href: "/documents", label: uz.nav.documents },
+// `roles: null` = everyone. Money pages follow the backend rule: the student
+// sees their own contract, the tutor/dean office the group summary, teachers
+// neither (FUNKSIONALLIK 3.6).
+const NAV: { href: string; label: string; roles: UserRole[] | null }[] = [
+  { href: "/chat", label: uz.nav.chat, roles: null },
+  { href: "/documents", label: uz.nav.documents, roles: null },
+  { href: "/contract", label: uz.nav.contract, roles: ["student"] },
+  { href: "/group", label: uz.nav.group, roles: ["tutor", "staff", "admin"] },
 ];
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
@@ -40,7 +46,9 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-6">
           <span className="font-bold">{uz.home.title}</span>
           <nav className="flex items-center gap-1">
-            {NAV.map((item) => (
+            {NAV.filter(
+              (item) => item.roles === null || item.roles.includes(user.role),
+            ).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

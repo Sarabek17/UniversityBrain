@@ -88,6 +88,17 @@ export const api = {
     request<T>(path, { ...init, method: "DELETE" }),
 };
 
+/** The human message FastAPI put in `{"detail": "..."}`, when there is one. */
+export function errorDetail(error: unknown): string | null {
+  if (!(error instanceof ApiError)) return null;
+  const body = error.detail;
+  if (body !== null && typeof body === "object" && "detail" in body) {
+    const detail = (body as { detail: unknown }).detail;
+    if (typeof detail === "string") return detail;
+  }
+  return null;
+}
+
 export interface HealthOut {
   status: string;
   app: string;
@@ -255,4 +266,112 @@ export const documentsApi = {
     api.post<DocumentTranslation>(
       `/documents/${id}/translate?target_language=${encodeURIComponent(targetLanguage)}`,
     ),
+};
+
+// --- payments (S8 API) ------------------------------------------------------
+
+/** "uploaded" = student handed in a receipt, still waiting for the tutor. */
+export type PaymentStatus = "automatic" | "uploaded" | "confirmed";
+
+/** Contract state of one student: paid / partial / debtor. */
+export type PaymentState = "paid" | "partial" | "debtor";
+
+export interface PaymentRow {
+  id: number;
+  amount: number;
+  paid_at: string;
+  receipt_number: string | null;
+  status: PaymentStatus;
+  has_receipt_file: boolean;
+}
+
+/** One student's contract. `pending_amount` is money awaiting confirmation —
+ * it does NOT reduce `remaining_amount` until a tutor confirms the receipt. */
+export interface ContractSummary {
+  student_id: number;
+  username: string;
+  student_name: string;
+  group_id: number | null;
+  group_name: string | null;
+  academic_year: string;
+  total_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  remaining_amount: number;
+  paid_percent: number;
+  state: PaymentState;
+  last_payment_at: string | null;
+  payments: PaymentRow[];
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export interface GroupPaymentRow {
+  student_id: number;
+  username: string;
+  full_name: string;
+  group_id: number | null;
+  group_name: string | null;
+  total_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  remaining_amount: number;
+  paid_percent: number;
+  state: PaymentState;
+  last_payment_at: string | null;
+  pending_count: number;
+}
+
+/** Tutor dashboard: every student in scope, biggest debt first. */
+export interface GroupPaymentSummary {
+  group_ids: number[];
+  group_names: string[];
+  rows: GroupPaymentRow[];
+  total_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  remaining_amount: number;
+  debtor_count: number;
+  partial_count: number;
+  paid_count: number;
+  pending_count: number;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+/** Structured receipt. The demo has no receipt image files, so the payment
+ * record itself is the receipt (`file_available` is false and says so). */
+export interface Receipt {
+  payment_id: number;
+  student_id: number;
+  student_name: string;
+  receipt_number: string | null;
+  amount: number;
+  paid_at: string;
+  status: PaymentStatus;
+  academic_year: string;
+  method: string;
+  file_available: boolean;
+  note: string;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export const paymentsApi = {
+  contract: () => api.get<ContractSummary>("/payments/contract"),
+  studentContract: (studentId: number) =>
+    api.get<ContractSummary>(`/payments/contract/${studentId}`),
+  group: (groupId?: number | null) =>
+    api.get<GroupPaymentSummary>(
+      groupId == null ? "/payments/group" : `/payments/group?group_id=${groupId}`,
+    ),
+  receipt: (paymentId: number) =>
+    api.get<Receipt>(`/payments/${paymentId}/receipt`),
+  uploadReceipt: (amount: number, receiptNumber?: string | null) =>
+    api.post<ContractSummary>("/payments/receipts", {
+      amount,
+      receipt_number: receiptNumber?.trim() ? receiptNumber.trim() : null,
+    }),
+  confirm: (paymentId: number) =>
+    api.post<ContractSummary>(`/payments/${paymentId}/confirm`),
 };

@@ -2,18 +2,110 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S8 (navbatda)
+## Joriy sessiya: S9 (navbatda)
 
-S7 yakunlandi (DoD 3/3: `pytest` **74/74** — S2 12 + S3 9 + S4 9 + S5 9 + S6 15
-+ S7 20; `npm run lint` va `npm run build` toza; jonli tekshiruv uvicorn+curl
-(inglizcha ML hujjati: 23 paragraf → 23 juftlik, 2-chaqiruvda `cached=true` va
-juftliklar aynan bir xil; talaba 91-M ni tarjima qilmoqchi bo'lsa **404**,
-dekanat **200**; noma'lum til **400**; o'zbek hujjati → uz da `same_language`,
-LLM chaqirilmaydi; chatda `use_tool:tarjima_qil:{...}` markeri asl+tarjima
-juftliklarini manba va disclaimer bilan qaytaradi) va **brauzerda** (headless
-Chrome/CDP): "Tarjima" tugmasi → 23 ta juftlik qatori, chapda inglizcha
-original, o'ngda tarjima, ikkinchi bosishda "keshdan" belgisi, kutish
-indikatori 10 ms da ko'rindi, konsolda xato yo'q).
+S8 yakunlandi (DoD 3/3: `pytest` **103/103** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15 + S7 20 + S8 **29**; `npm run lint` va `npm run build` toza; jonli
+tekshiruv uvicorn+curl (aliyev qoldiq **0 so'm** / 100%, karimov **12 000 000
+so'm** qarzdor / 0 to'lov, tokensiz **401**, aliyev boshqa talabani so'rasa
+**403**; nazarova svodi — AT-24-01 + AT-24-02, 16 talaba, 12 to'langan /
+2 qisman / 2 qarzdor, umumiy qarz 36 000 000 so'm; qodirova IQ ning 14 talabasi;
+sharipova chekini qodirova tasdiqlolmadi (**403**), nazarova tasdiqladi →
+to'langan 7 200 000, qoldiq 4 800 000, ikkinchi urinish **409**; chatda
+"kontraktimdan qancha qoldi?" → aniq raqamlar + manba "To'lov jadvali —
+kontrakt 2025-2026, oxirgi chek CLK-66629388") va **brauzerda** (headless
+Chrome/CDP): talaba `/contract` — karta + 3 qatorli tarix + chek yuklash
+formasi ishladi (2 400 000 so'm CHK-DEMO88 → "Tasdiq kutilmoqda: 2 400 000
+so'm"); tyutor `/group` — 16 qator, ranglar, saralash, Sharipova qatoridan
+kontrakt paneli → chek modali → "Tasdiqlash" → qator 60% / 4 800 000 ga
+yangilandi; konsolda xato yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga
+qaytarildi** (payment id 32 yana `uploaded`, CHK-DEMO88 o'chirildi).
+
+S9 (Davomat + mavjudlik) uchun izohlar:
+
+- **Modellar (`models.py`) — maydonlar aynan shunday:**
+  ```python
+  TurnstileLog: id, user_id (FK users), timestamp (DateTime, index),
+                direction (TurnstileDirection: entry="in" / exit="out")
+  Attendance:   id, student_id (FK users), schedule_id (FK schedules),
+                date (Date), status (AttendanceStatus: present/absent/late),
+                marked_by_teacher_id (FK users)
+  ClassSession: id, schedule_id (FK schedules), date (Date),
+                status (ClassSessionStatus: held/cancelled/needs_clarification),
+                teacher_arrived_at (DateTime|None)
+  Schedule:     id, group_id, subject, room, weekday (0=Dushanba…6),
+                pair_number (1..6), teacher_id
+  ```
+  Diqqat: `TurnstileDirection.entry` ning **qiymati `"in"`**, `exit` niki
+  `"out"` (enum nomi bilan qiymati boshqa — `direction == TurnstileDirection.entry`
+  deb yozing, `"entry"` bilan solishtirmang). `Attendance` da `schedule_id`
+  bor, `pair_number` yo'q — juftlik raqami `Schedule` dan olinadi.
+- **Seed'dagi bugungi holatlar (`FIXED_LOG_PLANS`, `create_turnstile_logs`,
+  `create_sessions_and_attendance`) — S9 DoD shularga tayanadi:**
+  - **aliyev**: `[(10:02, in)]` — binoda, chiqmagan; bugungi barcha
+    juftliklarda `present`. Guruh jadvali 2-juftlikdan boshlanadi (10:02 bilan
+    zid kelmasin), 3-juftlik = "Ma'lumotlar bazasi", 214-xona, umarov.
+  - **mahmudov**: `[(08:07, in)]` — binoda, lekin **3-juftlikdan boshlab
+    `absent`** (ataylab: "binoda + davomatda belgilanmagan" holati).
+  - **sodiqova**: `[(08:12, in), (13:15, out)]` — chiqib ketgan.
+  - **karimov**: `[]` — umuman kelmagan (bugungi davomati `absent`).
+  - **tursunov** (o'qituvchi): `[]` — S10 ssenariysi; uning bugungi
+    `ClassSession` lari `needs_clarification`, davomat umuman yozilmagan.
+  - Qolgan talabalar deterministik tasodifiy (15% kelmagan, 15% 3-juftlikdan
+    keyin chiqqan, 15% tushlikka chiqib qaytgan, 55% ertalab kirib qolgan).
+  - Bugungi davomat KUNNING HAMMA juftliklari uchun oldindan yozilgan
+    (`_attendance_status_today`: juftlik boshlanishidan +15 daqiqagacha
+    binoda bo'lsa `present`, +5 daqiqadan keyin kirgan bo'lsa `late`) —
+    demo istalgan soatda ishlaydi.
+- **`PAIR_TIMES` HOZIR IKKI JOYDA** — `seed/generate.py` (`time` obyektlari) va
+  `app/agents/tools/schedule_view.py` (satrlar, `{1: ("08:30","09:50"), …}`).
+  S9 uchinchi nusxa yasamasin: `app/services/presence.py` yoki `app/config.py`
+  ga **umumiy konstanta** qilib ko'chirilsin va `schedule_view.py` shundan
+  import qilsin (seed'ga tegmasdan ham bo'ladi — seed doiradan tashqarida).
+- **RBAC doira helperlari (`app/auth/rbac.py`) — YAGONA joy, qayta yozilmaydi:**
+  `get_current_user`, `require_role(*rollar)` (admin DOIM ruxsatli),
+  `visible_group_ids(db, user)` → `None` = cheklovsiz (admin), aks holda
+  guruh id lari to'plami (tyutor → `Group.tutor_id`, o'qituvchi → `Schedule`
+  orqali, staff → o'z fakulteti, talaba → o'z guruhi), `can_access_user` /
+  `ensure_can_access_user` (**403** ko'taradi). S8 shu naqshni ishlatdi:
+  "boshqa foydalanuvchining shaxsiy ma'lumoti" → 403, "ko'rinmaydigan hujjat/
+  suhbat" → 404.
+- **Endpoint + servis naqshi (S6-S8 dan tayyor):** router yupqa
+  (`app/api/attendance.py`), logika `app/services/presence.py` da, javobda
+  `source` (`schemas.ChatSource`) va `disclaimer` (`AGENT_DISCLAIMER`).
+  S8 `ChatSource.type` ga yangi qiymat qo'shdi — `"payment"`; S9 uchun
+  `"turnstile"` / `"attendance"` / `"schedule"` mos keladi. **`SourceChips`
+  faqat `type === "document"` chipini bosiladigan qiladi**, qolganlari oddiy
+  yorliq bo'lib chiqadi — hech narsa buzilmaydi.
+- **Domen qoidasi 6 (mavjudlik = xulosa):** "qaysi xonada" jadvaldan olingan
+  **taxmin** — javobda "jadval bo'yicha" deb belgilansin; turniket vaqti esa
+  fakt ("turniket logi, 10:02"). S8 dagi `format_contract_for_tool` naqshi
+  (matn oxirida "(Manba: …)" qatori) shu maqsadda qayta ishlatilsa bo'ladi.
+- **Tool qo'shish:** `agents/tools/` ga fayl + `agents/tools/__init__.py` ga
+  bitta import qatori. S8 birinchi **rol-cheklangan** vositani qo'shdi:
+  `payment_status.py`, `roles=(student, tutor, staff)` — o'qituvchi uchun
+  `registry.execute_tool` handlerni CHAQIRMASDAN `ok=False` qaytaradi.
+  `mavjudlik_tekshir` / `davomat_kor` uchun ehtimol `ALL_ROLES` to'g'ri keladi
+  (cheklov ma'lumot qatlamida: `visible_group_ids` + `can_access_user`).
+- **Frontend joylashuv:** `RoleDashboard.tsx` endi bo'sh placeholder EMAS —
+  tutor/staff/admin uchun to'lov vidjeti bor (`PAYMENT_ROLES`), teacher esa
+  hamon placeholder ko'radi (`dashboard.items.teacher` = "Guruhlar davomati va
+  darslar holati") — **S9/S10 o'sha joyni to'ldiradi**. Navigatsiya endi rolga
+  qarab filtrlanadi (`(protected)/layout.tsx` dagi `NAV` massivi, har elementda
+  `roles: UserRole[] | null`) — yangi sahifa qo'shish = `NAV` ga bitta qator +
+  `uz.json` → `nav` ga matn. Sahifalar: `(protected)/attendance/page.tsx`
+  (talaba/tyutor) va o'qituvchi uchun davomat belgilash ko'rinishi.
+- **Davomat belgilash oqimi (S9 ishlari ro'yxatidan):** o'qituvchi dars
+  boshida guruh ro'yxatini ko'radi → bir klik bilan `Attendance` yoziladi va
+  `ClassSession` `held` ga o'tadi. S8 dagi "tasdiqlash" endpointi naqsh
+  bo'lib xizmat qiladi (`POST /payments/{id}/confirm`: RBAC helperi servis
+  ICHIDA chaqiriladi, holat mos kelmasa **409**, javobda yangilangan svod
+  qaytadi — frontend qayta so'rov yubormaydi).
+- **`lib/api.ts` ga `attendanceApi` qo'shiladi** (frontend backendga FAQAT shu
+  fayl orqali murojaat qiladi). S8 u yerga `errorDetail(error)` yordamchisini
+  qo'shdi — FastAPI ning `{"detail": "..."}` xabarini UI da ko'rsatish uchun
+  (`ApiError` ni qo'lda ochib o'tirmang). Sana/summa formatlash
+  `src/lib/labels.ts` da (`formatDate`, `formatDateTime`, `formatAmount`).
 
 **Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
 bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
@@ -21,82 +113,6 @@ bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
 (`MockLLMClient` + 40 ms `sleep`): 1-chaqiruv **1.020 s / 25 LLM chaqiruvi**,
 2-chaqiruv **0.001 s / 0 chaqiruv**. Keyingi sessiyalarda kesh o'lchansa shu
 usul ishlatilsin.
-
-S8 (To'lovlar moduli) uchun izohlar:
-
-- **Modellar (`models.py`) — maydonlar aynan shunday:**
-  ```python
-  Contract: id, student_id (FK users), total_amount (Numeric(14,2)),
-            academic_year (String(16), "2025-2026")
-  Payment:  id, student_id (FK users), amount (Numeric(14,2)),
-            paid_at (DateTime), receipt_number (String(64)|None),
-            receipt_file (String(512)|None), status (PaymentStatus),
-            academic_year (String(16))
-  ```
-  `PaymentStatus` enumi: `automatic` (sintetik Click/Payme orqali keldi),
-  `uploaded` (talaba chek yukladi, tasdiq kutilmoqda), `confirmed` (tyutor
-  tasdiqladi). **Qoldiq maydon YO'Q** — `total_amount - sum(payments)` servisda
-  hisoblanadi. Sxemalar `schemas.py` da hali yo'q, S8 o'zi qo'shadi
-  (`ContractOut`/`PaymentOut` naqshi `DocumentSummaryOut` kabi).
-- **Seed to'lov ssenariylari (`seed/generate.py`, `create_contracts_and_payments`):**
-  kontrakt summasi fakultet bo'yicha — fakultet 1 → 12 000 000, fakultet 2 →
-  10 500 000 so'm (`FACULTY_CONTRACT_TOTALS`).
-  - **QARZDORLAR (0 so'm to'lagan):** `DEBTOR_USERNAMES = {karimov, olimov,
-    hamidov, tosheva}` — umuman `Payment` qatori yo'q.
-  - **QISMAN (50%):** `PARTIAL_USERNAMES = {sodiqova, sharipova, roziyeva,
-    berdiyeva, boboyev}` — 30% (`automatic`, 2025-09) + 20% (`confirmed`,
-    2025-12).
-  - **sharipova** qo'shimcha: **kecha** 10% `uploaded` statusi bilan
-    (`receipt_number = CHK-…`, `receipt_file = uploads/receipts/chek_sharipova_<oy>.jpg`)
-    — tyutor **nazarova** tasdig'i kutilmoqda. S8 demo tugunining o'zi.
-  - **TO'LIQ:** qolgan barcha talabalar (jumladan **aliyev**) — 40% + 30% + 30%
-    (oxirgisi 25% ehtimol bilan `confirmed`, aks holda `automatic`).
-  - Chek raqamlari: `CLK-…` avtomatik to'lovda (`receipt_file = None`),
-    `CHK-…` qo'lda yuklanganda.
-- **Chek FAYLLARI mavjud emas** (`receipt_file` — faqat yo'l-platzholder,
-  `uploads/` papkasi yo'q). S8 "chek ochish" UI si uchun qaror kerak: yo
-  placeholder rasm generatsiya qilinadi (masalan seed'da bitta SVG/PNG), yo
-  UI faqat `receipt_number` + sana + summa ko'rsatadi va "chek fayli demo
-  ma'lumotda yo'q" deb yozadi. **Endpoint fayl yo'qligida 404 bermasin** —
-  demo yiqilmasin.
-- **RBAC doira helperlari (`app/auth/rbac.py`) — YAGONA joy, qayta yozilmaydi:**
-  `get_current_user`, `require_role(*rollar)` (admin DOIM ruxsatli),
-  `visible_group_ids(db, user)` → `None` = cheklovsiz (admin), aks holda
-  guruh id lari ro'yxati (tyutor → `Group.tutor_id` guruhlari, o'qituvchi →
-  `Schedule` orqali, staff → o'z fakulteti), va `can_access_user(db, user,
-  target)` / `ensure_can_access_user(...)` (403 ko'taradi). Talaba boshqa
-  talabaning to'lovini so'rasa — shu helperlar rad etadi, qo'lda rol
-  tekshirmang.
-- **Endpoint + servis naqshi (S6/S7 dan tayyor):** router yupqa
-  (`app/api/payments.py`), biznes logika `app/services/payments.py` da,
-  javobda `source` (`schemas.ChatSource`) va `disclaimer` (`AGENT_DISCLAIMER`)
-  — to'lov javobi ham faktik javob (domen qoidalari 3 va 5). Ruxsati yo'q
-  resurs → **404** (403 emas) hujjatlardagi qoida bilan bir xil; lekin
-  "boshqa talabaning ma'lumoti" holatida `ensure_can_access_user` **403**
-  beradi — S8 qaysi biri qayerda ishlatilishini bir marta hal qilsin.
-- **Tool qo'shish:** `agents/tools/` ga fayl + `agents/tools/__init__.py` ga
-  bitta import qatori. `tolov_holati` — S4-S7 dagi 4 vositadan farqli o'laroq
-  ehtimol rol-cheklangan bo'ladi (`roles=(UserRole.student, UserRole.tutor,
-  UserRole.staff)`); `registry.execute_tool` ruxsatni handler CHAQIRILMASDAN
-  oldin tekshiradi va `ToolResult(ok=False, "Ruxsat yo'q…")` qaytaradi.
-- **Frontend layout — dashboard placeholderi qayerda:**
-  `frontend/src/components/RoleDashboard.tsx` (+ `hasDashboard(role)`) —
-  hozir bo'sh placeholder, matnlari `i18n/uz.json` → `dashboard.items.tutor`
-  ("Guruh monitoringi: to'lov, davomat, mavjudlik"). U chat sahifasining
-  o'ng panelida ko'rinadi (`src/app/(protected)/chat/page.tsx`, hujjat
-  ochilmagan bo'lsa) va faqat teacher/tutor/staff/admin uchun. Talaba
-  "Kontrakt" sahifasi yangi marshrut bo'ladi:
-  `src/app/(protected)/contract/page.tsx` + navigatsiyaga havola
-  (`(protected)/layout.tsx` dagi `nav`, matnlar `uz.json` → `nav`).
-- **`lib/api.ts` ga `paymentsApi` qo'shiladi** (frontend backendga FAQAT shu
-  fayl orqali murojaat qiladi). Pul formatlash uchun `src/lib/labels.ts` da
-  hozircha helper YO'Q — S8 o'zi qo'shsin (`formatAmount`), UI matnlari
-  `i18n/uz.json` → yangi `payments` bo'limi.
-- **Keshlash naqshi (S7 da yozildi, kerak bo'lsa qayta ishlatiladi):**
-  `services/translation.py` dagi `cached_row` / `store_translation` — upsert +
-  `db.commit()` servisda (`get_db` commit qilmaydi). To'lov ma'lumoti
-  keshlanmaydi (u DB dan to'g'ridan-to'g'ri o'qiladi), lekin agar S8 og'ir
-  hisob-kitob qilsa shu naqsh tayyor.
 
 Umumiy (o'zgarmaydigan) izohlar:
 
@@ -118,6 +134,23 @@ Umumiy (o'zgarmaydigan) izohlar:
   `document_text`. Rol filtri — `rag.search.allowed_access_levels(user)`,
   ya'ni qidiruvda ko'rinmaydigan hujjat ro'yxatda ham, ko'ruvchida ham,
   rezyumeda ham, tarjimada ham ko'rinmaydi (bitta qoida, bitta joy).
+- **To'lovlar API (`app/api/payments.py`) — to'liq ro'yxat (S8):**
+  ```
+  GET  /payments/contract               -> ContractSummaryOut (o'z kontrakti)
+  GET  /payments/contract/{student_id}  -> ContractSummaryOut (doira: 403)
+  GET  /payments/group[?group_id=]      -> GroupPaymentSummaryOut (tutor/staff/admin)
+  GET  /payments/{payment_id}/receipt   -> ReceiptOut (strukturali chek)
+  POST /payments/receipts               -> ContractSummaryOut (talaba chek yuklaydi)
+  POST /payments/{payment_id}/confirm   -> ContractSummaryOut (tyutor tasdiqlaydi)
+  ```
+  `ContractSummaryOut`: `student_id, username, student_name, group_id,
+  group_name, academic_year, total_amount, paid_amount, pending_amount,
+  remaining_amount, paid_percent, state ("paid"|"partial"|"debtor"),
+  last_payment_at, payments[{id, amount, paid_at, receipt_number, status,
+  has_receipt_file}], source, disclaimer`. Biznes logika
+  `app/services/payments.py` da: `contract_summary`, `group_payment_summary`,
+  `receipt_view`, `upload_receipt`, `confirm_payment`, `format_amount`,
+  `format_contract_for_tool`, `format_group_for_tool`.
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
@@ -199,7 +232,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S5 | Chat UI | ✅ tugadi | DoD 3/3 o'tdi (pytest 39/39, lint+build toza, 4 rolda brauzer tekshiruvi), commit "S5: chat UI and document panel" |
 | S6 | Summarizatsiya | ✅ tugadi | DoD 3/3 o'tdi (pytest 54/54, lint+build toza, curl 3 rolda + brauzerda "Rezyume" tugmasi), commit "S6: role-aware document summarization" |
 | S7 | Tarjima moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 74/74, lint+build toza, curl bilan kesh/ruxsat + brauzerda yonma-yon rejim), commit "S7: document translation with original preserved" |
-| S8 | To'lovlar moduli | ⬜ boshlanmagan | |
+| S8 | To'lovlar moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 103/103, lint+build toza, curl bilan raqamlar/doira/tasdiqlash + brauzerda talaba va tyutor sahifalari), commit "S8: payments module with receipt flow" |
 | S9 | Davomat + mavjudlik (talaba) | ⬜ boshlanmagan | |
 | S10 | O'qituvchilar davomati | ⬜ boshlanmagan | |
 | S11 | Hujjat almashinuvi | ⬜ boshlanmagan | |
@@ -544,6 +577,51 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     (hamda uning bugi) umuman kerak emas. Ustun sarlavhalari `sticky`.
     Holat `id:til` kaliti bo'yicha derivatsiya qilinadi (Next 16 eslint
     qoidasi), til o'zgarsa ko'rinish o'z-o'zidan oddiy rejimga qaytadi.
+- **S8 qarorlar (to'lovlar):**
+  - **`uploaded` — pul emas, va'da.** Yagona muhim arifmetika:
+    `paid_amount` faqat `automatic` + `confirmed` ni qo'shadi, talaba yuklagan
+    (`uploaded`) chek esa alohida `pending_amount` da turadi va
+    `remaining_amount = total - paid` ni KAMAYTIRMAYDI. Tyutor tasdiqlagach
+    pul "paid" ga o'tadi (sharipova: 6 000 000 → 7 200 000, qoldiq
+    6 000 000 → 4 800 000). Aks holda "chekni yukladim" bilan "to'ladim"
+    farqi yo'qoladi — bu esa aynan modul yopmoqchi bo'lgan muammo.
+  - **Chek = strukturali ma'lumot, fayl emas** (`GET /payments/{id}/receipt`
+    → `ReceiptOut`: talaba, chek raqami, summa, sana, holat, to'lov usuli,
+    o'quv yili + `file_available:false` va izoh matni). Placeholder
+    rasm/SVG generatsiya qilinmadi: (a) `<img>` tegi `Authorization`
+    sarlavhasini yubormaydi, ya'ni rasm uchun alohida token mexanizmi kerak
+    bo'lardi, (b) soxta "chek rasmi" demo tomoshabinini chalg'itadi.
+    Frontend shu ma'lumotni chek ko'rinishidagi modalda chizadi. **Fayl
+    yo'qligi hech qachon 404 bermaydi** — demo yiqilmaydi.
+  - **Ruxsat: 403, 404 emas.** Hujjat/suhbatda "ko'rinmasa yo'q" qoidasi
+    ishlaydi (404), lekin shaxsiy ma'lumotda `ensure_can_access_user` ning
+    **403** i ishlatildi: guruhdoshning mavjudligi sir emas, kontrakti sir.
+    Bu S7 izohidagi ochiq savolning javobi.
+  - **O'qituvchi to'lovlarni umuman ko'rmaydi:** `GET /payments/group` →
+    `require_role(tutor, staff)` (admin avtomatik), `tolov_holati` tooli
+    `roles=(student, tutor, staff)`. Asos — FUNKSIONALLIK 3.6 "maxfiylik:
+    talaba faqat o'zini, tyutor faqat o'z guruhini". Bu loyihadagi birinchi
+    rol-cheklangan vosita: registr handlerni chaqirmasdan rad etadi.
+  - **`tolov_holati` argumentsiz ham foydali:** tyutor/dekanat uchun
+    argumentsiz chaqiruv butun doiraning svodini beradi ("guruhimda kimlar
+    qarzdor?"), talaba uchun esa o'z kontraktini. Talaba boshqa ism bersa —
+    rad javobi (`ok=False`), lekin o'z ismini/loginini bersa ishlaydi.
+  - **Ortiqcha to'lov rad etiladi (422):** yuklangan chek summasi qoldiqdan
+    katta bo'lsa qabul qilinmaydi (aliyev — 0 qoldiq — hech narsa yuklolmaydi).
+    Manfiy/nol summa ham 422. Ikki marta tasdiqlash — **409**.
+  - **Saralash serverda ham, klientda ham:** servis qatorlarni qoldiq
+    bo'yicha kamayish tartibida qaytaradi (tyutorga eng kerakli tartib),
+    frontend esa `sortRows` bilan ism/guruh bo'yicha qayta saralaydi —
+    qo'shimcha so'rov yubormasdan.
+  - **`RoleDashboard` placeholderi to'ldirildi** (tutor/staff/admin uchun
+    to'lov vidjeti: holatlar soni, eng katta 4 qarzdor, kutayotgan cheklar,
+    `/group` ga havola). Teacher uchun placeholder qoldi — S9/S10 uchun.
+    Navigatsiya rolga qarab filtrlanadi: talaba "Kontrakt", tyutor/dekanat/
+    admin "Guruh".
+  - **`errorDetail(error)` yordamchisi `lib/api.ts` ga qo'shildi** — FastAPI
+    ning `{"detail": "..."}` matnini UI da ko'rsatish uchun (masalan "summa
+    kontrakt qoldig'idan ko'p: qoldiq 0 so'm"), har komponent `ApiError` ni
+    o'zi ochib o'tirmasin.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -582,9 +660,10 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   aylantirilsin.
 - Suhbatni o'chirish/nomini o'zgartirish YO'Q (faqat ro'yxat + yangi suhbat).
   Kerak bo'lsa S13 (admin) yoki S14 da qo'shiladi.
-- `schemas.DocumentOut` va `ChunkOut` (S0 dan qolgan) hech qayerda
-  ishlatilmaydi — S5 o'z sxemalarini qo'shdi (`DocumentListItemOut`,
-  `DocumentDetailOut`). Kerak bo'lmasa S14 da tozalansin.
+- `schemas.DocumentOut`, `ChunkOut`, `ContractOut`, `PaymentOut` (S0 dan
+  qolgan) hech qayerda ishlatilmaydi — S5 va S8 o'z sxemalarini qo'shdi
+  (`DocumentListItemOut`/`DocumentDetailOut`, `ContractSummaryOut`/
+  `PaymentRowOut`). Kerak bo'lmasa S14 da tozalansin.
 - **Juftlik vaqtlari ikki joyda:** `seed/generate.py` dagi `PAIR_TIMES` va
   `app/agents/tools/schedule_view.py` dagi `PAIR_TIMES` — bir xil jadval.
   S9 (mavjudlik servisi) uchinchi nusxa yasamasin: o'sha sessiyada umumiy
@@ -625,8 +704,22 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 - Gemini provayderi hali `NotImplementedError` — kalit ulangach
   `GeminiLLMClient.chat()` yozilishi kerak (neytral message/tool formatini
   google-genai formatiga o'girish). Butun tizim shu bitta metodga bog'liq.
-- Chek rasm fayllari (`Payment.receipt_file` ko'rsatgan yo'llar) mavjud emas —
-  S8 da chek ko'rish UI uchun demo rasm/placeholder hal qilinadi.
+- **Chek FAYLI hech qachon yuklanmaydi** (S8 qarori: chek — strukturali
+  ma'lumot). Yangi yuklangan to'lovlarda `Payment.receipt_file = None`,
+  seed'dagilarda esa mavjud bo'lmagan yo'l turadi. Agar S13 da fayl saqlash
+  qo'shilsa: `multipart/form-data` endpoint + `uploads/` papkasi + `ReceiptOut`
+  ga `file_url` maydoni kerak bo'ladi.
+- **To'lov bildirishnomalari yozilmaydi:** seed'da `payment_uploaded`
+  (nazarova uchun) va `payment_debt` (karimov uchun) `Notification` qatorlari
+  bor, lekin S8 chek yuklashda/tasdiqlashda YANGI bildirishnoma yaratmaydi —
+  bu S12 (Bildirishnomalar) ishi. O'sha yerda `services/payments.upload_receipt`
+  va `confirm_payment` ga bittadan chaqiruv qo'shilsa yetadi.
+- **`/group` sahifasining o'ng paneli `lg:` dan kichik ekranda yashirin**
+  (chat sahifasidagi bilan bir xil muammo) — telefonda talaba qatorini bosish
+  ko'zga ko'rinadigan natija bermaydi. S14 da modal/drawer bilan yechilsin.
+- **Kontrakt to'lovlari uchun sana filtri yo'q:** `academic_year` bo'yicha eng
+  oxirgi kontrakt olinadi (demo'da har talabada bittadan). Ko'p yillik tarix
+  kerak bo'lsa endpointga `?academic_year=` qo'shiladi.
 - Qidiruv sifati: 24 savollik o'lchovda 4-5 tasi hali ham xato hujjatni
   birinchi qo'yadi (masalan "birlamchi kalit va tashqi kalit" → ruscha hujjat
   o'rniga inglizcha ML hujjati; savolda ruscha atama bilan hech qanday

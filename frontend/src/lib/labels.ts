@@ -1,6 +1,11 @@
 // Uzbek labels for backend enums. UI text itself lives in i18n/uz.json.
 
-import type { AccessLevel, DocumentType } from "@/lib/api";
+import type {
+  AccessLevel,
+  DocumentType,
+  PaymentState,
+  PaymentStatus,
+} from "@/lib/api";
 import uz from "@/i18n/uz.json";
 
 const LANGUAGE_LABELS: Record<string, string> = uz.documents.languages;
@@ -24,3 +29,25 @@ export function formatDateTime(iso: string): string {
 export function formatDate(iso: string): string {
   return formatDateTime(iso).split(" ")[0];
 }
+
+// --- payments (S8) ----------------------------------------------------------
+
+/** `12000000` -> `"12 000 000 so'm"` — the same shape the backend prints. */
+export function formatAmount(value: number): string {
+  const rounded = Math.round(value);
+  return `${rounded.toLocaleString("en-US").replace(/,/g, " ")} so'm`;
+}
+
+export const paymentStateLabel = (state: PaymentState): string =>
+  uz.payments.states[state] ?? state;
+
+export const paymentStatusLabel = (status: PaymentStatus): string =>
+  uz.payments.statuses[status] ?? status;
+
+/** Traffic light for a contract state: green paid, amber partial, red debtor. */
+export const paymentStateClass = (state: PaymentState): string =>
+  ({
+    paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+    partial: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+    debtor: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  })[state] ?? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
