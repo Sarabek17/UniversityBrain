@@ -4,6 +4,7 @@ import enum
 from datetime import date, datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Date,
     DateTime,
@@ -82,6 +83,14 @@ class FlowStatus(str, enum.Enum):
     in_progress = "in_progress"
     approved = "approved"
     rejected = "rejected"
+
+
+class ChatRole(str, enum.Enum):
+    """Author of a stored chat message (S4 agent core)."""
+
+    user = "user"
+    assistant = "assistant"
+    tool = "tool"  # tool result kept for audit: which tool, what it returned
 
 
 class User(Base):
@@ -278,6 +287,40 @@ class FlowHistory(Base):
     changed_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     flow_document: Mapped["FlowDocument"] = relationship(back_populates="history")
+
+
+class Conversation(Base):
+    """One chat thread of one user (S4: `POST /chat` history)."""
+
+    __tablename__ = "conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    title: Mapped[str | None] = mapped_column(String(128))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    messages: Mapped[list["ChatMessage"]] = relationship(
+        back_populates="conversation", order_by="ChatMessage.id"
+    )
+
+
+class ChatMessage(Base):
+    """One message inside a conversation: user, assistant or tool result."""
+
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(
+        ForeignKey("conversations.id"), index=True
+    )
+    role: Mapped[ChatRole] = mapped_column(Enum(ChatRole), index=True)
+    content: Mapped[str] = mapped_column(Text)
+    tool_name: Mapped[str | None] = mapped_column(String(64))
+    # Citations collected for this message: [{"type", "label", "document_id", ...}]
+    sources: Mapped[list | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
 
 
 class Notification(Base):

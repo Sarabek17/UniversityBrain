@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from app.models import (
     AccessLevel,
     AttendanceStatus,
+    ChatRole,
     ClassSessionStatus,
     DocumentType,
     FlowDocumentType,
@@ -167,6 +168,54 @@ class FlowHistoryOut(ORMSchema):
     comment: str | None
     timestamp: datetime
     changed_by_id: int
+
+
+# --- chat / agent (S4) ------------------------------------------------------
+
+
+class ChatSource(BaseModel):
+    """One citation. `type` says where it came from: document, schedule, ..."""
+
+    type: str
+    label: str
+    document_id: int | None = None
+    title: str | None = None
+    heading: str | None = None
+    order_index: int | None = None
+    chunk_id: int | None = None
+
+
+class ChatIn(BaseModel):
+    message: str
+    conversation_id: int | None = None
+
+
+class ChatOut(BaseModel):
+    conversation_id: int
+    text: str
+    sources: list[ChatSource] = []
+    disclaimer: str
+
+
+class ConversationOut(ORMSchema):
+    id: int
+    user_id: int
+    title: str | None
+    created_at: datetime
+
+
+class ChatMessageOut(ORMSchema):
+    id: int
+    conversation_id: int
+    role: ChatRole
+    content: str
+    tool_name: str | None
+    sources: list[ChatSource] | None
+    created_at: datetime
+
+
+class ConversationDetailOut(ConversationOut):
+    messages: list[ChatMessageOut] = []
 
 
 class NotificationOut(ORMSchema):

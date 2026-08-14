@@ -49,15 +49,24 @@ class BaseLLMClient(ABC):
         raise NotImplementedError
 
 
+SEARCH_TOOL = "hujjat_qidir"  # the mock's default first step (S4)
+MOCK_ANSWER_CHARS = 600
+
+
 class MockLLMClient(BaseLLMClient):
     """Deterministic offline provider for development and tests.
 
-    Behavior:
-    - If tools are given and the last user message mentions a tool name
-      (or contains the marker "use_tool:<name>"), returns a tool call for
-      the first matching tool with empty/marker arguments.
-    - Otherwise returns a deterministic text answer derived from the last
-      user message (stable hash suffix so tests can assert determinism).
+    Tool selection (only while no tool result is in the transcript yet):
+    1. explicit marker `use_tool:<name>` (optionally `:{"arg": 1}`) in the
+       last user message,
+    2. a tool name appearing literally in the last user message,
+    3. otherwise `hujjat_qidir(query=<user message>)` if that tool is offered —
+       so the whole agent flow (search -> sources -> answer) is exercised
+       without an API key.
+
+    Once a tool result is present the mock always answers with text, built
+    from that result — the agent loop therefore always terminates, and the
+    answer never repeats the user's question back (no fake facts).
     """
 
     def chat(
@@ -70,28 +79,46 @@ class MockLLMClient(BaseLLMClient):
             (m for m in reversed(messages) if m.get("role") == "user"), None
         )
         last_text = (last_user or {}).get("content", "") or ""
+        tool_messages = [m for m in messages if m.get("role") == "tool"]
 
-        if tools:
-            marker_call = self._marker_tool_call(last_text, tools)
-            if marker_call is not None:
-                return LLMResponse(text="", tool_calls=[marker_call])
-            for tool in tools:
-                name = tool.get("name", "")
-                if name and name in last_text:
-                    return LLMResponse(
-                        text="", tool_calls=[ToolCall(name=name, arguments={})]
-                    )
+        if tools and not tool_messages:
+            call = self._pick_tool_call(last_text, tools)
+            if call is not None:
+                return LLMResponse(text="", tool_calls=[call])
 
-        # If the previous message is a tool result, summarize it deterministically
-        last_msg = messages[-1] if messages else {}
-        if last_msg.get("role") == "tool":
-            result = last_msg.get("tool_result") or last_msg.get("content") or ""
-            return LLMResponse(
-                text=f"[mock] Tool '{last_msg.get('tool_name', '?')}' result: {result}"
-            )
+        if tool_messages:
+            return LLMResponse(text=self._answer_from_tool(tool_messages[-1]))
 
         digest = hashlib.sha256(last_text.encode("utf-8")).hexdigest()[:8]
         return LLMResponse(text=f"[mock:{digest}] Echo: {last_text}")
+
+    def _pick_tool_call(self, text: str, tools: list[dict]) -> ToolCall | None:
+        marker_call = self._marker_tool_call(text, tools)
+        if marker_call is not None:
+            return marker_call
+        for tool in tools:
+            name = tool.get("name", "")
+            if name and name in text:
+                return ToolCall(name=name, arguments=self._default_arguments(name, text))
+        if text.strip() and any(t.get("name") == SEARCH_TOOL for t in tools):
+            return ToolCall(name=SEARCH_TOOL, arguments={"query": text})
+        return None
+
+    @staticmethod
+    def _default_arguments(name: str, text: str) -> dict:
+        return {"query": text} if name == SEARCH_TOOL else {}
+
+    @staticmethod
+    def _answer_from_tool(message: dict) -> str:
+        """Deterministic answer built ONLY from the tool result."""
+        name = message.get("tool_name") or "?"
+        result = (message.get("tool_result") or message.get("content") or "").strip()
+        if not result:
+            return f"[mock] '{name}' vositasi natija qaytarmadi."
+        snippet = result[:MOCK_ANSWER_CHARS].rstrip()
+        if len(result) > MOCK_ANSWER_CHARS:
+            snippet += " […]"
+        return f"[mock] '{name}' vositasi natijasi asosida:\n{snippet}"
 
     @staticmethod
     def _marker_tool_call(text: str, tools: list[dict]) -> ToolCall | None:

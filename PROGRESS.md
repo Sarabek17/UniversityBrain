@@ -2,15 +2,40 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S4 (navbatda)
+## Joriy sessiya: S5 (navbatda)
 
-S3 yakunlandi (DoD 3/3: seed korpusi indekslandi — 10 hujjat, 28 bo'lak,
-Chroma kolleksiyasida 28 vektor; `pytest` 21/21 o'tdi (S2 ning 12 tasi +
-S3 ning 9 tasi); jonli skript bilan 3 ta qidiruv tekshirildi — o'zbekcha
-savol → nizomdagi juftlik jadvali, o'zbekcha savol → inglizcha ML hujjati,
-talaba "Buyruq 91-M" ni KO'RMAYDI / dekanat KO'RADI). S4 uchun izohlar:
+S4 yakunlandi (DoD 3/3: jonli serverda talaba `POST /chat` → 5 ta manba +
+disclaimer bilan javob keldi va `hujjat_qidir` chaqirildi; `pytest` 30/30
+o'tdi — S2 12 + S3 9 + S4 9; ruxsatsiz vosita bloklanishi testda isbotlangan
+(handler UMUMAN ishlamaydi)). Jonli tekshiruv 5 rol uchun ham o'tkazildi.
+S5 (Chat UI) uchun izohlar:
 
-- **Qidiruv imzosi (S4 `hujjat_qidir` tooli shuni chaqiradi):**
+- **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
+  ```
+  POST /chat                     {message, conversation_id?}
+    -> {conversation_id, text, sources[], disclaimer}
+  GET  /chat/conversations       -> [{id, user_id, title, created_at}]  (faqat o'ziniki)
+  GET  /chat/conversations/{id}  -> yuqoridagi + messages[]
+  ```
+  `sources[]` elementi (`schemas.ChatSource`): `type` ("document" | "schedule"),
+  `label` (tayyor sitata matni — chipga shu yoziladi), `document_id`, `title`,
+  `heading`, `order_index`, `chunk_id` (oxirgi 5 tasi ixtiyoriy/None).
+  `messages[]` elementi: `role` ("user"/"assistant"/"tool"), `content`,
+  `tool_name` (faqat tool xabarida), `sources`, `created_at` — "qaysi vosita
+  ishlatildi" ko'rsatkichi shundan olinadi. Hamma endpoint `Bearer` token
+  talab qiladi; begona suhbat → **404** (mavjudligini ham oshkor qilmaydi).
+  `conversation_id` berilmasa yangi suhbat ochiladi, sarlavhasi — birinchi
+  xabarning 80 belgisi.
+- **Disclaimer matni backenddan keladi** (`orchestrator.DISCLAIMER`) —
+  frontend uni hardcode qilmasin, javobdagi `disclaimer` maydonini ko'rsatsin.
+- Manba chipini bosganda hujjatni ochish uchun hujjat endpointi hali YO'Q —
+  S5 da `GET /documents/{id}` kerak bo'ladi (rol filtri:
+  `rag.search.allowed_access_levels(user)` bilan).
+- Mock rejimda javob matni `[mock] '<vosita>' vositasi natijasi asosida: …`
+  ko'rinishida bo'ladi (deterministik). UI buni "chiroyli javob" deb emas,
+  oqim tirikligi belgisi deb qabul qilsin — Gemini ulangach matn o'zgaradi,
+  format (manbalar, disclaimer) o'zgarmaydi.
+- **Qidiruv imzosi (`hujjat_qidir` tooli shuni chaqiradi):**
   ```python
   from app.rag.search import search, SearchResult
   results: list[SearchResult] = search(query: str, user: User, top_k: int = 5)
@@ -31,8 +56,6 @@ talaba "Buyruq 91-M" ni KO'RMAYDI / dekanat KO'RADI). S4 uchun izohlar:
   (403 ko'taradi). Keyingi sessiyalar FAQAT shularni ishlatadi.
 - RBAC namunasi: `GET /auth/test-staff-only` (`auth/router.py`) — doimiy
   qoladi, S2 testlari unga tayanadi.
-- LLM interfeysi hali yozilmagan (`app/llm/client.py` S4 da yaratiladi) —
-  S3 hech qanday LLM chaqirmaydi.
 - Testlar uchun `tests/conftest.py`: alohida `backend/test_app.db`
   (`DATABASE_URL` env orqali) va alohida `backend/test_chroma_data/`
   (`CHROMA_PATH` env orqali) — ikkisi ham app importidan OLDIN o'rnatiladi.
@@ -52,7 +75,7 @@ talaba "Buyruq 91-M" ni KO'RMAYDI / dekanat KO'RADI). S4 uchun izohlar:
 | S1 | Demo ma'lumot generatori | ✅ tugadi | DoD 3/3 o'tdi, commit "S1: demo data generator and document corpus" |
 | S2 | Auth + RBAC | ✅ tugadi | DoD 4/4 o'tdi, commit "S2: auth and RBAC" |
 | S3 | RAG quvuri | ✅ tugadi | DoD 3/3 o'tdi, commit "S3: RAG pipeline with role-filtered search" |
-| S4 | Agent yadrosi + tools | ⬜ boshlanmagan | |
+| S4 | Agent yadrosi + tools | ✅ tugadi | DoD 3/3 o'tdi, commit "S4: agent core with tool calling" |
 | S5 | Chat UI | ⬜ boshlanmagan | |
 | S6 | Summarizatsiya | ⬜ boshlanmagan | |
 | S7 | Tarjima moduli | ⬜ boshlanmagan | |
@@ -200,6 +223,61 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     https://download.pytorch.org/whl/cpu`, 122 MB; PyPI dagi oddiy g'ildirak
     CUDA bilan ~10 barobar katta), `sentence-transformers` 5.7,
     `chromadb` 1.5.9 — `requirements.txt` da izoh bilan.
+- **S4 qarorlar (agent yadrosi + tool calling):**
+  - **Tool registri (`app/agents/registry.py`):** `Tool(name, description,
+    parameters(JSON Schema), handler, roles)` + `ToolResult(text, sources, ok)`.
+    `execute_tool(name, args, db, user)` — **ruxsat shu yerda tekshiriladi**:
+    rol mos kelmasa handler CHAQIRILMAYDI, `ToolResult(ok=False, "Ruxsat
+    yo'q…")` qaytadi (exception EMAS — agent oqimi davom etadi va model rad
+    javobini tushuntiradi). Noma'lum vosita va handler ichidagi xatolik ham
+    shu tarzda `ok=False` natijaga aylanadi. `roles` ro'yxatiga qo'shimcha
+    ravishda **admin har doim ruxsatli** (rbac dagi `require_role` bilan bir xil
+    qoida). `tools_for_role(role)` — LLM ga beriladigan deklaratsiyalar.
+    Yangi tool qo'shish: `agents/tools/` ga fayl + o'sha faylda `register(...)`;
+    `agents/tools/__init__.py` ga bitta import qatori. Boshqa hech narsa.
+  - **S4 dagi 3 vosita — uchalasi ham hamma rolga ochiq**, chunki cheklov
+    ma'lumot qatlamida: `hujjat_qidir` (rol filtri `rag.search` ichida),
+    `jadval_kor` (`rbac.visible_group_ids` doirasi; o'qituvchi — faqat
+    `Schedule.teacher_id == user.id`; doiradan tashqari guruh so'ralsa
+    "Ruxsat yo'q" natijasi), `hujjat_rezyume` (`access_level` tekshiruvi
+    `rag.search.allowed_access_levels` bilan; **nom bo'yicha qidiruvda**
+    ko'rinmaydigan hujjat umuman topilmaydi — mavjudligi ham oshkor bo'lmaydi,
+    id bo'yicha so'ralsa ochiq "ruxsat yo'q"). Rol-cheklangan vositalar
+    S8-S11 da qo'shiladi (`tolov_holati`, `mavjudlik_tekshir`, …).
+  - **Tizim promptlari (`app/agents/prompts/`):** `umumiy.md` (6 ta buzilmas
+    qoida: faqat tool natijasiga tayanish, manba ko'rsatish, ruxsat chegarasi,
+    "rasmiy hujjat emas", "mavjudlik = xulosa", qisqalik) + rol fayli
+    (`student.md`, `teacher.md`, `tutor.md`, `staff.md`, `admin.md`).
+    `orchestrator.load_system_prompt(role)` ikkalasini birlashtiradi
+    (`lru_cache`) — ya'ni majburiy qoidalar bitta joyda, rol fayli faqat ohang
+    va rakursni belgilaydi.
+  - **Orkestrator (`app/agents/orchestrator.py`):** tarix (oxirgi 20 ta
+    user/assistant xabari) → rol prompti → `llm.chat(messages, tools, system)`
+    → tool_calls bo'lsa `execute_tool` → natija xabarlar ro'yxatiga qo'shiladi
+    va model qayta chaqiriladi → birinchi matnli javobda to'xtaydi,
+    **max 5 iteratsiya** (tugasa oxirgi tool natijasidan fallback javob).
+    Manbalar iteratsiyalar bo'ylab yig'iladi va dublikatlari olib tashlanadi.
+  - **Yangi modellar (ataylab qilingan kengaytma, ISH_REJA S4 "suhbat DB da
+    saqlanadi" talabi):** `Conversation` (id, user_id, title, created_at) va
+    `ChatMessage` (id, conversation_id, role: user/assistant/**tool**, content,
+    tool_name, sources JSON, created_at). Tool xabarlari **audit izi** sifatida
+    saqlanadi (qaysi vosita, nima qaytardi), lekin modelga tarix sifatida
+    QAYTA berilmaydi — faqat user/assistant almashinuvi beriladi (kontekst toza
+    va deterministik qolsin). `seed/generate.py` dagi `ALL_MODELS` ro'yxatiga
+    ikkala jadval qo'shildi, aks holda demo reset eski suhbatlarni qoldirardi.
+  - **Chat API (`app/api/chat.py`):** router yupqa — butun oqim orkestratorda.
+    Begona suhbat uchun **404** (403 emas): boshqa foydalanuvchi suhbatining
+    mavjudligini ham bilib bo'lmasin.
+  - **Mock provayder kengaytmasi (`llm/client.py`, deterministik qoldi):**
+    tool tanlash tartibi — (1) `use_tool:<nom>:{...}` markeri, (2) xabarda
+    tool nomi uchrasa o'sha, (3) aks holda `hujjat_qidir(query=<xabar>)`.
+    **Transkriptda tool natijasi paydo bo'lgach mock BOSHQA tool chaqirmaydi**
+    — shuning uchun sikl har doim tugaydi (bitta tool aylanmasi). Yakuniy matn
+    FAQAT tool natijasidan yasaladi (foydalanuvchi savolini qaytarib aytmaydi —
+    "javob" ichida o'ylab topilgan fakt bo'lmasligi kafolatlanadi).
+    Shu bilan Gemini kalitisiz ham butun oqim (qidiruv → manba → javob) jonli
+    ishlaydi; aniq vosita kerak bo'lsa marker ishlatiladi:
+    `use_tool:hujjat_rezyume:{"nom": "91-M"}`.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -230,6 +308,17 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Keyinga qoldirilganlar
 
+- **Juftlik vaqtlari ikki joyda:** `seed/generate.py` dagi `PAIR_TIMES` va
+  `app/agents/tools/schedule_view.py` dagi `PAIR_TIMES` — bir xil jadval.
+  S9 (mavjudlik servisi) uchinchi nusxa yasamasin: o'sha sessiyada umumiy
+  konstantaga (masalan `app/services/presence.py` yoki `app/config.py`)
+  ko'chirilsin.
+- `hujjat_rezyume` — sodda variant: hujjat matnining birinchi 6000 belgisi
+  bitta LLM chaqiruviga beriladi. S6 da rol rakursi kuchaytiriladi va uzun
+  hujjat uchun map-reduce qo'shiladi (`ROLE_FOCUS` dict allaqachon bor).
+- Gemini provayderi hali `NotImplementedError` — kalit ulangach
+  `GeminiLLMClient.chat()` yozilishi kerak (neytral message/tool formatini
+  google-genai formatiga o'girish). Butun tizim shu bitta metodga bog'liq.
 - Chek rasm fayllari (`Payment.receipt_file` ko'rsatgan yo'llar) mavjud emas —
   S8 da chek ko'rish UI uchun demo rasm/placeholder hal qilinadi.
 - Qidiruv sifati: 24 savollik o'lchovda 4-5 tasi hali ham xato hujjatni

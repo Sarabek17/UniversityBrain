@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.chat import router as chat_router
 from app.auth.router import router as auth_router
 from app.config import get_settings
 from app.db import init_db
@@ -27,8 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Module routers (chat, documents, ...) are wired here in later sessions.
+# Module routers (documents, payments, ...) are wired here in later sessions.
 app.include_router(auth_router)
+app.include_router(chat_router)
 
 
 @app.get("/health", response_model=HealthOut)

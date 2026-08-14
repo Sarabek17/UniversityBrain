@@ -221,6 +221,7 @@ FIXED_LOG_PLANS = {
 
 # Deletion order: children first (SQLite does not enforce FKs here, but keep it clean)
 ALL_MODELS = [
+    m.ChatMessage, m.Conversation,
     m.Notification, m.FlowHistory, m.FlowDocument, m.ClassSession, m.Attendance,
     m.TurnstileLog, m.Payment, m.Contract, m.Schedule, m.Assignment,
     m.Translation, m.Chunk, m.Document, m.User, m.Group,
