@@ -2,33 +2,31 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S1 (navbatda)
+## Joriy sessiya: S2 (navbatda)
 
-S0 yakunlandi (DoD to'liq tekshirildi, commit: "S0: project skeleton").
-Navbatdagi ish — S1: demo ma'lumot generatori (`backend/seed/generate.py` +
-`backend/seed/documents/` korpusi). S1 uchun izohlar:
+S1 yakunlandi (DoD 3/3: `python -m seed.generate --reset` xatosiz o'tadi va
+COUNT larni chiqaradi; ikkinchi ishga tushirish ham xatosiz — idempotent;
+3 ta ssenariy tekshiruvi skript oxirida OK: qarzdor talaba, binoda turgan
+talaba, darsga kelmagan o'qituvchi). S2 uchun izohlar:
 
-- Modellar va enumlar `backend/app/models.py` da tayyor — seed yozishdan oldin
-  o'qib chiqilsin (maydon nomlari inglizcha: `full_name`, `paid_at`,
-  `receipt_number`, `pair_number`, `weekday` 0=Dushanba, ...).
-- `User` da `username` (unique) va `password_hash` maydonlari bor — seed
-  foydalanuvchilarga username berilsin, parol xeshlash S2 da hal bo'ladi
-  (hozircha `password_hash` ga oddiy belgi qo'yish mumkin, S2 almashtiradi).
-- DB jadvallari `app.db.init_db()` (`Base.metadata.create_all`) bilan
-  yaratiladi — uvicorn startupda avtomatik chaqiriladi; seed skript ham
-  boshida `init_db()` ni chaqirsin.
-- `Group.faculty_id` / `User.faculty_id` — oddiy int (alohida Faculty jadvali
-  yo'q, 15 obyekt ro'yxatida bo'lmagani uchun). Seed 1 va 2 raqamlarini
-  ishlatsin.
-- Demo ssenariy qahramonlari shu sessiyada qat'iy belgilanib pastdagi
-  "Qabul qilingan qarorlar"ga yozilsin.
+- Barcha foydalanuvchilarda `password_hash = "PLACEHOLDER_S2"` — S2 haqiqiy
+  xesh bilan almashtiradi. Eng toza yo'l: S2 da xeshlash funksiyasi yozilgach,
+  `seed/generate.py` dagi `PASSWORD_PLACEHOLDER` o'rniga o'sha funksiya bilan
+  demo parol xeshini qo'yish (masalan hamma demo foydalanuvchiga bitta parol:
+  `demo123`).
+- Demo login usernamelari pastdagi "S1 demo qahramonlar" qaroriga yozilgan;
+  har rol uchun tez tanlash tugmalari shu usernamelardan foydalansin.
+- Rol doiralari uchun maydonlar tayyor: `User.group_id` (talaba),
+  `User.faculty_id` (tyutor/staff — 1 yoki 2), `Group.tutor_id`.
+- Seedda `Group.tutor_id` to'ldirilgan: nazarova → AT-24-01, AT-24-02;
+  qodirova → IQ-24-01, IQ-24-02.
 
 ## Sessiyalar holati
 
 | № | Sessiya | Holat | Izoh |
 |---|---|---|---|
 | S0 | Loyiha skeleti + modellar | ✅ tugadi | DoD 4/4 o'tdi, commit "S0: project skeleton" |
-| S1 | Demo ma'lumot generatori | ⬜ boshlanmagan | |
+| S1 | Demo ma'lumot generatori | ✅ tugadi | DoD 3/3 o'tdi, commit "S1: demo data generator and document corpus" |
 | S2 | Auth + RBAC | ⬜ boshlanmagan | |
 | S3 | RAG quvuri | ⬜ boshlanmagan | |
 | S4 | Agent yadrosi + tools | ⬜ boshlanmagan | |
@@ -78,11 +76,69 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   API'si o'zgargan — frontend ishlashdan oldin `frontend/AGENTS.md` dagi
   yo'riqnomaga qaralsin. API bazaviy URL: `NEXT_PUBLIC_API_URL`
   (`frontend/.env.local`, default `http://localhost:8000`).
-- (S1 da to'ldiriladi) Demo ssenariy qahramonlari: ...
+- **S1 demo qahramonlar (O'ZGARMAS — keyingi sessiyalar shunga tayanadi):**
+  - Fakultetlar: `1` = Axborot texnologiyalari (AT), `2` = Iqtisodiyot (IQ).
+    Guruhlar va "uy xonalari": AT-24-01 → 214, AT-24-02 → 215,
+    IQ-24-01 → 310, IQ-24-02 → 311.
+  - **aliyev** (Aliyev Jasur, talaba, AT-24-01): binoda (bugun 10:02 da
+    kirgan, chiqmagan), bugungi barcha darslarida `present`, kontrakt TO'LIQ
+    to'langan (qarz yo'q), bitta arizasi (ma'lumotnoma) `approved`.
+  - **karimov** (Karimov Diyor, talaba, AT-24-01): QARZDOR (0 so'm to'lagan),
+    bugun binoga kelmagan, o'tgan kunlarda davomati past.
+  - **sodiqova** (Sodiqova Malika, talaba, AT-24-01): QISMAN to'lagan (50%),
+    bugun 08:12 da kirib 13:15 da chiqib ketgan.
+  - **mahmudov** (Mahmudov Aziz, talaba, AT-24-01): binoda (08:07 da kirgan),
+    lekin bugungi 3-4-juftlik davomatida `absent` — S9 dagi
+    "binoda + davomatda belgilanmagan" holati.
+  - **tursunov** (Tursunov Akmal, o'qituvchi, fakultet 1): bugun jadvalda
+    darslari bor (jumladan 3-juftlik: AT-24-02, "Kompyuter tarmoqlari",
+    103-lab), binoga UMUMAN kirmagan — S10 "dars xavf ostida" ssenariysi.
+    Uning bugungi ClassSession lari `needs_clarification`; dekanat
+    (rashidova, yusupov) uchun `teacher_absence` bildirishnomasi yozilgan.
+  - **sharipova** (Sharipova Gulnora, talaba, AT-24-02): kecha chek yuklagan —
+    `Payment.status = uploaded`, tyutor tasdig'i kutilmoqda (S8 demo);
+    nazarova uchun bildirishnoma bor.
+  - Bugungi pin: AT-24-01 3-juftlik = "Ma'lumotlar bazasi", 214-xona, umarov
+    (FUNKSIONALLIK 3.7 misoli bilan mos: "10:02 da kirgan, 214-xonada,
+    davomatda belgilangan").
+  - Demo loginlar: talaba `aliyev`/`karimov`/`sodiqova`; o'qituvchi `umarov`
+    (darsda) / `tursunov` (kelmagan); tyutor `nazarova` (AT) / `qodirova`
+    (IQ); dekanat `rashidova` (AT) / `yusupov` (IQ); admin `admin`.
+- **S1 texnik qarorlar:**
+  - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
+    nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
+    3) 11:30-12:50, 4) 13:30-14:50, 5) 15:00-16:20, 6) 16:30-17:50.
+    S9/S10 presence servisi shu vaqtlarni ishlatsin (umumiy konstantaga
+    ko'chirish mumkin).
+  - Jadval Dush-Shan (weekday 0-5), 1-4-juftlik (shanba 1-3), deterministik
+    rotatsiya — o'qituvchi/xona to'qnashuvlari yo'q (SQL bilan tekshirilgan).
+    Aliyev guruhining bugungi jadvali 2-juftlikdan boshlanadi (10:02 da
+    kirgani bilan zid kelmasligi uchun).
+  - Turniket loglari faqat "bugun" (skript ishga tushgan kun) uchun
+    yaratiladi; bugungi davomat kunning HAMMA juftliklari uchun oldindan,
+    turniket loglaridan hisoblab yoziladi — demo istalgan soatda ishlaydi.
+    (Ertalab ishga tushirilsa ba'zi loglar/davomat "kelajakda" bo'ladi —
+    demo uchun qabul qilingan soddalashtirish.)
+  - Topshiriq deadlinelari nisbiy (bugun +4/+7/+11/+18 kun, 23:59) — hujjat
+    matnlarida qat'iy sana YO'Q ("e'lon qilingan kundan N kun" deyilgan),
+    shuning uchun DB va hujjat zid kelmaydi; S12 deadline triggerlari har
+    resetdan keyin ham ishlayveradi.
+  - Hujjat kirish darajalari: hammasi `public`, faqat "Buyruq 91-M
+    (attestatsiya)" — `staff` (demo ssenariyda talabaga rad etiladi).
+    `Document.file_path` — backend/ ga nisbatan yo'l (`seed/documents/...`).
+  - Kontrakt summalari: fakultet 1 → 12 000 000, fakultet 2 → 10 500 000
+    so'm; to'liq to'lov sxemasi 40/30/30 (nizom 5.1-band bilan mos).
+  - Chek raqamlari: `CLK-...` (avtomatik, sintetik Click), `CHK-...`
+    (qo'lda yuklangan). `Payment.receipt_file` — faqat yo'l-platzholder
+    (`uploads/receipts/...`), haqiqiy fayl yo'q.
 
 ## Keyinga qoldirilganlar
 
-- (bo'sh)
+- Chek rasm fayllari (`Payment.receipt_file` ko'rsatgan yo'llar) mavjud emas —
+  S8 da chek ko'rish UI uchun demo rasm/placeholder hal qilinadi.
+- `password_hash` placeholder — S2 haqiqiy xeshlaydi (yuqoridagi izoh).
+- Seed hujjatlari hali indekslanmagan (Chunk=0) — S3 ingest seed jarayoniga
+  ulanadi.
 
 ## Ochiq savollar
 
