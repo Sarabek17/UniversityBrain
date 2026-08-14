@@ -2,28 +2,47 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S3 (navbatda)
+## Joriy sessiya: S4 (navbatda)
 
-S2 yakunlandi (DoD 4/4: pytest 12/12 o'tdi; 5 rol curl bilan login +
-`/auth/me` jonli tekshirildi; brauzerda login → header'da ism/rol → chiqish
-ishladi (headless Chrome smoke, konsolda xato yo'q); talaba tokeni bilan
-`/auth/test-staff-only` curl'da 403 qaytardi). S3 uchun izohlar:
+S3 yakunlandi (DoD 3/3: seed korpusi indekslandi — 10 hujjat, 28 bo'lak,
+Chroma kolleksiyasida 28 vektor; `pytest` 21/21 o'tdi (S2 ning 12 tasi +
+S3 ning 9 tasi); jonli skript bilan 3 ta qidiruv tekshirildi — o'zbekcha
+savol → nizomdagi juftlik jadvali, o'zbekcha savol → inglizcha ML hujjati,
+talaba "Buyruq 91-M" ni KO'RMAYDI / dekanat KO'RADI). S4 uchun izohlar:
 
+- **Qidiruv imzosi (S4 `hujjat_qidir` tooli shuni chaqiradi):**
+  ```python
+  from app.rag.search import search, SearchResult
+  results: list[SearchResult] = search(query: str, user: User, top_k: int = 5)
+  ```
+  `SearchResult` — dataclass: `document_id`, `title`, `text` (bo'lak matni),
+  `order_index` (bo'lak tartibi), `score` (0..1, katta = yaxshi), `heading`
+  (hujjat bo'limi/bo'limlari), `language`, `doc_type`, `access_level`,
+  `chunk_id`. `.as_dict()` bor — tool javobini JSON qilish uchun.
+  `user` — SQLAlchemy `User` obyekti (rol shundan olinadi), DB sessiyasi
+  KERAK EMAS. Bo'sh so'rov yoki bo'sh indeks → `[]`.
+- **Ruxsat filtri qidiruv ICHIDA** (Chroma metadata filtri), natijadan keyin
+  emas: ko'rish huquqi yo'q bo'lak umuman skorlanmaydi va LLM ga bormaydi.
+  Qoida: `public` hammaga, rol-darajali hujjat faqat o'sha rolga, admin —
+  hammasi (`search.allowed_access_levels(user)`).
 - RBAC faqat `app/auth/rbac.py` da: `get_current_user`, `require_role(*rollar)`
   (admin DOIM ruxsatli), doira helperlari `visible_group_ids(db, user)`
   (None = cheklovsiz/admin) va `can_access_user` / `ensure_can_access_user`
   (403 ko'taradi). Keyingi sessiyalar FAQAT shularni ishlatadi.
 - RBAC namunasi: `GET /auth/test-staff-only` (`auth/router.py`) — doimiy
   qoladi, S2 testlari unga tayanadi.
-- S3 qidiruv filtri: `Document.access_level` bo'yicha — `public` hammaga,
-  rol-darajali hujjat faqat o'sha rolga (admin hammasini ko'radi). Seedda
-  yagona maxfiy hujjat: "Buyruq 91-M" (`staff`).
-- Testlar uchun `tests/conftest.py` bor: alohida `backend/test_app.db`
-  (`DATABASE_URL` env orqali, app importidan OLDIN o'rnatiladi), session-scoped
-  `seeded_db` (to'liq seed) va `client` (TestClient) fixturelari — S3 testlari
-  shu fixturelarni qayta ishlatsin.
-- Seed hujjatlari hali indekslanmagan (Chunk=0) — S3 ingest seed jarayoniga
-  ulanadi (`seed/generate.py` dan chaqirish yoki alohida buyruq).
+- LLM interfeysi hali yozilmagan (`app/llm/client.py` S4 da yaratiladi) —
+  S3 hech qanday LLM chaqirmaydi.
+- Testlar uchun `tests/conftest.py`: alohida `backend/test_app.db`
+  (`DATABASE_URL` env orqali) va alohida `backend/test_chroma_data/`
+  (`CHROMA_PATH` env orqali) — ikkisi ham app importidan OLDIN o'rnatiladi.
+  Fixturelar: `seeded_db` (to'liq seed, autouse), `client` (TestClient),
+  `db_session` (DB sessiyasi) va `indexed_corpus` (korpusni bir marta
+  indekslaydi — embedding modelini yuklaydi, ~10 s).
+- **Demo/reset ketma-ketligi ikki buyruq:** `python -m seed.generate --reset`
+  (Chunk jadvalini ham tozalaydi) → `python -m seed.ingest_documents --reset`
+  (Chroma kolleksiyasini qayta quradi). S13 dagi "demo reset" tugmasi
+  IKKALASINI ham chaqirishi kerak.
 
 ## Sessiyalar holati
 
@@ -32,7 +51,7 @@ ishladi (headless Chrome smoke, konsolda xato yo'q); talaba tokeni bilan
 | S0 | Loyiha skeleti + modellar | ✅ tugadi | DoD 4/4 o'tdi, commit "S0: project skeleton" |
 | S1 | Demo ma'lumot generatori | ✅ tugadi | DoD 3/3 o'tdi, commit "S1: demo data generator and document corpus" |
 | S2 | Auth + RBAC | ✅ tugadi | DoD 4/4 o'tdi, commit "S2: auth and RBAC" |
-| S3 | RAG quvuri | ⬜ boshlanmagan | |
+| S3 | RAG quvuri | ✅ tugadi | DoD 3/3 o'tdi, commit "S3: RAG pipeline with role-filtered search" |
 | S4 | Agent yadrosi + tools | ⬜ boshlanmagan | |
 | S5 | Chat UI | ⬜ boshlanmagan | |
 | S6 | Summarizatsiya | ⬜ boshlanmagan | |
@@ -130,6 +149,57 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     sahifalar `src/app/(protected)/` route-guruhida (client-side guard +
     header: ism, rol, chiqish). Login: `/login`, 5 ta demo tugma.
   - Backend testlarga `pytest`, `httpx` qo'shildi (`requirements.txt`).
+- **S3 qarorlar (RAG quvuri):**
+  - **Embedding modeli: `intfloat/multilingual-e5-small`** (lokal
+    sentence-transformers, kalitsiz, 384 o'lchov, 512 tokenlik oyna, ~450 MB).
+    Tanlov o'lchab qilingan (seed korpusi, 24 ta savol, top-1):
+    `paraphrase-multilingual-MiniLM-L12-v2` RAD ETILDI — uning 50 tilli
+    distillyatsiya ro'yxatida **o'zbek tili yo'q**; `multilingual-e5-base`
+    (1.1 GB) sinovda e5-small dan **yaxshi chiqmadi** (ikkalasi ham 19/24),
+    lekin 3 barobar sekin — shuning uchun small.
+  - **Model FAQAT `app/rag/embeddings.py` orqali** (CLAUDE.md qoidasi).
+    Sozlamalar `config.py` da: `EMBEDDING_MODEL`, `EMBEDDING_QUERY_PREFIX`
+    (`"query: "`), `EMBEDDING_PASSAGE_PREFIX` (`"passage: "`) — e5 oilasi shu
+    prefikslarni talab qiladi; boshqa model qo'yilsa ularni bo'sh qilish kerak.
+  - **Markazlashtirish (mean centering), `EMBEDDING_CENTER=true`** — S3 ning
+    eng muhim topilmasi. Ko'p tilli fazo anizotrop: hamma o'xshashlik
+    0.79-0.87 oralig'ida siqilgan va qolgan farqni **til** belgilaydi, ma'no
+    emas. Natijada "mashinaviy o'qitish nima?" savoli inglizcha ML hujjatini
+    **12-o'ringa** tushirgan (oldida — mavzuga aloqasiz o'zbekcha hujjatlar).
+    Korpus o'rtacha vektorini ayirish buni yo'qotadi: top-1 12/16 → 15/16.
+    O'rtacha vektor to'liq qayta indekslashda hisoblanadi va
+    `chroma_data/embedding_bias.json` da saqlanadi; savol ham shu vektor bilan
+    markazlashtiriladi. Fayl bo'lmasa — oddiy (markazlashtirilmagan) rejim.
+  - **Gibrid reyting:** vektor qidiruvi nomzodlar hovuzini beradi
+    (`top_k*4`, kamida 20), keyin ular IDF-vaznli kalit so'z mosligi bilan
+    qayta tartiblanadi: `0.7*kosinus + 0.3*leksik`
+    (`SEARCH_LEXICAL_WEIGHT`). Kosinus **min-max normallashtirilmaydi** —
+    aks holda eng yaxshi nomzod zaif bo'lsa ham 1.0 ga cho'ziladi va mavzuga
+    aloqasiz hujjat yutib ketadi. O'lchov (talaba ko'rinishi, 23 savol,
+    top-1): 15/23 oddiy → 18/23 markazlashtirilgan → **20/23 gibrid**.
+  - **Bo'laklash:** paragraf chegaralarini buzmaydi, markdown sarlavhalarini
+    kuzatadi; maqsad ~1600 belgi, qattiq chegara 2200 (`CHUNK_TARGET_CHARS`,
+    `CHUNK_MAX_CHARS`) — bu ~260 median token, model oynasi 512 dan past,
+    ya'ni **hech narsa kesilmaydi**. Embeddingga beriladigan matn oldiga
+    hujjat nomi + bo'lim sarlavhasi qo'shiladi (qisqa bo'lak — masalan
+    juftliklar jadvali — kontekstsiz ma'nosiz). Bo'lak bir nechta bo'limni
+    qamrasa, `heading` ularning HAMMASINI " · " bilan ko'rsatadi (manba
+    ko'rsatish qoidasi buzilmasin). Seed korpusi: 10 hujjat → 28 bo'lak.
+  - **Chroma:** `chromadb` 1.5.9, `PersistentClient`,
+    kolleksiya `uniagent_documents`, `metadata={"hnsw:space": "cosine"}`,
+    `embedding_function=None` (vektorni doim o'zimiz beramiz). Papka
+    `backend/chroma_data/` (`CHROMA_PATH`, gitignore da). Metadata:
+    `document_id`, `chunk_id`, `title`, `doc_type`, `language`,
+    `access_level`, `order_index`, `heading`. Chroma id formati
+    `doc{document_id}_c{order_index}` — u `Chunk.embedding_id` ga yoziladi.
+  - **Fayllar:** `app/rag/embeddings.py` (yagona embedding nuqtasi),
+    `store.py` (yagona chromadb nuqtasi), `ingest.py` (matn → bo'lak →
+    vektor → Chroma + `Chunk`), `search.py` (rol filtri + gibrid reyting),
+    `seed/ingest_documents.py` (CLI). `seed/generate.py` O'ZGARMADI.
+  - **Kutubxonalar:** torch **CPU g'ildiragi** (`--index-url
+    https://download.pytorch.org/whl/cpu`, 122 MB; PyPI dagi oddiy g'ildirak
+    CUDA bilan ~10 barobar katta), `sentence-transformers` 5.7,
+    `chromadb` 1.5.9 — `requirements.txt` da izoh bilan.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -162,8 +232,20 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 - Chek rasm fayllari (`Payment.receipt_file` ko'rsatgan yo'llar) mavjud emas —
   S8 da chek ko'rish UI uchun demo rasm/placeholder hal qilinadi.
-- Seed hujjatlari hali indekslanmagan (Chunk=0) — S3 ingest seed jarayoniga
-  ulanadi.
+- Qidiruv sifati: 24 savollik o'lchovda 4-5 tasi hali ham xato hujjatni
+  birinchi qo'yadi (masalan "birlamchi kalit va tashqi kalit" → ruscha hujjat
+  o'rniga inglizcha ML hujjati; savolda ruscha atama bilan hech qanday
+  leksik moslik yo'q). Sabab — 118M parametrli kichik modelning chegarasi.
+  Agar S14 da vaqt bo'lsa: kattaroq model (`bge-m3`, `LaBSE`) yoki
+  savolni LLM bilan inglizcha/ruschaga kengaytirish (query expansion)
+  sinab ko'rilsin. MVP uchun hozirgi sifat yetarli (talaba ko'rinishida
+  top-1 20/23, top-3 21/23).
+- `Document.language` maydoni ingest da metadata sifatida yoziladi, lekin
+  til bo'yicha FILTR hali qo'llanilmaydi (tillar aro qidiruv shart) — S7
+  tarjima moduli kerak bo'lsa shu metadatadan foydalanadi.
+- Faqat `.md`/`.txt` fayllar indekslanadi (`app/rag/ingest.py`
+  `SUPPORTED_SUFFIXES`) — S13 da PDF/DOCX yuklash kerak bo'lsa,
+  `extract_text()` kengaytiriladi.
 
 ## Ochiq savollar
 

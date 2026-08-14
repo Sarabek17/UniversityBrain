@@ -16,6 +16,7 @@ __pycache__/
 backend/app.db
 backend/test_app.db
 backend/chroma_data/
+backend/test_chroma_data/
 
 # Node
 node_modules/
