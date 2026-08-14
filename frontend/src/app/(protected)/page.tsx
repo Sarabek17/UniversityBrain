@@ -1,25 +1,22 @@
 "use client";
 
-import { useAuth } from "@/lib/auth";
+// The chat is the landing screen after login; "/" only forwards to it.
+// Later sessions may turn this route into a role dashboard.
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import uz from "@/i18n/uz.json";
 
 export default function Home() {
-  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/chat");
+  }, [router]);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-      <h1 className="text-4xl font-bold">{uz.home.title}</h1>
-      <p className="text-lg text-gray-600 dark:text-gray-300">
-        {uz.home.subtitle}
-      </p>
-      {user && (
-        <p className="text-lg">
-          {uz.home.welcome}, {user.full_name} ({uz.roles[user.role]})
-        </p>
-      )}
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        {uz.home.status}
-      </p>
+    <main className="flex flex-1 items-center justify-center p-8">
+      <p className="text-sm text-gray-500">{uz.common.loading}</p>
     </main>
   );
 }

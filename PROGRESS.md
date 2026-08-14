@@ -2,20 +2,57 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S5 (navbatda)
+## Joriy sessiya: S6 (navbatda)
 
-S4 yakunlandi (DoD 3/3: jonli serverda talaba `POST /chat` → 5 ta manba +
-disclaimer bilan javob keldi va `hujjat_qidir` chaqirildi; `pytest` 30/30
-o'tdi — S2 12 + S3 9 + S4 9; ruxsatsiz vosita bloklanishi testda isbotlangan
-(handler UMUMAN ishlamaydi)). Jonli tekshiruv 5 rol uchun ham o'tkazildi.
-S5 (Chat UI) uchun izohlar:
+S5 yakunlandi (DoD 3/3: `pytest` 39/39 — S2 12 + S3 9 + S4 9 + S5 9;
+`npm run lint` va `npm run build` toza; jonli oqim curl bilan tekshirildi
+(talaba 9 hujjat ko'radi, 91-M yo'q → id bilan 404; dekanat 10 hujjat, 91-M
+ochiladi; `POST /chat` → 5 manba + disclaimer) va **haqiqiy brauzerda 4 rolda**
+(talaba/dekanat/o'qituvchi/tyutor) chiqib, konsolda birorta xato chiqmadi).
+S6 (Summarizatsiya) uchun izohlar:
 
+- **Hujjatlar API (S5 da qo'shildi, `app/api/documents.py`):**
+  ```
+  GET /documents        -> [{id, title, doc_type, language, access_level, uploaded_at}]
+  GET /documents/{id}   -> yuqoridagilar + text (to'liq matn)
+  ```
+  Sxemalar: `schemas.DocumentListItemOut` / `DocumentDetailOut`.
+  `file_path` ATAYLAB chiqarilmaydi (ichki yo'l). Rol filtri —
+  `rag.search.allowed_access_levels(user)`, biznes logika
+  `app/services/documents.py` da (`visible_documents`, `get_visible_document`,
+  `document_text`). Ko'rish huquqi yo'q yoki mavjud bo'lmagan hujjat → **404**
+  (403 emas: mavjudligi ham oshkor bo'lmaydi). Matn `Document.file_path` dan
+  o'qiladi, bo'sh bo'lsa `Chunk` lardan yig'iladi.
+- **"Rezyume" tugmasi shu yerga qo'yiladi:** `frontend/src/components/
+  DocumentPanel.tsx` — sarlavha `<header>` ida `onClose` tugmasi yonida
+  (kodda izoh qo'yilgan). Panel `documentId` propini oladi va o'zi
+  `documentsApi.get(id)` ni chaqiradi; rezyume uchun yangi endpoint kerak
+  bo'lsa `documentsApi` ga qo'shiladi (`lib/api.ts` — YAGONA joy).
+- **Frontend fayllari (S5):** sahifalar `src/app/(protected)/chat/page.tsx`
+  (suhbat holati SHU YERDA: `messages`, `activeId`, `openDocumentId`) va
+  `.../documents/page.tsx`; komponentlar `src/components/` da: `ChatWindow`
+  (faqat ko'rinish), `ConversationList`, `SourceChips`, `DocumentPanel`,
+  `DocumentList`, `RoleDashboard` (+ `hasDashboard(role)`), `Markdown`
+  (o'z yozganimiz, kutubxonasiz). Yordamchilar: `src/lib/chat.ts`
+  (`ViewMessage`, `toViewMessages`), `src/lib/labels.ts` (enum → o'zbekcha
+  yorliq, sana formati).
+- **Hujjat paneli qanday ochiladi:** chatdagi manba chipi (`SourceChips`,
+  faqat `type === "document"` va `document_id != null` bo'lganda tugma) →
+  `onOpenDocument(document_id)` → chat sahifasi `openDocumentId` ni
+  o'rnatadi → o'ng panelda `DocumentPanel` chiqadi (o'sha panelning aynan
+  o'zi `/documents` sahifasida ham ishlatiladi).
+- **MUHIM (Next 16 + React eslint):** `react-hooks/set-state-in-effect`
+  qoidasi `useEffect` ichida **sinxron** `setState` ni XATO deb hisoblaydi
+  (`npm run lint` yiqiladi). Yechim: holatni hodisa ishlovchilarida (klik,
+  submit) yangilash, effektda esa faqat `.then()/.catch()` ichida; "propdan
+  kelgan id o'zgarganda tozalash" o'rniga holatni **derivatsiya** qilish
+  (`DocumentPanel` da shunday). S6+ frontend ishlarida shu naqsh saqlansin.
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
     -> {conversation_id, text, sources[], disclaimer}
   GET  /chat/conversations       -> [{id, user_id, title, created_at}]  (faqat o'ziniki)
-  GET  /chat/conversations/{id}  -> yuqoridagi + messages[]
+  GET  /chat/conversations/{id}  -> yuqoridagi + messages[] + disclaimer
   ```
   `sources[]` elementi (`schemas.ChatSource`): `type` ("document" | "schedule"),
   `label` (tayyor sitata matni — chipga shu yoziladi), `document_id`, `title`,
@@ -27,10 +64,9 @@ S5 (Chat UI) uchun izohlar:
   `conversation_id` berilmasa yangi suhbat ochiladi, sarlavhasi — birinchi
   xabarning 80 belgisi.
 - **Disclaimer matni backenddan keladi** (`orchestrator.DISCLAIMER`) —
-  frontend uni hardcode qilmasin, javobdagi `disclaimer` maydonini ko'rsatsin.
-- Manba chipini bosganda hujjatni ochish uchun hujjat endpointi hali YO'Q —
-  S5 da `GET /documents/{id}` kerak bo'ladi (rol filtri:
-  `rag.search.allowed_access_levels(user)` bilan).
+  frontend uni hardcode qilmasin. `POST /chat` javobida ham,
+  `GET /chat/conversations/{id}` javobida ham `disclaimer` maydoni bor
+  (S5 da qo'shildi, tarixdan qayta yuklangan javoblar ostida ham ko'rinsin).
 - Mock rejimda javob matni `[mock] '<vosita>' vositasi natijasi asosida: …`
   ko'rinishida bo'ladi (deterministik). UI buni "chiroyli javob" deb emas,
   oqim tirikligi belgisi deb qabul qilsin — Gemini ulangach matn o'zgaradi,
@@ -76,7 +112,7 @@ S5 (Chat UI) uchun izohlar:
 | S2 | Auth + RBAC | ✅ tugadi | DoD 4/4 o'tdi, commit "S2: auth and RBAC" |
 | S3 | RAG quvuri | ✅ tugadi | DoD 3/3 o'tdi, commit "S3: RAG pipeline with role-filtered search" |
 | S4 | Agent yadrosi + tools | ✅ tugadi | DoD 3/3 o'tdi, commit "S4: agent core with tool calling" |
-| S5 | Chat UI | ⬜ boshlanmagan | |
+| S5 | Chat UI | ✅ tugadi | DoD 3/3 o'tdi (pytest 39/39, lint+build toza, 4 rolda brauzer tekshiruvi), commit "S5: chat UI and document panel" |
 | S6 | Summarizatsiya | ⬜ boshlanmagan | |
 | S7 | Tarjima moduli | ⬜ boshlanmagan | |
 | S8 | To'lovlar moduli | ⬜ boshlanmagan | |
@@ -278,6 +314,45 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     Shu bilan Gemini kalitisiz ham butun oqim (qidiruv → manba → javob) jonli
     ishlaydi; aniq vosita kerak bo'lsa marker ishlatiladi:
     `use_tool:hujjat_rezyume:{"nom": "91-M"}`.
+- **S5 qarorlar (chat UI + hujjat paneli):**
+  - **Hujjatlar API rol filtrini QAYTA yozmaydi** — `app/services/documents.py`
+    `rag.search.allowed_access_levels(user)` ni chaqiradi. Ya'ni qidiruvda
+    ko'rinmaydigan hujjat ro'yxatda ham, ko'ruvchida ham ko'rinmaydi (bitta
+    qoida, bitta joy). Ko'rish huquqi yo'q hujjat → **404**, 403 emas
+    (chat API dagi begona suhbat qoidasi bilan bir xil).
+  - **`services/documents.py` qo'shildi** (CLAUDE.md dagi ro'yxatda yo'q edi):
+    routerlar yupqa bo'lsin degan arxitektura qoidasiga amal qilingan; S6
+    rezyume tugmasi ham shu servisdan foydalanadi.
+  - **`ConversationDetailOut` ga `disclaimer` maydoni qo'shildi** (default —
+    `orchestrator.DISCLAIMER`, `api/chat.py` O'ZGARMADI). Sabab: domen
+    qoidasi 3 ga ko'ra tarixdan qayta yuklangan javob ostida ham ogohlantirish
+    turishi kerak, frontend esa matnni hardcode qilmasligi kerak.
+  - **Marshrutlar:** `/` → `/chat` ga yo'naltiradi (kirgandan keyin darhol
+    chat); `(protected)/chat` — chat ish maydoni, `(protected)/documents` —
+    hujjatlar sahifasi. `(protected)/layout.tsx` ga navigatsiya qo'shildi va
+    balandlik `h-screen overflow-hidden` ga o'tkazildi (har sahifa o'z
+    ustunini o'zi skroll qiladi).
+  - **Layout rolga qarab:** chat markazda (hamma rol), o'ngdagi panel —
+    ochilgan hujjat, hujjat ochilmagan bo'lsa `RoleDashboard` (bo'sh
+    placeholder) faqat teacher/tutor/staff/admin uchun. Panel `lg:` dan
+    kichik ekranda yashiriladi.
+  - **Markdown renderer o'zimizniki** (`components/Markdown.tsx`, ~200 qator,
+    sarlavha/jadval/ro'yxat/kod/bold): korpus kichik, tashqi markdown
+    kutubxonasi bundle'dagi eng og'ir narsa bo'lib qolardi.
+  - **Vosita badge'i** (`hujjat_qidir` va h.k.) `role="tool"` xabarlaridan
+    olinadi: `POST /chat` javobida vosita nomi yo'q, shuning uchun javob
+    kelgandan keyin `GET /chat/conversations/{id}` fonda qayta o'qiladi
+    (muvaffaqiyatsiz bo'lsa javob baribir ekranda qoladi).
+  - **UI matnlari faqat `src/i18n/uz.json` da** (`nav`, `chat`, `documents`,
+    `dashboard`, `common` bo'limlari qo'shildi); enum yorliqlari
+    `src/lib/labels.ts` orqali.
+  - **Jonli tekshiruv retsepti (keyingi sessiyalar uchun):** CORS faqat
+    `http://localhost:3000` ga ochiq va `NEXT_PUBLIC_API_URL` build paytida
+    qotadi — shuning uchun brauzer tekshiruvi backend **8000**, frontend
+    **3000** portida o'tkaziladi. Brauzer sinovi Chrome'ni
+    `--headless=new --remote-debugging-port=9222` bilan ishga tushirib, Node
+    22 ning ichki `WebSocket` i orqali CDP bilan qilindi (npm paketi
+    o'rnatilmadi); viewport 1440x900 qilinmasa `lg:` paneli yashirin qoladi.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -308,6 +383,17 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Keyinga qoldirilganlar
 
+- **Kichik ekran (mobil) layouti:** hujjat paneli va dashboard `lg:` dan
+  kichik ekranda yashiringan — telefonda manba chipini bosish ko'zga
+  ko'rinadigan natija bermaydi. S14 (sayqal) da modal/drawer qilinsin.
+- **`type: "schedule"` manba chipi bosilmaydi** (ochadigan ko'rinish yo'q).
+  S9/S10 jadval/davomat sahifasini qo'shganda shu chip ham havolaga
+  aylantirilsin.
+- Suhbatni o'chirish/nomini o'zgartirish YO'Q (faqat ro'yxat + yangi suhbat).
+  Kerak bo'lsa S13 (admin) yoki S14 da qo'shiladi.
+- `schemas.DocumentOut` va `ChunkOut` (S0 dan qolgan) hech qayerda
+  ishlatilmaydi — S5 o'z sxemalarini qo'shdi (`DocumentListItemOut`,
+  `DocumentDetailOut`). Kerak bo'lmasa S14 da tozalansin.
 - **Juftlik vaqtlari ikki joyda:** `seed/generate.py` dagi `PAIR_TIMES` va
   `app/agents/tools/schedule_view.py` dagi `PAIR_TIMES` — bir xil jadval.
   S9 (mavjudlik servisi) uchinchi nusxa yasamasin: o'sha sessiyada umumiy

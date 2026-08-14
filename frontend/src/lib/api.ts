@@ -121,3 +121,94 @@ export const authApi = {
   me: () => api.get<UserOut>("/auth/me"),
   logout: () => api.post<{ status: string }>("/auth/logout"),
 };
+
+// --- chat / agent (S4 API) --------------------------------------------------
+
+/** One citation. `label` is the ready-made text shown on the chip. */
+export interface ChatSource {
+  type: string; // "document" | "schedule" | ...
+  label: string;
+  document_id: number | null;
+  title: string | null;
+  heading: string | null;
+  order_index: number | null;
+  chunk_id: number | null;
+}
+
+export interface ChatOut {
+  conversation_id: number;
+  text: string;
+  sources: ChatSource[];
+  disclaimer: string;
+}
+
+export interface ConversationOut {
+  id: number;
+  user_id: number;
+  title: string | null;
+  created_at: string;
+}
+
+export type ChatMessageRole = "user" | "assistant" | "tool";
+
+export interface ChatMessageOut {
+  id: number;
+  conversation_id: number;
+  role: ChatMessageRole;
+  content: string;
+  tool_name: string | null;
+  sources: ChatSource[] | null;
+  created_at: string;
+}
+
+export interface ConversationDetailOut extends ConversationOut {
+  messages: ChatMessageOut[];
+  disclaimer: string;
+}
+
+export const chatApi = {
+  send: (message: string, conversationId?: number | null) =>
+    api.post<ChatOut>("/chat", {
+      message,
+      conversation_id: conversationId ?? null,
+    }),
+  conversations: () => api.get<ConversationOut[]>("/chat/conversations"),
+  conversation: (id: number) =>
+    api.get<ConversationDetailOut>(`/chat/conversations/${id}`),
+};
+
+// --- documents (S5 API) -----------------------------------------------------
+
+export type DocumentType =
+  | "syllabus"
+  | "order"
+  | "assignment"
+  | "literature"
+  | "regulation"
+  | "other";
+
+export type AccessLevel =
+  | "public"
+  | "student"
+  | "teacher"
+  | "tutor"
+  | "staff"
+  | "admin";
+
+export interface DocumentListItem {
+  id: number;
+  title: string;
+  doc_type: DocumentType;
+  language: string;
+  access_level: AccessLevel;
+  uploaded_at: string;
+}
+
+export interface DocumentDetail extends DocumentListItem {
+  text: string;
+}
+
+export const documentsApi = {
+  list: () => api.get<DocumentListItem[]>("/documents"),
+  get: (id: number) => api.get<DocumentDetail>(`/documents/${id}`),
+};

@@ -1,16 +1,24 @@
 "use client";
 
 // Protected area: unauthenticated users are redirected to /login;
-// authenticated ones see the header (name + role + logout).
+// authenticated ones see the header (nav + name + role + logout).
+// Fixed viewport height — each page scrolls its own columns.
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import uz from "@/i18n/uz.json";
+
+const NAV = [
+  { href: "/chat", label: uz.nav.chat },
+  { href: "/documents", label: uz.nav.documents },
+];
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -27,9 +35,27 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-gray-200 px-6 py-3 dark:border-gray-700">
-        <span className="font-bold">{uz.home.title}</span>
+    <div className="flex h-screen flex-col overflow-hidden">
+      <header className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-3 dark:border-gray-700">
+        <div className="flex items-center gap-6">
+          <span className="font-bold">{uz.home.title}</span>
+          <nav className="flex items-center gap-1">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={
+                  "rounded-md px-3 py-1.5 text-sm " +
+                  (pathname === item.href
+                    ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                    : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800")
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-sm">
             {user.full_name}
@@ -49,7 +75,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           </button>
         </div>
       </header>
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

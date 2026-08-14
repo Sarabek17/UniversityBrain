@@ -4,6 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.agents.orchestrator import DISCLAIMER as AGENT_DISCLAIMER
 from app.models import (
     AccessLevel,
     AttendanceStatus,
@@ -67,6 +68,23 @@ class DocumentOut(ORMSchema):
     access_level: AccessLevel
     file_path: str | None
     uploaded_at: datetime
+
+
+class DocumentListItemOut(ORMSchema):
+    """One row of GET /documents. `file_path` is internal and never exposed."""
+
+    id: int
+    title: str
+    doc_type: DocumentType
+    language: str
+    access_level: AccessLevel
+    uploaded_at: datetime
+
+
+class DocumentDetailOut(DocumentListItemOut):
+    """GET /documents/{id}: the same metadata plus the full text."""
+
+    text: str
 
 
 class ChunkOut(ORMSchema):
@@ -216,6 +234,9 @@ class ChatMessageOut(ORMSchema):
 
 class ConversationDetailOut(ConversationOut):
     messages: list[ChatMessageOut] = []
+    # Answers replayed from history must carry the same "not an official
+    # document" notice as fresh ones, and the UI must never hardcode it.
+    disclaimer: str = AGENT_DISCLAIMER
 
 
 class NotificationOut(ORMSchema):

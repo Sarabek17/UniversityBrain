@@ -19,6 +19,10 @@
   "header": {
     "logout": "Chiqish"
   },
+  "nav": {
+    "chat": "Suhbat",
+    "documents": "Hujjatlar"
+  },
   "roles": {
     "student": "Talaba",
     "teacher": "O'qituvchi",
@@ -27,6 +31,75 @@
     "admin": "Admin"
   },
   "common": {
-    "loading": "Yuklanmoqda..."
+    "loading": "Yuklanmoqda...",
+    "close": "Yopish",
+    "retry": "Qayta urinish",
+    "error": "Xatolik yuz berdi"
+  },
+  "chat": {
+    "conversations": "Suhbatlar",
+    "newConversation": "Yangi suhbat",
+    "noConversations": "Hozircha suhbat yo'q",
+    "untitled": "Nomsiz suhbat",
+    "listError": "Suhbatlar ro'yxatini yuklab bo'lmadi",
+    "loadError": "Suhbatni yuklab bo'lmadi",
+    "sendError": "Javob olishda xatolik yuz berdi. Qayta urinib ko'ring.",
+    "placeholder": "Savolingizni yozing...",
+    "send": "Yuborish",
+    "waiting": "Agent javob tayyorlamoqda...",
+    "you": "Siz",
+    "assistant": "Agent",
+    "sources": "Manbalar",
+    "toolUsed": "Ishlatilgan vosita",
+    "emptyTitle": "Savolingizni yozing",
+    "emptyHint": "Agent hujjatlar bazasi va dars jadvalidan foydalanib javob beradi.",
+    "samplesTitle": "Namuna savollar",
+    "samples": [
+      "Ma'lumotlar bazasi fanidan topshiriq nima edi?",
+      "Bugungi dars jadvalimni ko'rsat",
+      "Juftlik vaqtlari qanday?"
+    ]
+  },
+  "documents": {
+    "title": "Hujjatlar",
+    "listTitle": "Ochiq hujjatlar",
+    "empty": "Sizga ochiq hujjat topilmadi",
+    "listError": "Hujjatlar ro'yxatini yuklab bo'lmadi",
+    "loadError": "Hujjatni ochib bo'lmadi",
+    "notFound": "Hujjat topilmadi yoki uni ko'rish huquqingiz yo'q",
+    "selectHint": "Ro'yxatdan hujjat tanlang",
+    "panelHint": "Manba chipini bosing — hujjat shu yerda ochiladi",
+    "openFull": "To'liq sahifada ochish",
+    "types": {
+      "syllabus": "Sillabus",
+      "order": "Buyruq",
+      "assignment": "Topshiriq",
+      "literature": "Adabiyot",
+      "regulation": "Nizom",
+      "other": "Boshqa"
+    },
+    "access": {
+      "public": "Ochiq",
+      "student": "Talaba",
+      "teacher": "O'qituvchi",
+      "tutor": "Tyutor",
+      "staff": "Dekanat",
+      "admin": "Admin"
+    },
+    "languages": {
+      "uz": "O'zbekcha",
+      "ru": "Ruscha",
+      "en": "Inglizcha"
+    }
+  },
+  "dashboard": {
+    "title": "Boshqaruv paneli",
+    "placeholder": "Bu bo'lim keyingi sessiyalarda to'ldiriladi.",
+    "items": {
+      "teacher": "Guruhlar davomati va darslar holati",
+      "tutor": "Guruh monitoringi: to'lov, davomat, mavjudlik",
+      "staff": "Dekanat: o'qituvchilar davomati, hujjat aylanmasi",
+      "admin": "Tizim boshqaruvi: foydalanuvchilar, hujjatlar, demo reset"
+    }
   }
 }
