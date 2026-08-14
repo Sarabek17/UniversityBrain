@@ -36,6 +36,21 @@ class UserOut(ORMSchema):
     language: str
 
 
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+class OkOut(BaseModel):
+    status: str = "ok"
+
+
 class GroupOut(ORMSchema):
     id: int
     name: str

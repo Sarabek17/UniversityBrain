@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth.router import router as auth_router
 from app.config import get_settings
 from app.db import init_db
 from app.schemas import HealthOut
@@ -26,7 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Module routers (auth, chat, documents, ...) are wired here in later sessions.
+# Module routers (chat, documents, ...) are wired here in later sessions.
+app.include_router(auth_router)
 
 
 @app.get("/health", response_model=HealthOut)

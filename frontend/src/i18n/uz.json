@@ -2,6 +2,31 @@
   "home": {
     "title": "UniAgent",
     "subtitle": "Universitet uchun rol-asosli AI agentlar ekotizimi",
-    "status": "Skelet tayyor. Login va chat sahifalari keyingi sessiyalarda qo'shiladi."
+    "status": "Auth tayyor (S2). Chat va boshqa modullar keyingi sessiyalarda qo'shiladi.",
+    "welcome": "Xush kelibsiz"
+  },
+  "login": {
+    "title": "Tizimga kirish",
+    "subtitle": "UniAgent — universitet AI yordamchisi",
+    "username": "Login",
+    "password": "Parol",
+    "submit": "Kirish",
+    "submitting": "Kirilmoqda...",
+    "error": "Login yoki parol noto'g'ri",
+    "demoTitle": "Demo rol tanlash",
+    "demoHint": "Tugma bosilsa shu rol bilan avtomatik kiriladi"
+  },
+  "header": {
+    "logout": "Chiqish"
+  },
+  "roles": {
+    "student": "Talaba",
+    "teacher": "O'qituvchi",
+    "tutor": "Tyutor",
+    "staff": "Dekanat",
+    "admin": "Admin"
+  },
+  "common": {
+    "loading": "Yuklanmoqda..."
   }
 }

@@ -2,24 +2,28 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S2 (navbatda)
+## Joriy sessiya: S3 (navbatda)
 
-S1 yakunlandi (DoD 3/3: `python -m seed.generate --reset` xatosiz o'tadi va
-COUNT larni chiqaradi; ikkinchi ishga tushirish ham xatosiz — idempotent;
-3 ta ssenariy tekshiruvi skript oxirida OK: qarzdor talaba, binoda turgan
-talaba, darsga kelmagan o'qituvchi). S2 uchun izohlar:
+S2 yakunlandi (DoD 4/4: pytest 12/12 o'tdi; 5 rol curl bilan login +
+`/auth/me` jonli tekshirildi; brauzerda login → header'da ism/rol → chiqish
+ishladi (headless Chrome smoke, konsolda xato yo'q); talaba tokeni bilan
+`/auth/test-staff-only` curl'da 403 qaytardi). S3 uchun izohlar:
 
-- Barcha foydalanuvchilarda `password_hash = "PLACEHOLDER_S2"` — S2 haqiqiy
-  xesh bilan almashtiradi. Eng toza yo'l: S2 da xeshlash funksiyasi yozilgach,
-  `seed/generate.py` dagi `PASSWORD_PLACEHOLDER` o'rniga o'sha funksiya bilan
-  demo parol xeshini qo'yish (masalan hamma demo foydalanuvchiga bitta parol:
-  `demo123`).
-- Demo login usernamelari pastdagi "S1 demo qahramonlar" qaroriga yozilgan;
-  har rol uchun tez tanlash tugmalari shu usernamelardan foydalansin.
-- Rol doiralari uchun maydonlar tayyor: `User.group_id` (talaba),
-  `User.faculty_id` (tyutor/staff — 1 yoki 2), `Group.tutor_id`.
-- Seedda `Group.tutor_id` to'ldirilgan: nazarova → AT-24-01, AT-24-02;
-  qodirova → IQ-24-01, IQ-24-02.
+- RBAC faqat `app/auth/rbac.py` da: `get_current_user`, `require_role(*rollar)`
+  (admin DOIM ruxsatli), doira helperlari `visible_group_ids(db, user)`
+  (None = cheklovsiz/admin) va `can_access_user` / `ensure_can_access_user`
+  (403 ko'taradi). Keyingi sessiyalar FAQAT shularni ishlatadi.
+- RBAC namunasi: `GET /auth/test-staff-only` (`auth/router.py`) — doimiy
+  qoladi, S2 testlari unga tayanadi.
+- S3 qidiruv filtri: `Document.access_level` bo'yicha — `public` hammaga,
+  rol-darajali hujjat faqat o'sha rolga (admin hammasini ko'radi). Seedda
+  yagona maxfiy hujjat: "Buyruq 91-M" (`staff`).
+- Testlar uchun `tests/conftest.py` bor: alohida `backend/test_app.db`
+  (`DATABASE_URL` env orqali, app importidan OLDIN o'rnatiladi), session-scoped
+  `seeded_db` (to'liq seed) va `client` (TestClient) fixturelari — S3 testlari
+  shu fixturelarni qayta ishlatsin.
+- Seed hujjatlari hali indekslanmagan (Chunk=0) — S3 ingest seed jarayoniga
+  ulanadi (`seed/generate.py` dan chaqirish yoki alohida buyruq).
 
 ## Sessiyalar holati
 
@@ -27,7 +31,7 @@ talaba, darsga kelmagan o'qituvchi). S2 uchun izohlar:
 |---|---|---|---|
 | S0 | Loyiha skeleti + modellar | ✅ tugadi | DoD 4/4 o'tdi, commit "S0: project skeleton" |
 | S1 | Demo ma'lumot generatori | ✅ tugadi | DoD 3/3 o'tdi, commit "S1: demo data generator and document corpus" |
-| S2 | Auth + RBAC | ⬜ boshlanmagan | |
+| S2 | Auth + RBAC | ✅ tugadi | DoD 4/4 o'tdi, commit "S2: auth and RBAC" |
 | S3 | RAG quvuri | ⬜ boshlanmagan | |
 | S4 | Agent yadrosi + tools | ⬜ boshlanmagan | |
 | S5 | Chat UI | ⬜ boshlanmagan | |
@@ -45,6 +49,8 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Qabul qilingan qarorlar
 
+- **Orkestratsiya:** S3 dan boshlab sessiya-subagentlar **Opus** modelida
+  ochiladi (foydalanuvchi ko'rsatmasi, 2026-08-14).
 - **LLM provayder: Google Gemini** — API kalit loyiha oxirida ulanadi.
   Ungacha `LLM_PROVIDER=mock` rejimida quriladi va test qilinadi.
   `llm/client.py` Gemini tool calling formatiga mo'ljallanadi.
@@ -104,6 +110,26 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   - Demo loginlar: talaba `aliyev`/`karimov`/`sodiqova`; o'qituvchi `umarov`
     (darsda) / `tursunov` (kelmagan); tyutor `nazarova` (AT) / `qodirova`
     (IQ); dekanat `rashidova` (AT) / `yusupov` (IQ); admin `admin`.
+- **S2 qarorlar (auth + RBAC):**
+  - JWT: **pyjwt** (2.13), HS256, secret `.env` dagi `JWT_SECRET` (≥32 belgi),
+    muddat `JWT_EXPIRES_MINUTES` (default 720). Payload: `sub` (user id),
+    `role`, `exp`. Logout stateless — klient tokenni o'chiradi.
+  - Parol xeshlash: **stdlib PBKDF2** (`hashlib.pbkdf2_hmac`, sha256,
+    100 000 iteratsiya) — `app/auth/passwords.py`, tashqi kutubxona yo'q.
+    Format: `pbkdf2_sha256$iter$salt$digest`.
+  - **Hamma demo foydalanuvchi paroli: `demo123`** (seed bitta xeshni
+    hammaga qo'yadi — tezlik uchun).
+  - `require_role(*roles)` ro'yxatdagi rollarga + **har doim admin** ga
+    ruxsat beradi (admin superuser). Doira helperlari: talaba → o'zi,
+    o'qituvchi → o'zi dars beradigan guruhlar (Schedule orqali), tyutor →
+    `Group.tutor_id` guruhlari, staff → o'z fakulteti, admin → hammasi.
+  - Frontend: token `localStorage` (`uniagent_token`), `lib/api.ts` har
+    so'rovga `Authorization: Bearer` qo'shadi, 401 da tokenni o'chirib
+    `/login` ga qaytaradi (login so'rovining o'zidan tashqari). Auth
+    konteksti `src/lib/auth.tsx` (`AuthProvider`/`useAuth`), himoyalangan
+    sahifalar `src/app/(protected)/` route-guruhida (client-side guard +
+    header: ism, rol, chiqish). Login: `/login`, 5 ta demo tugma.
+  - Backend testlarga `pytest`, `httpx` qo'shildi (`requirements.txt`).
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -136,7 +162,6 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 - Chek rasm fayllari (`Payment.receipt_file` ko'rsatgan yo'llar) mavjud emas —
   S8 da chek ko'rish UI uchun demo rasm/placeholder hal qilinadi.
-- `password_hash` placeholder — S2 haqiqiy xeshlaydi (yuqoridagi izoh).
 - Seed hujjatlari hali indekslanmagan (Chunk=0) — S3 ingest seed jarayoniga
   ulanadi.
 

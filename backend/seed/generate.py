@@ -24,6 +24,7 @@ from pathlib import Path
 from random import Random
 
 from app import models as m
+from app.auth.passwords import hash_password
 from app.db import SessionLocal, init_db
 
 RND = Random(42)
@@ -31,7 +32,7 @@ RND = Random(42)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 DOCUMENTS_DIR = BACKEND_DIR / "seed" / "documents"
 
-PASSWORD_PLACEHOLDER = "PLACEHOLDER_S2"  # real hashing arrives in S2
+DEMO_PASSWORD = "demo123"  # every demo user logs in with this password
 
 PAIR_TIMES = {
     1: (time(8, 30), time(9, 50)),
@@ -247,6 +248,8 @@ def create_users_and_groups(db):
     """Returns (users_by_username, groups_by_name)."""
     users: dict[str, m.User] = {}
     groups: dict[str, m.Group] = {}
+    # One hash for all demo users (same password) — keeps seeding fast.
+    demo_hash = hash_password(DEMO_PASSWORD)
 
     for name, fac, _tutor in GROUP_DEFS:
         g = m.Group(name=name, faculty_id=fac)
@@ -257,7 +260,7 @@ def create_users_and_groups(db):
     def add_user(username, full_name, role, faculty_id=None, group=None):
         u = m.User(
             username=username,
-            password_hash=PASSWORD_PLACEHOLDER,
+            password_hash=demo_hash,
             full_name=full_name,
             role=role,
             faculty_id=faculty_id,
@@ -760,7 +763,7 @@ def print_counts(db):
 
 
 def print_demo_logins():
-    print("\nDemo loginlar (parollar S2 da o'rnatiladi):")
+    print(f"\nDemo loginlar (hammasi uchun parol: {DEMO_PASSWORD}):")
     print("  student : aliyev (binoda, qarzsiz), karimov (qarzdor),")
     print("            sodiqova (qisman to'lagan, chiqib ketgan)")
     print("  teacher : umarov (darsda), tursunov (darsga KELMAGAN)")
