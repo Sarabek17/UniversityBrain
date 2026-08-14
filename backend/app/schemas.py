@@ -203,6 +203,23 @@ class ChatSource(BaseModel):
     chunk_id: int | None = None
 
 
+class DocumentSummaryOut(BaseModel):
+    """POST /documents/{id}/summary (S6) — role-angled summary of one document.
+
+    Defined here, next to `ChatSource`: a summary is a factual answer, so the
+    domain rules require it to carry its citation and the "not an official
+    document" notice, exactly like a chat answer does.
+    """
+
+    document_id: int
+    title: str
+    summary: str
+    parts: int  # 1 = single LLM call, >1 = map-reduce over that many parts
+    truncated: bool
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
 class ChatIn(BaseModel):
     message: str
     conversation_id: int | None = None

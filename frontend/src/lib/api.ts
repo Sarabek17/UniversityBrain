@@ -208,7 +208,20 @@ export interface DocumentDetail extends DocumentListItem {
   text: string;
 }
 
+/** Role-angled summary of one document (S6). `parts` > 1 means map-reduce. */
+export interface DocumentSummary {
+  document_id: number;
+  title: string;
+  summary: string;
+  parts: number;
+  truncated: boolean;
+  source: ChatSource;
+  disclaimer: string;
+}
+
 export const documentsApi = {
   list: () => api.get<DocumentListItem[]>("/documents"),
   get: (id: number) => api.get<DocumentDetail>(`/documents/${id}`),
+  summary: (id: number) =>
+    api.post<DocumentSummary>(`/documents/${id}/summary`),
 };

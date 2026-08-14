@@ -1,9 +1,15 @@
-"""`hujjat_rezyume` — summarize one document through the LLM client.
+"""`hujjat_rezyume` — summarize one document from the caller's role angle.
 
-Simple version (S6 strengthens it with role-specific angles and map-reduce for
-long documents). Access is checked against `Document.access_level` with the
-same rule the RAG search uses (`rag.search.allowed_access_levels`), so the
-confidential order stays invisible to students even when asked by name.
+This file is only the *tool wrapper*: it resolves which document is meant and
+turns the result into a `ToolResult`. The summarization itself (role angle,
+map-reduce, LLM call) lives in `services/summarization.py`, the exact same code
+path the "Rezyume" button uses via `POST /documents/{id}/summary`.
+
+Access rules (unchanged since S4, `services/documents.py` owns them):
+    * by title  -> only visible documents are searched, so a confidential order
+      is not even reported as existing,
+    * by id     -> a document the user may not open answers a plain
+      "Ruxsat yo'q" (the id came from somewhere, hiding it helps nobody).
 """
 
 from __future__ import annotations
@@ -11,36 +17,11 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.agents.registry import ALL_ROLES, Tool, ToolResult, register
-from app.llm.client import get_llm_client
-from app.models import Chunk, Document, User, UserRole
-from app.rag.ingest import document_path, extract_text
-from app.rag.search import allowed_access_levels
+from app.models import Document, User
+from app.services import documents as documents_service
+from app.services import summarization
 
 NAME = "hujjat_rezyume"
-
-MAX_INPUT_CHARS = 6000  # enough for the demo corpus; S6 adds map-reduce
-
-SYSTEM = (
-    "Sen universitet hujjatlarini qisqartiruvchi yordamchisan. Faqat berilgan "
-    "matnga tayan, yangi fakt qo'shma. Javob o'zbek tilida, 5-7 qatorlik "
-    "aniq ro'yxat ko'rinishida bo'lsin."
-)
-
-ROLE_FOCUS = {
-    UserRole.student: "talaba nima qilishi va qaysi muddatgacha ulgurishi kerakligiga",
-    UserRole.teacher: "asosiy bandlar va o'quv jarayoniga ta'siriga",
-    UserRole.tutor: "guruh va talabalarga tegishli majburiyatlarga",
-    UserRole.staff: "hujjat raqami, sanalar, ijrochilar va muddatlarga",
-    UserRole.admin: "tashkiliy va texnik tafsilotlarga",
-}
-
-
-def _visible_documents(db: Session, user: User):
-    query = db.query(Document)
-    levels = allowed_access_levels(user)  # None = admin
-    if levels is not None:
-        query = query.filter(Document.access_level.in_(levels))
-    return query
 
 
 def _find_document(db: Session, user: User, args: dict) -> tuple[Document | None, str | None]:
@@ -51,11 +32,10 @@ def _find_document(db: Session, user: User, args: dict) -> tuple[Document | None
             doc_id = int(raw_id)
         except (TypeError, ValueError):
             return None, f"'hujjat_id' butun son bo'lishi kerak, kelgani: {raw_id!r}."
-        document = db.get(Document, doc_id)
-        if document is None:
+        if db.get(Document, doc_id) is None:
             return None, f"{doc_id}-raqamli hujjat topilmadi."
-        levels = allowed_access_levels(user)
-        if levels is not None and document.access_level.value not in levels:
+        document = documents_service.get_visible_document(db, user, doc_id)
+        if document is None:
             return None, (
                 "Ruxsat yo'q: bu hujjat sizning rolingiz uchun yopiq. "
                 "Foydalanuvchiga hujjat mazmunini aytma."
@@ -66,72 +46,32 @@ def _find_document(db: Session, user: User, args: dict) -> tuple[Document | None
     if not name:
         return None, "Hujjatni aniqlash uchun 'nom' yoki 'hujjat_id' bering."
 
-    # Title search runs over visible documents only: a document the user may
-    # not open simply does not exist for them.
-    document = (
-        _visible_documents(db, user)
-        .filter(Document.title.ilike(f"%{name}%"))
-        .order_by(Document.id)
-        .first()
-    )
+    document = documents_service.find_visible_document_by_title(db, user, name)
     if document is None:
         return None, f"'{name}' bo'yicha sizga ochiq hujjatlardan mos hujjat topilmadi."
     return document, None
 
 
-def _document_text(db: Session, document: Document) -> str:
-    try:
-        text = extract_text(document_path(document))
-    except (OSError, ValueError):
-        text = ""
-    if text.strip():
-        return text
-    chunks = (
-        db.query(Chunk)
-        .filter(Chunk.document_id == document.id)
-        .order_by(Chunk.order_index)
-        .all()
-    )
-    return "\n\n".join(c.text for c in chunks)
-
-
 def handler(db: Session, user: User, args: dict) -> ToolResult:
     document, error = _find_document(db, user, args)
-    if error:
-        return ToolResult(text=error, ok=False)
+    if error or document is None:
+        return ToolResult(text=error or "Hujjat topilmadi.", ok=False)
 
-    text = _document_text(db, document)
-    if not text.strip():
+    try:
+        result = summarization.summarize_document(db, document, user)
+    except summarization.EmptyDocumentError:
         return ToolResult(
             text=f"'{document.title}' hujjatining matni topilmadi.", ok=False
         )
-    truncated = len(text) > MAX_INPUT_CHARS
-    body = text[:MAX_INPUT_CHARS]
 
-    focus = ROLE_FOCUS.get(user.role, ROLE_FOCUS[UserRole.student])
-    prompt = (
-        f"Quyidagi hujjatni qisqartir. Rakurs: {focus} urg'u ber.\n"
-        f"Hujjat nomi: {document.title}\n"
-        f"Turi: {document.doc_type.value}, tili: {document.language}\n"
-        + ("(Matn qisqartirilgan holda berilmoqda.)\n" if truncated else "")
-        + f"\n--- HUJJAT MATNI ---\n{body}\n--- MATN OXIRI ---"
+    note = (
+        "\n(Hujjat juda uzun — rezyume uning boshidagi qismlar bo'yicha.)"
+        if result.truncated
+        else ""
     )
-
-    response = get_llm_client().chat(
-        messages=[{"role": "user", "content": prompt}], system=SYSTEM
-    )
-    summary = (response.text or "").strip() or "Rezyume tayyorlanmadi."
-
     return ToolResult(
-        text=f"'{document.title}' hujjati rezyumesi:\n{summary}",
-        sources=[
-            {
-                "type": "document",
-                "label": f"{document.title} (to'liq hujjat)",
-                "document_id": document.id,
-                "title": document.title,
-            }
-        ],
+        text=f"'{result.title}' hujjati rezyumesi:\n{result.summary}{note}",
+        sources=[result.source],
     )
 
 

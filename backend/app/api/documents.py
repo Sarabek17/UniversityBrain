@@ -1,7 +1,8 @@
 """Document endpoints. Thin layer: access logic lives in services/documents.py.
 
-    GET /documents          -> documents this user may see
-    GET /documents/{id}     -> metadata + full text (404 when not visible)
+    GET  /documents              -> documents this user may see
+    GET  /documents/{id}         -> metadata + full text (404 when not visible)
+    POST /documents/{id}/summary -> role-angled summary (S6, "Rezyume" button)
 
 RBAC: every authenticated role may list documents; *which* documents is decided
 by `rag.search.allowed_access_levels` — the same rule the RAG search applies, so
@@ -15,8 +16,9 @@ from sqlalchemy.orm import Session
 from app.auth.rbac import get_current_user
 from app.db import get_db
 from app.models import User
-from app.schemas import DocumentDetailOut, DocumentListItemOut
+from app.schemas import ChatSource, DocumentDetailOut, DocumentListItemOut, DocumentSummaryOut
 from app.services import documents as documents_service
+from app.services import summarization
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -50,4 +52,37 @@ def get_document(
         access_level=document.access_level,
         uploaded_at=document.uploaded_at,
         text=documents_service.document_text(db, document),
+    )
+
+
+@router.post("/{document_id}/summary", response_model=DocumentSummaryOut)
+def summarize_document(
+    document_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> DocumentSummaryOut:
+    """Summary of one document, from this user's role angle (no chat involved).
+
+    Same access rule and same 404 policy as the viewer; the summarization
+    itself is the shared `services/summarization.py` path the
+    `hujjat_rezyume` tool uses.
+    """
+    document = documents_service.get_visible_document(db, user, document_id)
+    if document is None:
+        raise _NOT_FOUND
+    try:
+        result = summarization.summarize_document(db, document, user)
+    except summarization.EmptyDocumentError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Hujjat matni topilmadi",
+        ) from None
+    return DocumentSummaryOut(
+        document_id=result.document_id,
+        title=result.title,
+        summary=result.summary,
+        parts=result.parts,
+        truncated=result.truncated,
+        source=ChatSource(**result.source),
+        disclaimer=result.disclaimer,
     )

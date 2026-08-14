@@ -2,32 +2,80 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S6 (navbatda)
+## Joriy sessiya: S7 (navbatda)
 
-S5 yakunlandi (DoD 3/3: `pytest` 39/39 — S2 12 + S3 9 + S4 9 + S5 9;
-`npm run lint` va `npm run build` toza; jonli oqim curl bilan tekshirildi
-(talaba 9 hujjat ko'radi, 91-M yo'q → id bilan 404; dekanat 10 hujjat, 91-M
-ochiladi; `POST /chat` → 5 manba + disclaimer) va **haqiqiy brauzerda 4 rolda**
-(talaba/dekanat/o'qituvchi/tyutor) chiqib, konsolda birorta xato chiqmadi).
-S6 (Summarizatsiya) uchun izohlar:
+S6 yakunlandi (DoD 3/3: `pytest` **54/54** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15; `npm run lint` va `npm run build` toza; jonli tekshiruv uvicorn+curl
+bilan (bitta hujjat 3 rolda — promptdagi rakurs uchchalasida boshqacha;
+ML hujjati → `parts: 2` map-reduce; talaba 91-M rezyumesini so'rasa **404**,
+dekanat 200; chat orqali `use_tool:hujjat_rezyume:{...}` markeri manba +
+disclaimer bilan ishlaydi) va **brauzerda** (headless Chrome/CDP): "Rezyume"
+tugmasi → blok, manba + disclaimer + "Yopish", original matn joyida qoladi,
+konsolda xato yo'q).
+S7 (Tarjima moduli) uchun izohlar:
 
+- **Hujjat matni qayerdan olinadi:** `app/services/documents.py` —
+  `document_text(db, document)` (avval `Document.file_path` fayli, bo'sh
+  bo'lsa `Chunk` lardan yig'iladi). Ruxsat: `get_visible_document(db, user,
+  id)` → None bo'lsa **404**. Tarjima servisi ham SHU ikkitasidan foydalansin,
+  o'z filtri/o'qishini yozmasin. Nomga qarab topish uchun tayyor helper ham
+  bor: `find_visible_document_by_title(db, user, nom)` (S6 da qo'shildi).
+- **Paragrafga bo'lish tayyor:** `app/services/summarization.py` dagi
+  `split_parts(text, part_chars, max_parts) -> (parts, truncated)` —
+  paragraf chegarasini buzmaydi. Tarjima paragraf-paragraf ketadi, shuning
+  uchun uni import qilib ishlatish yoki shu naqshni takrorlash mumkin
+  (yangi nusxa yasamasdan).
+- **`Translation` jadvali (`models.py:157`, kesh uchun tayyor):**
+  `id`, `document_id` (nullable, FK documents), `chunk_id` (nullable, FK
+  chunks), `language` (String(8) — MAQSAD tili), `translated_text` (Text),
+  `created_at`. Sxema `schemas.TranslationOut` da bor (hozircha
+  ishlatilmaydi). Butun hujjat tarjimasi = `document_id` to'ldirilgan qator;
+  bo'lak tarjimasi = `chunk_id`. Jadval `seed/generate.py` dagi `ALL_MODELS`
+  ro'yxatida bor — demo reset keshni ham tozalaydi.
+- **Endpoint naqshi (S6 dan nusxa oling):** `POST /documents/{id}/summary`
+  — router yupqa (`app/api/documents.py`), ruxsat `get_visible_document`,
+  logika `services/` da, javobda `source` (`schemas.ChatSource`) va
+  `disclaimer` (`AGENT_DISCLAIMER`). Tarjima uchun ham xuddi shu naqsh:
+  `POST /documents/{id}/translate?til=uz` yoki body bilan.
+- **LLM klient interfeysi:** `app/llm/client.py` —
+  `get_llm_client().chat(messages, tools=None, system=None) -> LLMResponse`.
+  Tarjima chaqiruvi `tools` bermaydi (vosita kerak emas), faqat
+  `messages=[{"role": "user", "content": prompt}]` + `system`.
+- **Mock rejimda tarjimani qanday test qilish (S6 da ishlagan usul):**
+  mock provayder `tools=None` bo'lganda `[mock:<digest>] Echo: <promptning
+  ilk 600 belgisi>` qaytaradi — ya'ni tarjima MATNI haqiqiy tarjima emas.
+  Shuning uchun testlar mexanikani tekshiradi: `monkeypatch.setattr(
+  <servis moduli>, "get_llm_client", lambda: RecordingClient())` bilan
+  promptlar va chaqiruvlar soni yoziladi (namuna:
+  `tests/test_s6_summary.py` dagi `RecordingClient` + `recorder` fixture).
+  Kesh testi: ikkinchi chaqiruvda LLM chaqiruvlari soni **0** bo'lishi kerak.
+- **DocumentPanel tuzilishi (`frontend/src/components/DocumentPanel.tsx`):**
+  `documentId` propi → `useEffect` da `documentsApi.get(id)`; holat id
+  bo'yicha **derivatsiya** qilinadi (`loaded.id === documentId`), effektda
+  sinxron `setState` YO'Q (Next 16 eslint qoidasi). Header'da amal tugmalari
+  qatori bor (hozir: "Rezyume" + "Yopish") — "Tarjima" tugmasi shu qatorga
+  qo'shiladi. Kontent maydonida avval rezyume bloki (`<section>`), keyin
+  `<Markdown text={document.text} />`. Yonma-yon ko'rinish uchun shu
+  kontent maydonini ikki ustunga bo'lish kerak (chapda `document.text`,
+  o'ngda tarjima) — original hech qachon almashtirilmaydi (domen qoidasi 4).
+- **`lib/api.ts`:** `documentsApi = { list, get, summary }` — tarjima metodi
+  shu obyektga qo'shiladi, UI matnlari `src/i18n/uz.json` → `documents.*`.
 - **Hujjatlar API (S5 da qo'shildi, `app/api/documents.py`):**
   ```
-  GET /documents        -> [{id, title, doc_type, language, access_level, uploaded_at}]
-  GET /documents/{id}   -> yuqoridagilar + text (to'liq matn)
+  GET  /documents              -> [{id, title, doc_type, language, access_level, uploaded_at}]
+  GET  /documents/{id}         -> yuqoridagilar + text (to'liq matn)
+  POST /documents/{id}/summary -> {document_id, title, summary, parts,
+                                   truncated, source, disclaimer}   (S6)
   ```
-  Sxemalar: `schemas.DocumentListItemOut` / `DocumentDetailOut`.
+  Sxemalar: `schemas.DocumentListItemOut` / `DocumentDetailOut` /
+  `DocumentSummaryOut`.
   `file_path` ATAYLAB chiqarilmaydi (ichki yo'l). Rol filtri —
   `rag.search.allowed_access_levels(user)`, biznes logika
   `app/services/documents.py` da (`visible_documents`, `get_visible_document`,
-  `document_text`). Ko'rish huquqi yo'q yoki mavjud bo'lmagan hujjat → **404**
-  (403 emas: mavjudligi ham oshkor bo'lmaydi). Matn `Document.file_path` dan
-  o'qiladi, bo'sh bo'lsa `Chunk` lardan yig'iladi.
-- **"Rezyume" tugmasi shu yerga qo'yiladi:** `frontend/src/components/
-  DocumentPanel.tsx` — sarlavha `<header>` ida `onClose` tugmasi yonida
-  (kodda izoh qo'yilgan). Panel `documentId` propini oladi va o'zi
-  `documentsApi.get(id)` ni chaqiradi; rezyume uchun yangi endpoint kerak
-  bo'lsa `documentsApi` ga qo'shiladi (`lib/api.ts` — YAGONA joy).
+  `find_visible_document_by_title`, `document_text`). Ko'rish huquqi yo'q yoki
+  mavjud bo'lmagan hujjat → **404** (403 emas: mavjudligi ham oshkor
+  bo'lmaydi). Matn `Document.file_path` dan o'qiladi, bo'sh bo'lsa `Chunk`
+  lardan yig'iladi.
 - **Frontend fayllari (S5):** sahifalar `src/app/(protected)/chat/page.tsx`
   (suhbat holati SHU YERDA: `messages`, `activeId`, `openDocumentId`) va
   `.../documents/page.tsx`; komponentlar `src/components/` da: `ChatWindow`
@@ -113,7 +161,7 @@ S6 (Summarizatsiya) uchun izohlar:
 | S3 | RAG quvuri | ✅ tugadi | DoD 3/3 o'tdi, commit "S3: RAG pipeline with role-filtered search" |
 | S4 | Agent yadrosi + tools | ✅ tugadi | DoD 3/3 o'tdi, commit "S4: agent core with tool calling" |
 | S5 | Chat UI | ✅ tugadi | DoD 3/3 o'tdi (pytest 39/39, lint+build toza, 4 rolda brauzer tekshiruvi), commit "S5: chat UI and document panel" |
-| S6 | Summarizatsiya | ⬜ boshlanmagan | |
+| S6 | Summarizatsiya | ✅ tugadi | DoD 3/3 o'tdi (pytest 54/54, lint+build toza, curl 3 rolda + brauzerda "Rezyume" tugmasi), commit "S6: role-aware document summarization" |
 | S7 | Tarjima moduli | ⬜ boshlanmagan | |
 | S8 | To'lovlar moduli | ⬜ boshlanmagan | |
 | S9 | Davomat + mavjudlik (talaba) | ⬜ boshlanmagan | |
@@ -353,6 +401,58 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     `--headless=new --remote-debugging-port=9222` bilan ishga tushirib, Node
     22 ning ichki `WebSocket` i orqali CDP bilan qilindi (npm paketi
     o'rnatilmadi); viewport 1440x900 qilinmasa `lg:` paneli yashirin qoladi.
+- **S6 qarorlar (summarizatsiya):**
+  - **Yagona kod yo'li: `app/services/summarization.py`.** `hujjat_rezyume`
+    tooli ham, `POST /documents/{id}/summary` ham AYNAN shu servisni
+    chaqiradi (`summarize_document(db, document, user)`), dublikat yo'q.
+    Tool endi faqat "qaysi hujjat" savolini hal qiladi va natijani
+    `ToolResult` ga o'raydi; matn o'qish `services/documents.document_text`,
+    nom bo'yicha qidiruv esa yangi `find_visible_document_by_title` orqali —
+    ya'ni ruxsat qoidasi (`rag.search.allowed_access_levels`) hamon bitta
+    joyda. Tooldagi eski nusxalar (`_visible_documents`, `_document_text`)
+    olib tashlandi.
+  - **Rol rakursi ikki qatlamda:** `ROLE_FOCUS` (qisqa ibora, S4 dan meros)
+    + yangi `ROLE_POINTS` (har rol uchun 3 ta aniq savol: talaba — "mendan
+    nima talab qilinadi / qachongacha / oqibati", dekanat — "raqam va sana /
+    ijrochilar / muddatlar", o'qituvchi — "asosiy bandlar / o'quv jarayoniga
+    ta'siri / undan talab qilinadigan ish" va h.k.). Ikkalasi HAM tizim
+    promptiga (`system_prompt(role)`), HAM foydalanuvchi promptiga
+    (`build_summary_prompt`/`build_part_prompt`/`build_reduce_prompt`) kiradi
+    — provayder tizim promptini qanchalik hisobga olishidan qat'i nazar
+    rakurs yo'qolmaydi. 5 rolning 5 ta har xil rakursi bor (test bilan
+    qotirilgan).
+  - **Map-reduce, `PART_CHARS = 4000` (`MAX_PARTS = 12`):** matn shu
+    chegaradan uzun bo'lsa paragraf chegaralari bo'yicha bo'linadi
+    (`split_parts`), har bo'lakka bitta "oraliq qayd" chaqiruvi (map), so'ng
+    bitta birlashtiruvchi chaqiruv (reduce) — jami `parts + 1` chaqiruv;
+    qisqa hujjatda bitta chaqiruv. 4000 model chegarasi emas, sifat/tezlik
+    byudjeti: 6000 da demo korpusining BIRORTA hujjati map-reduce'ga
+    tushmasdi (eng uzuni 4858 belgi — ruscha fayl 6793 BAYT, lekin kirill
+    2 baytdan, ya'ni ~3.8k belgi). 4000 da syllabus/nizom/ML hujjatlari
+    2 bo'lakka bo'linadi, 2 sahifalik buyruq esa bitta chaqiruvda qoladi —
+    ikkala yo'l ham demoda jonli ko'rinadi. `MAX_PARTS` dan oshsa
+    `truncated=True` va javobda ogohlantirish qatori chiqadi.
+  - **Endpoint `POST /documents/{id}/summary`** (GET emas: LLM chaqiruvi —
+    qimmat, keshlanmaydigan amal). Javob `schemas.DocumentSummaryOut`:
+    `document_id, title, summary, parts, truncated, source (ChatSource),
+    disclaimer`. Manba va disclaimer MAJBURIY maydon — rezyume ham faktik
+    javob (domen qoidalari 3 va 5). Ruxsati yo'q hujjat → **404** (viewer
+    bilan bir xil), matni bo'sh hujjat → 422.
+  - **Mock provayder kengaytmasi (`llm/client.py`, ataylab minimal):**
+    `tools` berilmagan chaqiruvda (rezyume shunday chaqiradi) javob endi
+    `[mock:<digest>] Echo: <promptning ilk 600 belgisi> […]` — oldin butun
+    prompt qaytarardi, ya'ni "rezyume" hujjatning o'zidan uzun bo'lardi.
+    Digest hamon TO'LIQ matndan olinadi, shuning uchun deterministiklik va
+    kirishga bog'liqlik saqlanadi; tool natijasidan javob yasash yo'li
+    o'zgarmadi (endi u ham shu `_clip()` yordamchisini ishlatadi). Yoqimli
+    yon ta'sir: mock rejimda ham rezyume matnining boshida rol rakursi
+    ko'rinadi — 3 rolda farqni ko'z bilan tekshirish mumkin.
+  - **Frontend:** "Rezyume" tugmasi `DocumentPanel` header'idagi amal
+    tugmalari qatorida; natija hujjat matni TEPASIDA alohida `<section>`
+    blokida (manba + disclaimer + "Yopish"), original matn hech qachon
+    almashtirilmaydi. Holat S5 naqshi bilan — id bo'yicha derivatsiya
+    (`summary.id === documentId`), `setState` faqat hodisa ishlovchisida va
+    `.then()/.catch()` ichida (Next 16 `react-hooks/set-state-in-effect`).
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (`seed/generate.py` dagi `PAIR_TIMES`, ichki tartib
     nizomi 3.1-band bilan bir xil): 1) 08:30-09:50, 2) 10:00-11:20,
@@ -399,9 +499,19 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   S9 (mavjudlik servisi) uchinchi nusxa yasamasin: o'sha sessiyada umumiy
   konstantaga (masalan `app/services/presence.py` yoki `app/config.py`)
   ko'chirilsin.
-- `hujjat_rezyume` — sodda variant: hujjat matnining birinchi 6000 belgisi
-  bitta LLM chaqiruviga beriladi. S6 da rol rakursi kuchaytiriladi va uzun
-  hujjat uchun map-reduce qo'shiladi (`ROLE_FOCUS` dict allaqachon bor).
+- **Rezyume keshlanmaydi** — bitta hujjatga har bosishda LLM qayta
+  chaqiriladi (rol bo'yicha farq qilgani uchun kesh kaliti
+  `(document_id, role)` bo'lishi kerak). S7 da `Translation` keshi
+  yozilgandan keyin xuddi shu naqshni rezyumega ham qo'llash mumkin
+  (yoki S14 da) — hozircha demo tezligi yetarli.
+- **Rezyume sifati Gemini bilan tekshirilmagan:** ISH_REJA S6 DoD dagi
+  "2 sahifalik buyruq 5-6 qatorli aniq rezyumega tushadi" bandi mock
+  rejimda o'lchab bo'lmaydi (matn — deterministik echo). S14 da kalit
+  ulangach 3 rolda qayta ko'rilsin; kerak bo'lsa `SYSTEM_BASE` va
+  `ROLE_POINTS` matnlari o'sha yerda sozlanadi.
+- **`_document_text` mantiqi ikki joyda emas, lekin `extract_text` faqat
+  `.md/.txt` ni biladi** — S13 da PDF/DOCX qo'shilsa rezyume ham avtomatik
+  ishlaydi (u `services/documents.document_text` ga tayanadi).
 - Gemini provayderi hali `NotImplementedError` — kalit ulangach
   `GeminiLLMClient.chat()` yozilishi kerak (neytral message/tool formatini
   google-genai formatiga o'girish). Butun tizim shu bitta metodga bog'liq.

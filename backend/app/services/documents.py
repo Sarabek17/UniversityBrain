@@ -38,6 +38,24 @@ def get_visible_document(db: Session, user: User, document_id: int) -> Document 
     return document
 
 
+def find_visible_document_by_title(
+    db: Session, user: User, name: str
+) -> Document | None:
+    """First visible document whose title contains `name` (case-insensitive).
+
+    Searching runs over visible documents only: a document the user may not
+    open simply does not exist for them (same rule as `get_visible_document`).
+    """
+    name = (name or "").strip()
+    if not name:
+        return None
+    query = db.query(Document)
+    levels = allowed_access_levels(user)
+    if levels is not None:
+        query = query.filter(Document.access_level.in_(levels))
+    return query.filter(Document.title.ilike(f"%{name}%")).order_by(Document.id).first()
+
+
 def document_text(db: Session, document: Document) -> str:
     """Full text: the source file, falling back to the indexed chunks."""
     try:

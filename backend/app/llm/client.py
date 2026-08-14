@@ -53,6 +53,15 @@ SEARCH_TOOL = "hujjat_qidir"  # the mock's default first step (S4)
 MOCK_ANSWER_CHARS = 600
 
 
+def _clip(text: str, limit: int = MOCK_ANSWER_CHARS) -> str:
+    """Cap mock output. Tool-less callers (S6 summarization) pass a whole
+    document in the prompt — echoing it verbatim would make the "summary"
+    longer than the document. The digest still covers the full text, so the
+    response stays deterministic and unique per input."""
+    text = text.strip()
+    return text if len(text) <= limit else text[:limit].rstrip() + " […]"
+
+
 class MockLLMClient(BaseLLMClient):
     """Deterministic offline provider for development and tests.
 
@@ -90,7 +99,7 @@ class MockLLMClient(BaseLLMClient):
             return LLMResponse(text=self._answer_from_tool(tool_messages[-1]))
 
         digest = hashlib.sha256(last_text.encode("utf-8")).hexdigest()[:8]
-        return LLMResponse(text=f"[mock:{digest}] Echo: {last_text}")
+        return LLMResponse(text=f"[mock:{digest}] Echo: {_clip(last_text)}")
 
     def _pick_tool_call(self, text: str, tools: list[dict]) -> ToolCall | None:
         marker_call = self._marker_tool_call(text, tools)
@@ -115,10 +124,7 @@ class MockLLMClient(BaseLLMClient):
         result = (message.get("tool_result") or message.get("content") or "").strip()
         if not result:
             return f"[mock] '{name}' vositasi natija qaytarmadi."
-        snippet = result[:MOCK_ANSWER_CHARS].rstrip()
-        if len(result) > MOCK_ANSWER_CHARS:
-            snippet += " […]"
-        return f"[mock] '{name}' vositasi natijasi asosida:\n{snippet}"
+        return f"[mock] '{name}' vositasi natijasi asosida:\n{_clip(result)}"
 
     @staticmethod
     def _marker_tool_call(text: str, tools: list[dict]) -> ToolCall | None:
