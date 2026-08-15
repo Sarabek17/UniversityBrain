@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.attendance import router as attendance_router
 from app.api.chat import router as chat_router
+from app.api.docflow import router as docflow_router
 from app.api.documents import router as documents_router
 from app.api.payments import router as payments_router
 from app.auth.router import router as auth_router
@@ -31,12 +32,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Module routers (docflow, notifications, admin) are wired here in later sessions.
+# Module routers (notifications, admin) are wired here in later sessions.
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
 app.include_router(payments_router)
 app.include_router(attendance_router)
+app.include_router(docflow_router)
 
 
 @app.get("/health", response_model=HealthOut)

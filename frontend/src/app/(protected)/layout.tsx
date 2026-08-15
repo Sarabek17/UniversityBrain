@@ -22,6 +22,9 @@ const NAV: { href: string; label: string; roles: UserRole[] | null }[] = [
   // Presence + attendance: the same page answers a different question per role
   // (teacher marks, tutor/dean watch the group, student sees their own record).
   { href: "/attendance", label: uz.nav.attendance, roles: null },
+  // Document flow: the student tracks their application, the teacher hands in
+  // reports, the dean's office decides — one page, three questions.
+  { href: "/docflow", label: uz.nav.docflow, roles: null },
 ];
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {

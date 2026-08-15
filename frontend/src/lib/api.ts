@@ -725,3 +725,137 @@ export const attendanceApi = {
   teachersMonthly: (days?: number | null) =>
     api.get<TeacherMonth>(`/attendance/teachers/monthly${query({ days })}`),
 };
+
+// --- document flow (S11 API) ------------------------------------------------
+
+export type FlowDocumentType = "application" | "report" | "order" | "letter";
+
+/** The status chain: sent -> seen -> in_progress -> approved | rejected. */
+export type FlowStatus =
+  | "sent"
+  | "seen"
+  | "in_progress"
+  | "approved"
+  | "rejected";
+
+export type FlowBox = "inbox" | "outbox";
+export type FlowSort = "new" | "due";
+
+/** One entry of the template catalogue — already filtered by the caller's role. */
+export interface FlowTemplate {
+  id: string;
+  title: string;
+  description: string;
+  doc_type: FlowDocumentType;
+  doc_type_label: string;
+  recipient_role: UserRole | null;
+  recipient_label: string;
+  needs_recipient_user: boolean;
+  needs_due_date: boolean;
+  body_hint: string;
+}
+
+export interface FlowRecipient {
+  id: number;
+  full_name: string;
+  role: UserRole;
+  role_label: string;
+}
+
+export interface FlowHistoryItem {
+  id: number;
+  status: FlowStatus;
+  status_label: string;
+  comment: string | null;
+  timestamp: string;
+  changed_by_id: number;
+  changed_by_name: string;
+}
+
+/** One row of an inbox / outbox list. `can_change_status` is the backend's
+ * answer, not a role guess: only the recipient of an open document may act. */
+export interface FlowItem {
+  id: number;
+  doc_type: FlowDocumentType;
+  doc_type_label: string;
+  template_id: string | null;
+  title: string;
+  sender_id: number;
+  sender_name: string;
+  sender_role: UserRole;
+  recipient_role: UserRole | null;
+  recipient_user_id: number | null;
+  recipient_label: string;
+  status: FlowStatus;
+  status_label: string;
+  created_at: string;
+  updated_at: string;
+  due_date: string | null;
+  due_in_days: number | null;
+  overdue: boolean;
+  is_incoming: boolean;
+  is_outgoing: boolean;
+  can_change_status: boolean;
+  last_comment: string | null;
+  preview: string;
+}
+
+export interface FlowDetail extends FlowItem {
+  body_text: string;
+  history: FlowHistoryItem[];
+  next_statuses: FlowStatus[];
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export interface FlowList {
+  box: FlowBox;
+  sort: FlowSort;
+  rows: FlowItem[];
+  total: number;
+  new_count: number;
+  open_count: number;
+  overdue_count: number;
+  due_soon_count: number;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+/** Summary of an incoming document — the same S6 service the viewer uses. */
+export interface FlowSummary {
+  flow_id: number;
+  title: string;
+  summary: string;
+  parts: number;
+  truncated: boolean;
+  source: ChatSource;
+  disclaimer: string;
+}
+
+export interface FlowCreateInput {
+  template_id: string;
+  body_text: string;
+  recipient_user_id?: number | null;
+  due_date?: string | null;
+}
+
+export const docflowApi = {
+  templates: () => api.get<FlowTemplate[]>("/docflow/templates"),
+  recipients: () => api.get<FlowRecipient[]>("/docflow/recipients"),
+  list: (box: FlowBox, sort?: FlowSort | null) =>
+    api.get<FlowList>(`/docflow/${box}${query({ sort })}`),
+  get: (id: number) => api.get<FlowDetail>(`/docflow/${id}`),
+  create: (input: FlowCreateInput) =>
+    api.post<FlowDetail>("/docflow", {
+      template_id: input.template_id,
+      body_text: input.body_text,
+      recipient_user_id: input.recipient_user_id ?? null,
+      due_date: input.due_date ?? null,
+    }),
+  changeStatus: (id: number, status: FlowStatus, comment?: string | null) =>
+    api.post<FlowDetail>(`/docflow/${id}/status`, {
+      status,
+      comment: comment?.trim() ? comment.trim() : null,
+    }),
+  summary: (id: number) => api.post<FlowSummary>(`/docflow/${id}/summary`),
+};

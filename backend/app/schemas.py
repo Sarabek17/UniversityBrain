@@ -734,3 +734,119 @@ class TeacherMonthOut(BaseModel):
     percent: int | None
     source: ChatSource
     disclaimer: str = AGENT_DISCLAIMER
+
+
+# --- S11: document flow (ariza / hujjat aylanmasi) ---------------------------
+# Templates are a code constant (`services/docflow.TEMPLATES`), not a table:
+# `FlowDocument.template_id` is just that string.
+
+
+class FlowTemplateOut(BaseModel):
+    """One entry of the template catalogue, already filtered by role."""
+
+    id: str
+    title: str
+    description: str
+    doc_type: FlowDocumentType
+    doc_type_label: str
+    recipient_role: UserRole | None
+    recipient_label: str
+    needs_recipient_user: bool
+    needs_due_date: bool
+    body_hint: str
+
+
+class FlowRecipientOut(BaseModel):
+    """A person a staff order may be addressed to (inside the caller's scope)."""
+
+    id: int
+    full_name: str
+    role: UserRole
+    role_label: str
+
+
+class FlowHistoryItemOut(BaseModel):
+    id: int
+    status: FlowStatus
+    status_label: str
+    comment: str | None
+    timestamp: datetime
+    changed_by_id: int
+    changed_by_name: str
+
+
+class FlowItemOut(BaseModel):
+    """One row of an inbox / outbox list."""
+
+    id: int
+    doc_type: FlowDocumentType
+    doc_type_label: str
+    template_id: str | None
+    title: str
+    sender_id: int
+    sender_name: str
+    sender_role: UserRole
+    recipient_role: UserRole | None
+    recipient_user_id: int | None
+    recipient_label: str
+    status: FlowStatus
+    status_label: str
+    created_at: datetime
+    updated_at: datetime
+    due_date: date | None
+    due_in_days: int | None
+    overdue: bool
+    is_incoming: bool
+    is_outgoing: bool
+    can_change_status: bool
+    last_comment: str | None
+    preview: str
+
+
+class FlowDetailOut(FlowItemOut):
+    """GET /docflow/{id} — the document with its whole status history."""
+
+    body_text: str
+    history: list[FlowHistoryItemOut] = []
+    next_statuses: list[FlowStatus] = []
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class FlowListOut(BaseModel):
+    """GET /docflow/inbox | /docflow/outbox."""
+
+    box: str  # "inbox" | "outbox"
+    sort: str  # "new" | "due"
+    rows: list[FlowItemOut] = []
+    total: int
+    new_count: int  # incoming and still `sent` — nobody opened it yet
+    open_count: int  # not approved/rejected
+    overdue_count: int
+    due_soon_count: int
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class FlowCreateRequest(BaseModel):
+    template_id: str
+    body_text: str
+    recipient_user_id: int | None = None  # only for person-addressed templates
+    due_date: date | None = None  # only for templates with an execution deadline
+
+
+class FlowStatusRequest(BaseModel):
+    status: FlowStatus
+    comment: str | None = None  # mandatory when rejecting
+
+
+class FlowSummaryOut(BaseModel):
+    """POST /docflow/{id}/summary — S6 summarizer over the document body."""
+
+    flow_id: int
+    title: str
+    summary: str
+    parts: int
+    truncated: bool
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER

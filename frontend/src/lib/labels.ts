@@ -6,6 +6,8 @@ import type {
   ClassSessionStatus,
   ClassState,
   DocumentType,
+  FlowDocumentType,
+  FlowStatus,
   PaymentState,
   PaymentStatus,
   PresenceState,
@@ -114,6 +116,34 @@ export const classStateClass = (state: ClassState): string =>
     upcoming: NEUTRAL_CHIP,
     cancelled: NEUTRAL_CHIP,
   })[state] ?? NEUTRAL_CHIP;
+
+// --- document flow (S11) -----------------------------------------------------
+
+export const flowTypeLabel = (type: FlowDocumentType): string =>
+  uz.docflow.types[type] ?? type;
+
+export const flowStatusLabel = (status: FlowStatus): string =>
+  uz.docflow.statuses[status] ?? status;
+
+/** The status chain as a traffic light: grey sent, blue seen/in progress,
+ * green approved, red rejected. */
+export const flowStatusClass = (status: FlowStatus): string =>
+  ({
+    sent: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    seen: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
+    in_progress: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+    approved:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+    rejected: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  })[status] ?? NEUTRAL_CHIP;
+
+/** "3 kun qoldi" / "muddat o'tgan" — red once the deadline is behind us. */
+export const dueClass = (days: number | null, overdue: boolean): string =>
+  overdue
+    ? "text-red-700 dark:text-red-300"
+    : days !== null && days <= 3
+      ? "text-amber-700 dark:text-amber-300"
+      : "text-gray-600 dark:text-gray-300";
 
 /** Percentage colouring for the monthly report (same threshold as students). */
 export const percentClass = (percent: number | null): string =>

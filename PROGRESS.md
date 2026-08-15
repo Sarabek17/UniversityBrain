@@ -2,95 +2,95 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S11 (navbatda)
+## Joriy sessiya: S12 (navbatda)
 
-S10 yakunlandi (DoD 3/3: `pytest` **166/166** — S2 12 + S3 9 + S4 9 + S5 9 +
-S6 15 + S7 20 + S8 29 + S9 39 + S10 **24**; `npm run lint` va `npm run build`
-toza; jonli tekshiruv uvicorn+curl: rashidova svodi `?at=11:40` — 5 o'qituvchi
-(binoda 4, kelmagan 1), 11 dars (o'tilgan 9, **xavf ostida 1**, aniqlashtirish 1,
-kechikkan 0), **tursunov** 3-juftlik "Kompyuter tarmoqlari" 103-lab →
-"dars xavf ostida", 2-juftlik → "aniqlashtirish kerak"; oylik svod 64 dars 95%,
-tursunov **8/10 (80%)** eng past qatorda; yusupov faqat IQ o'qituvchilarini
-(saidova/ergashev/muminova) ko'radi, tursunov ro'yxatda yo'q; umarov
-`/attendance/teachers` **403**, tokensiz **401**; `?at=10:05` da xavf ostida
-hodisasi **1 ta yangi Notification** yozdi, ikkinchi so'rovda **0** (dublikat
-yo'q); chatda `use_tool:oqituvchi_davomat:{"vaqt":"11:40"}` → tursunov +
-3-juftlik + 103-lab + "jadval bo'yicha" + turniket manbasi) va **brauzerda**
-(headless Chrome/CDP, 1440x900): dekanat `/attendance` uch tabli
-("O'qituvchilar" / "Oylik jadval" / "Talabalar"), tursunov kartasi **qizil**
-(`border-red-300`) va "Bugun kelmagan" chipi qizil, brauzerda 11:40 in'ektsiyasi
-bilan 3-juftlik chipi **qizil "Xavf ostida"**, 2-juftlik sariq, boshqa
-o'qituvchilarniki yashil "O'tildi"; oylik jadvalda 5 qator (foiz rangi bilan);
-`/chat` dekanat vidjetida "Xavf ostidagi dars yo'q" ko'rsatkichi + tursunov
-qatori; o'qituvchi va tyutor ko'rinishlari o'zgarmagan; konsolda xato yo'q
-(faqat HMR/devtools infolari). **Demo bazasi tekshiruvdan keyin asl holatiga
-qaytarildi**: 15 bildirishnoma (shundan 2 ta `teacher_absence`), bugungi
-class_sessions 13 `held` + 2 `needs_clarification`.
+S11 yakunlandi (DoD 3/3: `pytest` **194/194** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15 + S7 20 + S8 29 + S9 39 + S10 24 + S11 **28**; `npm run lint` va
+`npm run build` toza; jonli tekshiruv uvicorn+curl: aliyev chatda
+`use_tool:ariza_holati:{"ariza": "malumotnoma"}` → "Ariza №1, 12.08.2026,
+holat: tasdiqlandi" + to'liq tarix + rashidovaning "204-xona" izohi + manba
+chipi; talaba `akademik_tatil` arizasini yubordi (id 5, tarix 1 yozuv) →
+rashidova uni kelganlar ro'yxatida "yangi" deb ko'rdi → **ko'rildi** →
+**tasdiqlandi** (tarix **3 yozuv**) → talaba yangi statusni va izohni ko'rdi;
+yusupov (IQ dekanati) o'sha arizani ochsa **404**, aliyev o'z arizasi statusini
+o'zgartirsa **403**, sababsiz rad etish **422**, tasdiqlangandan keyin qayta
+o'zgartirish **409**; bildirishnomalar: rashidovaga 1 ta `flow_incoming`,
+aliyevga 2 ta `flow_status` (dublikat yo'q, seed qatorlari saqlandi).
+**Brauzerda** (headless Chrome/CDP, 1440x900): talaba — "Arizalarim" (2 ariza,
+tarix 3 qator, qaror tugmalari YO'Q, manba + disclaimer bor, "Yangi ariza"
+formasida 3 shablon va namuna matn avtomatik qo'yiladi); dekanat — "Hujjat
+aylanmasi" (4 qator, "Ochiq: 2 / Yangi: 1" chiplari, "Kelgan hujjatlar" /
+"Yuborilganlar" tablari, saralash tanlagichi; ochiq hujjatda
+Ko'rildi/Ijroda/Tasdiqlash/**Rad etish** tugmalari, "Rad etish" sabab maydonini
+ochadi va bo'sh sabab bilan yuborilmaydi, "Rezyume" tugmasi S6 servisidan
+dekanat rakursidagi rezyumeni chiqardi, UI dan "Ko'rildi" bosilganda tarix
+2 qatorga o'sdi); o'qituvchi — "Topshirilgan hujjatlar" (1 ta hisobot, kelganlar
+tabi bo'sh); konsolda xato yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga
+qaytarildi**: 4 flow hujjat, 9 tarix yozuvi, 15 bildirishnoma.
 
-S11 (Hujjat almashinuvi) uchun izohlar:
+S12 (Bildirishnomalar) uchun izohlar:
 
-- **Modellar tayyor (`app/models.py`), o'zgartirish shart emas:**
-  ```python
-  FlowDocument(id, doc_type: FlowDocumentType, template_id: str|None,
-               sender_id, recipient_role: UserRole|None,
-               recipient_user_id: int|None, body_text: Text,
-               file_path: str|None, due_date: date|None,
-               status: FlowStatus, created_at)      # history -> FlowHistory
-  FlowHistory(id, flow_document_id, status: FlowStatus, comment: str|None,
-              timestamp, changed_by_id)
+- **Notification yozadigan BARCHA joylar (S12 shu ro'yxatni yig'adi):**
+  1. `seed/generate.py: create_notifications` — demo uchun 15 qator:
+     `flow_status` 2, `flow_incoming` 1, `teacher_absence` 2,
+     `payment_uploaded` 1, `payment_debt` 1, `new_assignment` 8.
+  2. `services/presence.py: record_risk_notifications` (S10) —
+     `teacher_absence`, `link_type="schedule"`, `link_id=schedule_id`.
+     **Faqat `GET /attendance/teachers` chaqirilganda yoziladi** (GET yon
+     ta'siri, fon vazifasi yo'q). Dublikat oynasi kechagi yarim tundan
+     boshlanadi (UTC tuzog'i, pastda).
+  3. `services/docflow.py` (S11) — `_write_notification` yordamchisi +
+     `notify_incoming` (`flow_incoming`, hujjat yaratilganda qabul
+     qiluvchilarga) va `notify_status` (`flow_status`, har status
+     o'zgarishida yuboruvchiga). Dublikat kaliti ikki xil:
+     `flow_incoming` — `(user_id, type, link_id)` (matn solishtirilmaydi,
+     shuning uchun seed yozgan boshqacha matnli qator ham tanib olinadi),
+     `flow_status` — `(user_id, type, link_id, text)` (har qadamning matni
+     boshqacha, ya'ni haqiqiy ikkinchi qadam yutib yuborilmaydi).
+  4. **To'lovlar (S8) hech narsa yozmaydi** — `upload_receipt` va
+     `confirm_payment` ga bittadan chaqiruv qo'shilsa yetadi.
+  5. **`mark_attendance` (S9) hech narsa yozmaydi** — "darsga kelmadi"
+     triggeri shu yerga qo'shiladi.
+- **`services/notifications.py` hali YO'Q** (CLAUDE.md arxitekturasida bor).
+  S12 uni yaratib, yuqoridagi 2- va 3-bandlarni o'sha faylga ko'chirsin:
+  ikkalasi ham bitta umumiy yordamchiga tushadi —
+  `write_notification(db, user_id, notif_type, text, link_type, link_id, *,
+  match_text=True) -> bool`. Ko'chirilgandan keyin `presence.py` va
+  `docflow.py` faqat chaqiradi (testlar `record_risk_notifications` va
+  `docflow.notify_incoming` nomlariga tayanadi — nom o'zgarsa test ham
+  yangilansin).
+- **`link_type` / `link_id` konventsiyasi (o'zgarmaydi, UI havolani shundan
+  yasaydi):**
   ```
-  Enumlar: `FlowDocumentType = application | report | order | letter`,
-  `FlowStatus = sent | seen | in_progress | approved | rejected`.
-  **Qabul qiluvchi ikki xil:** `recipient_role` (butun dekanat) YOKI
-  `recipient_user_id` (aniq shaxs) — ro'yxat so'rovi ikkalasini ham qamrashi
-  kerak (`or_(FlowDocument.recipient_user_id == user.id,
-  FlowDocument.recipient_role == user.role)`).
-- **Seed'dagi 4 ta ariza (O'ZGARMAS, `seed/generate.py: create_flow_documents`):**
-  1. **aliyev** → dekanat (`recipient_role=staff`), `template_id="malumotnoma"`,
-     status **approved**, tarixi 3 yozuv (sent 2 kun oldin → seen → approved,
-     rashidova izohi "Dekanatdan (204-xona) olib ketishingiz mumkin") —
-     "arizam qayerda?" demo ssenariysi shu.
-  2. **abdullayev** → dekanat, `qayta_topshirish`, status **seen** (2 yozuv).
-  3. **umarov** (o'qituvchi) → dekanat, `semestr_hisobot`, doc_type **report**,
-     status **sent** (1 yozuv) — "o'qituvchi hujjat topshiradi" yo'li.
-  4. **rashidova** → **tursunov** (`recipient_user_id`), `buyruq_topshiriq`,
-     doc_type **order**, `due_date = bugun + 5 kun`, status **in_progress**
-     (3 yozuv) — "muddati yaqinlashayotgan" saralash uchun tayyor keys.
-  Shablon id'lari satr (`template_id`), alohida jadval YO'Q — S11 shablonlar
-  ro'yxatini kodda (konstanta) saqlashi mumkin; ISH_REJA 5 ta shablon so'raydi,
-  seed'da 4 tasi ishlatilgan (`malumotnoma`, `qayta_topshirish`,
-  `semestr_hisobot`, `buyruq_topshiriq`) — beshinchisi (masalan
-  `akademik_tatil`) qo'shilsa seed'ga TEGMASDAN faqat shablon ro'yxatiga
-  qo'shilsin.
-- **Bildirishnomalar allaqachon bor:** seed `flow_status` (aliyev — ariza
-  tasdiqlandi; abdullayev — ko'rildi) va `flow_incoming` (rashidova — yangi
-  hisobot) turlarini yozgan, `link_type="flow_document"`, `link_id=<flow id>`.
-  S11 har status o'zgarishida shu formatda yangi yozuv qo'shsin (S10 dagi
-  `record_risk_notifications` naqshi: dublikatni tekshirib yozish).
-- **RBAC doirasi:** yangi mexanizm kerak emas —
-  `require_role(...)` + `can_access_user(db, actor, target)` (talaba faqat
-  o'zining arizasi; staff → o'z fakulteti; admin — hammasi). Begona ariza →
-  **404** (hujjat/suhbat qoidasi bilan bir xil: mavjudligi ham oshkor
-  bo'lmasin), status o'zgartirishga ruxsat yo'q bo'lsa → **403** (S8/S9 dagi
-  "shaxsiy ma'lumot" qoidasi).
-- **Servis qayerga:** `app/services/docflow.py` (CLAUDE.md arxitekturasida
-  shu nom yozilgan), router `app/api/docflow.py` — yupqa. Sxemalar
-  `schemas.py` oxiriga (`FlowDocumentOut`, `FlowHistoryOut`,
-  `FlowCreateRequest`, `FlowStatusRequest`, ...). Frontend: `lib/api.ts` ga
-  `docflowApi`, sahifa `(protected)/docflow/page.tsx`, navigatsiyaga havola
-  (`(protected)/layout.tsx` dagi `NAV` — rolga qarab filtrlangan).
-- **`ariza_holati` tooli:** `agents/tools/flow_status.py` + `tools/__init__.py`
-  ga bitta import. Ruxsat: hamma rolga ochiq (`ALL_ROLES`) bo'lishi mumkin,
-  chunki cheklov ma'lumot qatlamida (talaba faqat o'zinikini ko'radi) —
-  `mavjudlik_tekshir` naqshi; agar faqat xodimga ochilsa `oqituvchi_davomat`
-  (`roles=(UserRole.staff,)`) naqshi olinadi. Javobda **manba** majburiy:
-  "Ariza №{id}, {sana}, holat: {status}" + oxirgi `FlowHistory` izohi.
-- **Rezyume tooli bilan bog'lanish:** kelgan hujjatni qisqartirish uchun
-  `services/summarization.summarize_document(db, document, user)` **Document**
-  obyektini kutadi — `FlowDocument` unga to'g'ridan-to'g'ri berilmaydi.
-  Eng arzon yo'l: `summarization.summarize_text(...)` ko'rinishidagi kichik
-  qayta ishlanish YOKI `body_text` ni to'g'ridan-to'g'ri promptga berish
-  (S6 servisidagi `build_summary_prompt` qayta ishlatiladi).
+  flow_document -> /docflow      link_id = FlowDocument.id
+  schedule      -> /attendance   link_id = Schedule.id
+  payment       -> /contract yoki /group   link_id = Payment.id
+  contract      -> /contract     link_id = None (karimovning qarzdorlik yozuvi)
+  ```
+- **`notif_type` ro'yxati:** hozir DB da `flow_status`, `flow_incoming`,
+  `teacher_absence`, `payment_uploaded`, `payment_debt`, `new_assignment`.
+  FUNKSIONALLIK 3.10 jadvalidan qolgan triggerlar: topshiriq deadline'i
+  (masalan `assignment_deadline`), ijro muddati o'tayapti (`flow_due`),
+  yangi buyruq e'lon qilindi (`new_order`).
+- **O'qilmagan hisoblagich uchun maydonlar tayyor:** `Notification.is_read`
+  (Boolean, index) va `created_at`. `schemas.NotificationOut` **allaqachon
+  yozilgan** (S0 dan, hali hech qayerda ishlatilmaydi):
+  `id, user_id, notif_type, text, link_type, link_id, is_read, created_at`.
+  Kutilayotgan endpointlar: `GET /notifications[?unread=true&limit=]`
+  (javobda `unread_count` bo'lsa qo'ng'iroqchaga ikkinchi so'rov kerak
+  bo'lmaydi), `POST /notifications/{id}/read`, `POST /notifications/read-all`.
+- **UTC tuzog'i (S10 da topilgan, kuchda):** `Notification.created_at`
+  `server_default=func.now()` orqali **UTC** yoziladi, loyihadagi qolgan
+  hamma vaqt lokal (O'zbekiston UTC+5). "Bugun" filtri yoki sana ko'rsatish
+  shuni hisobga olsin — S10 dagi "oyna kechagi yarim tundan" naqshi.
+- **Docflow tayyor hisoblagich beradi:** `services/docflow.overview(db, user)`
+  → `FlowList` (`new_count`, `open_count`, `overdue_count`, `due_soon_count`,
+  `DUE_SOON_DAYS = 3`). "Ijro muddati o'tayapti/o'tdi" triggeri uchun yangi
+  so'rov yozish shart emas — shu hisoblagichlar va `FlowItem.overdue`
+  maydoni ishlatilsin.
+- **Agent uchun:** "menda yangi nima bor?" savoliga alohida tool kerak
+  (`bildirishnomalar`) — `ariza_holati` naqshi: `ALL_ROLES`, cheklov ma'lumot
+  qatlamida (`Notification.user_id == user.id`), javobda manba majburiy.
 
 **Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
 bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
@@ -183,6 +183,30 @@ Umumiy (o'zgarmaydigan) izohlar:
   `format_teacher_month_for_tool`.
   **`PAIR_TIMES` shu faylda** (yagona nusxa; `seed/generate.py` va
   `agents/tools/schedule_view.py` shundan import qiladi).
+- **Hujjat aylanmasi API (`app/api/docflow.py`) — to'liq ro'yxat (S11):**
+  ```
+  GET  /docflow/templates            -> [FlowTemplateOut]  (rol bo'yicha filtrlangan)
+  GET  /docflow/recipients           -> [FlowRecipientOut]  (buyruq kimga yuborilishi mumkin)
+  GET  /docflow/inbox[?sort=new|due] -> FlowListOut (menga kelganlar)
+  GET  /docflow/outbox[?sort=]       -> FlowListOut (men yuborganlarim)
+  GET  /docflow/{id}                 -> FlowDetailOut (tarix bilan; begona -> 404)
+  POST /docflow                      -> FlowDetailOut (shablondan yaratish, 201)
+  POST /docflow/{id}/status          -> FlowDetailOut (403/409/422 — pastda)
+  POST /docflow/{id}/summary         -> FlowSummaryOut (S6 servisi, body_text bo'yicha)
+  ```
+  `FlowItemOut` (ro'yxat qatori): `id, doc_type, doc_type_label, template_id,
+  title, sender_id, sender_name, sender_role, recipient_role,
+  recipient_user_id, recipient_label, status, status_label, created_at,
+  updated_at, due_date, due_in_days, overdue, is_incoming, is_outgoing,
+  can_change_status, last_comment, preview`; `FlowDetailOut` = shu + `body_text,
+  history[FlowHistoryItemOut], next_statuses[], source, disclaimer`;
+  `FlowListOut`: `box, sort, rows[], total, new_count, open_count,
+  overdue_count, due_soon_count, source, disclaimer`. Biznes logika
+  `app/services/docflow.py` da: `TEMPLATES` (5 ta shablon konstantasi),
+  `TRANSITIONS`, `inbox`, `outbox`, `flow_detail`, `create_flow`,
+  `change_status`, `summarize_flow`, `find_flow`, `overview`,
+  `notify_incoming`, `notify_status`, `format_flow_for_tool`,
+  `format_flow_list_for_tool`.
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
@@ -267,7 +291,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S8 | To'lovlar moduli | ✅ tugadi | DoD 3/3 o'tdi (pytest 103/103, lint+build toza, curl bilan raqamlar/doira/tasdiqlash + brauzerda talaba va tyutor sahifalari), commit "S8: payments module with receipt flow" |
 | S9 | Davomat + mavjudlik (talaba) | ✅ tugadi | DoD 3/3 o'tdi (pytest 142/142, lint+build toza, curl bilan 4 holat/doira/davomat belgilash + brauzerda o'qituvchi, tyutor va talaba sahifalari), commit "S9: student presence and attendance" |
 | S10 | O'qituvchilar davomati | ✅ tugadi | DoD 3/3 o'tdi (pytest 166/166, lint+build toza, curl bilan svod/oylik/doira/403 + bildirishnoma dublikati va brauzerda dekanat ko'rinishi — tursunov qizil), commit "S10: teacher attendance monitoring" |
-| S11 | Hujjat almashinuvi | ⬜ boshlanmagan | |
+| S11 | Hujjat almashinuvi | ✅ tugadi | DoD 3/3 o'tdi (pytest 194/194, lint+build toza, curl bilan to'liq zanjir/404/403/409/422 + bildirishnomalar va brauzerda talaba, dekanat, o'qituvchi ko'rinishlari), commit "S11: document flow with status chain" |
 | S12 | Bildirishnomalar | ⬜ boshlanmagan | |
 | S13 | Admin panel + reset | ⬜ boshlanmagan | |
 | S14 | Integratsiya + taqdimot | ⬜ boshlanmagan | |
@@ -794,6 +818,64 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     ko'rsatiladi — kelmagan o'qituvchi baribir ko'zga tashlanishi kerak.
   - **Frontend `?at=` yubormaydi** (S9 qarori kuchda): demo soati faqat
     backend/curl darajasida in'ektsiya qilinadi.
+- **S11 qarorlar (hujjat almashinuvi):**
+  - **Shablonlar — kod konstantasi, jadval EMAS** (`services/docflow.TEMPLATES`,
+    5 ta: `malumotnoma`, `akademik_tatil` (S11 qo'shdi), `qayta_topshirish`,
+    `semestr_hisobot`, `buyruq_topshiriq`). Har shablonda `roles` (kim yubora
+    oladi), `recipient_role`, `needs_recipient_user`, `needs_due_date` va
+    `body_hint` (UI matn maydonini oldindan to'ldiradi) bor. `seed/generate.py`
+    ga TEGILMADI — u yozgan 4 ta `template_id` shu katalogda topiladi.
+  - **Status zanjiri faqat oldinga:** `TRANSITIONS` —
+    `sent → seen|in_progress|approved|rejected`, `seen → in_progress|approved|
+    rejected`, `in_progress → approved|rejected`, `approved`/`rejected` →
+    **hech qayerga** (terminal, **409**). Orqaga (`… → sent`) yo'l yo'q, bir
+    xil holatni qayta qo'yish ham 409. Rad etishda izoh **majburiy** (**422**),
+    tasdiqlashda ixtiyoriy. Frontend tugmalarni rolga qarab EMAS, backend
+    qaytargan `next_statuses` / `can_change_status` bo'yicha chizadi — qoida
+    bitta joyda.
+  - **Ikki xil rad javobi, ataylab:** ko'rinmaydigan hujjat → **404**
+    (`get_visible_flow` → None; begona arizaning mavjudligi ham oshkor
+    bo'lmasin — hujjat/suhbat qoidasi), ko'rinadigan hujjatda qaror qabul
+    qilishga ruxsat yo'q → **403** (yuboruvchi o'z arizasini tasdiqlay
+    olmaydi). Router avval 404 ni tekshiradi, keyin 403 ni.
+  - **Doira uchun yangi mexanizm yozilmadi:** `is_recipient` shaxsga
+    yuborilgan hujjatda `recipient_user_id == user.id`, rolga yuborilganda
+    `recipient_role == user.role` **va** `rbac.can_access_user(db, user,
+    sender)` — ya'ni rolga yo'naltirilgan hujjat **yuboruvchining fakulteti**
+    ichida qoladi (yusupov AT arizasini ko'rmaydi). Admin — hammasi.
+  - **Bildirishnoma dublikat kaliti ikki xil** (S10 naqshining kengaytmasi):
+    `flow_incoming` — `(user, type, link_id)`, matnsiz (shuning uchun seed
+    yozgan boshqacha matnli qator tanib olinadi va ikkinchi marta
+    yozilmaydi); `flow_status` — matn ham kalitda (har qadam yangi yozuv).
+    Ikkalasi ham `link_type="flow_document"`, `link_id=<flow id>`.
+  - **`ariza_holati` — `ALL_ROLES`** (`mavjudlik_tekshir` naqshi): cheklov
+    ma'lumot qatlamida (`docflow.can_view`), shuning uchun talaba faqat
+    o'zinikini so'raydi. Argumentlar: `ariza` (raqam yoki mavzudagi so'z;
+    ko'rinmaydigan id "topilmadi" javobini beradi — mavjudligi oshkor
+    bo'lmaydi) va `yonalish` (`kelgan`/`yuborilgan`; bo'sh bo'lsa talaba va
+    o'qituvchiga — yuborilganlar, dekanat/tyutorga — kelganlar). Javobning
+    birinchi qatori majburiy manba formatida:
+    `"Ariza №{id}, {sana}, holat: {status}"`, oxirida oxirgi `FlowHistory`
+    izohi.
+  - **Rezyume uchun S6 buzilmadi:** `services/summarization.summarize_text(...)`
+    (mavjud funksiya) `body_text` bilan chaqiriladi — `summarize_document`
+    `Document` obyektini kutgani uchun yangi qatlam yozilmadi, prompt
+    quruvchilar ham o'zgarmadi. Natijada rol rakursi (dekanat: "raqam, sana,
+    ijrochilar") hujjat aylanmasida ham ishlaydi.
+  - **Vaqt maydonlari lokal:** `FlowDocument.created_at` va
+    `FlowHistory.timestamp` `datetime.now()` bilan aniq yoziladi (server
+    default UTC bo'lardi) — seed ham lokal vaqt yozadi, ya'ni tarix qatorlari
+    bir xil o'lchovda. `Notification.created_at` esa hamon UTC (S10 qaydi).
+  - **UI: bitta sahifa, uch savol** (`/docflow`, navigatsiyada "Arizalar",
+    hamma rolga ochiq): talaba — "Arizalarim" (tab yo'q, faqat yuborilganlar +
+    "Yangi ariza"), o'qituvchi/tyutor/dekanat/admin — ikki tab
+    ("Kelgan hujjatlar" / "Yuborilganlar"), saralash `new`/`due`. Qaror
+    tugmalari faqat `can_change_status` bo'lganda; "Rad etish" avval sabab
+    maydonini ochadi (klientda ham, serverda ham majburiy). Komponentlar:
+    `FlowList`, `FlowDetailPanel`, `FlowComposer`. Next 16 qoidasi uchun
+    holat derivatsiya qilinadi: ochilgan hujjat `detail.id === selectedId`,
+    rezyume `summary.flow_id === detail.id`, qaror formasi
+    `pending.flowId === detail.id`, yangi hujjat matni `body ?? body_hint`.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (ichki tartib nizomi 3.1-band bilan bir xil):
     1) 08:30-09:50, 2) 10:00-11:20, 3) 11:30-12:50, 4) 13:30-14:50,
@@ -825,10 +907,28 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Keyinga qoldirilganlar
 
-- **Bildirishnoma yozish `services/presence.py` da qoldi** (S10:
-  `record_risk_notifications`). S12 da `services/notifications.py` yaratilib,
-  bu funksiya + `mark_attendance` (S9 qaydi) + to'lov triggerlari (S8 qaydi)
-  bitta joyga yig'ilsin; hozircha faqat `teacher_absence` turi yoziladi.
+- **Bildirishnoma yozish `services/presence.py` va `services/docflow.py` da
+  qoldi** (S10: `record_risk_notifications`; S11: `_write_notification`,
+  `notify_incoming`, `notify_status`). S12 da `services/notifications.py`
+  yaratilib, bu funksiyalar + `mark_attendance` (S9 qaydi) + to'lov
+  triggerlari (S8 qaydi) bitta joyga yig'ilsin.
+- **Hujjatga fayl ilova qilinmaydi:** `FlowDocument.file_path` hech qachon
+  to'ldirilmaydi (ariza — faqat matn). S13 da fayl saqlash qo'shilsa
+  `multipart/form-data` endpoint + `uploads/` papkasi kerak bo'ladi (S8 dagi
+  chek fayli bilan bir xil qaror).
+- **Rad etilgan arizani tahrirlab qayta yuborish yo'li yo'q** — yangi hujjat
+  yaratiladi (zanjir orqaga qaytmaydi). "Qayta ishlash uchun qaytarish"
+  (`returned`) holati kerak bo'lsa `FlowStatus` enumiga qo'shish kerak, ya'ni
+  S0 modeliga tegish — S14 gacha qilinmasin.
+- **Ijro muddati o'tayotgan hujjat uchun bildirishnoma yozilmaydi:**
+  `FlowItem.overdue` / `due_soon_count` hisoblanadi va UI da qizil/sariq
+  ko'rinadi, lekin trigger S12 ishi (FUNKSIONALLIK 3.10).
+- **Hujjat aylanmasida tyutor qabul qiluvchi emas:** birorta shablon
+  `recipient_role=tutor` bilan kelmaydi, ya'ni tyutorning "Kelgan hujjatlar"
+  tabi doim bo'sh (faqat unga shaxsan yuborilgan buyruq tushishi mumkin).
+  Kerak bo'lsa `TEMPLATES` ga bitta qator qo'shiladi.
+- **Flow rezyumesi keshlanmaydi** (hujjat rezyumesi bilan bir xil muammo):
+  har bosishda LLM qayta chaqiriladi.
 - **"Xavf ostida" bildirishnomasi faqat svod so'ralganda yoziladi**
   (GET yon ta'siri). Fon vazifasi/scheduler yo'q — hech kim dekanat
   sahifasini ochmasa yozuv ham paydo bo'lmaydi. S12 da trigger ro'yxati
@@ -852,10 +952,12 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   uch tur ham havolaga aylantirilsin.
 - Suhbatni o'chirish/nomini o'zgartirish YO'Q (faqat ro'yxat + yangi suhbat).
   Kerak bo'lsa S13 (admin) yoki S14 da qo'shiladi.
-- `schemas.DocumentOut`, `ChunkOut`, `ContractOut`, `PaymentOut` (S0 dan
-  qolgan) hech qayerda ishlatilmaydi — S5 va S8 o'z sxemalarini qo'shdi
+- `schemas.DocumentOut`, `ChunkOut`, `ContractOut`, `PaymentOut`,
+  `FlowDocumentOut`, `FlowHistoryOut` (S0 dan qolgan) hech qayerda
+  ishlatilmaydi — S5, S8 va S11 o'z sxemalarini qo'shdi
   (`DocumentListItemOut`/`DocumentDetailOut`, `ContractSummaryOut`/
-  `PaymentRowOut`). Kerak bo'lmasa S14 da tozalansin.
+  `PaymentRowOut`, `FlowItemOut`/`FlowDetailOut`/`FlowListOut`). Kerak
+  bo'lmasa S14 da tozalansin. `NotificationOut` esa S12 da ishlatiladi.
 - **Davomat belgilash bildirishnoma yozmaydi:** `mark_attendance` faqat
   `Attendance` + `ClassSession` yozadi. "Farzandingiz darsga kelmadi" /
   "dars xavf ostida" bildirishnomalari S12 ishi — o'sha yerda
