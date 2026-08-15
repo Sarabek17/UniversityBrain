@@ -17,3 +17,8 @@ chromadb>=0.5
 # --- S13: admin panel ---
 # multipart/form-data parsing for the document upload endpoint
 python-multipart>=0.0.9
+
+# --- S14: Gemini provider ---
+# Google Gemini SDK, used only when LLM_PROVIDER=gemini (the default "mock"
+# provider needs no network and no key). Imported lazily in app/llm/client.py.
+google-genai>=1.0

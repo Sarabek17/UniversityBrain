@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { ViewMessage } from "@/lib/chat";
+import Markdown from "@/components/Markdown";
 import SourceChips from "@/components/SourceChips";
 import uz from "@/i18n/uz.json";
 
@@ -100,7 +101,11 @@ export default function ChatWindow({
                       ))}
                     </div>
                   )}
-                  <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                  <Markdown
+                    text={message.content}
+                    breaks
+                    className="text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                  />
                   <SourceChips
                     sources={message.sources}
                     onOpenDocument={onOpenDocument}

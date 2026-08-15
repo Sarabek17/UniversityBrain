@@ -345,7 +345,7 @@
     "summaryError": "Rezyumeni tayyorlab bo'lmadi",
     "composeTitle": "Yangi hujjat yuborish",
     "template": "Shablon",
-    "templateHint": "Shablonni tanlang — matn namunasi avtomatik qo'yiladi",
+    "templateHint": "Shablonni tanlang — matn namunasi avtomatik qo'yiladi; [qavs] ichidagi joylarni to'ldiring",
     "recipient": "Qabul qiluvchi",
     "recipientHint": "Hujjat aynan shu shaxsga boradi",
     "dueDate": "Ijro muddati",
@@ -390,7 +390,8 @@
       "payment_confirmed": "To'lov tasdiqlandi",
       "payment_debt": "Kontrakt qarzdorligi",
       "class_absent": "Davomat",
-      "new_assignment": "Yangi topshiriq"
+      "new_assignment": "Yangi topshiriq",
+      "new_order": "Yangi hujjat e'loni"
     }
   },
   "admin": {
@@ -439,6 +440,8 @@
     "colUsername": "Login",
     "colRole": "Rol",
     "colGroup": "Guruh",
+    "colScope": "Guruh / fakultet",
+    "facultyShort": "fakultet",
     "colFaculty": "Fakultet",
     "colCreated": "Yaratilgan",
     "roleChanged": "Rol o'zgartirildi",

@@ -44,6 +44,7 @@ from app.models import (
 )
 from app.rag import ingest as rag_ingest
 from app.services import docflow, documents as documents_service
+from app.services import notifications as notifications_service
 from app.services import payments as payments_service
 from app.services import presence as presence_service
 
@@ -454,11 +455,16 @@ def upload_document(
     doc_type: DocumentType,
     language: str = "uz",
     access_level: AccessLevel = AccessLevel.public,
+    uploaded_by: int | None = None,
 ) -> tuple[Document, int]:
     """Save + register + index one uploaded file. Returns (document, chunks).
 
     Indexing happens right here (not in a background job): the DoD of S13 is
     that an uploaded document is findable in the very next search.
+
+    Publishing also announces itself (S14, FUNKSIONALLIK 3.10 "Yangi buyruq
+    e'lon qilindi"): everyone whose role may read the document gets one
+    notification, the uploading admin excluded.
     """
     suffix = Path(safe_filename(filename)).suffix.lower()
     if suffix not in rag_ingest.SUPPORTED_SUFFIXES:
@@ -486,6 +492,9 @@ def upload_document(
     chunks = rag_ingest.ingest_document(db, document)
     db.commit()
     db.refresh(document)
+    notifications_service.notify_new_document(
+        db, document, exclude_user_id=uploaded_by
+    )
     return document, chunks
 
 

@@ -213,6 +213,7 @@ def upload_document(
             doc_type=doc_type,
             language=language,
             access_level=access_level,
+            uploaded_by=user.id,
         )
     except admin_service.UnsupportedFileError:
         raise HTTPException(

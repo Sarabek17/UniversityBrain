@@ -41,7 +41,17 @@ from datetime import date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.models import Group, Notification, Payment, Schedule, User, UserRole
+from app.models import (
+    AccessLevel,
+    Document,
+    DocumentType,
+    Group,
+    Notification,
+    Payment,
+    Schedule,
+    User,
+    UserRole,
+)
 
 # --- vocabulary --------------------------------------------------------------
 
@@ -56,6 +66,7 @@ NEW_ASSIGNMENT = "new_assignment"  # new task/material           -> student
 PAYMENT_CONFIRMED = "payment_confirmed"  # receipt accepted      -> student
 CLASS_ABSENT = "class_absent"  # marked absent in a class        -> student
 FLOW_DUE = "flow_due"  # execution deadline near/passed  -> executor + sender
+NEW_ORDER = "new_order"  # a document was published       -> the roles that see it
 
 TYPE_LABELS: dict[str, str] = {
     FLOW_STATUS: "Ariza holati",
@@ -67,6 +78,7 @@ TYPE_LABELS: dict[str, str] = {
     PAYMENT_DEBT: "Kontrakt qarzdorligi",
     CLASS_ABSENT: "Davomat",
     NEW_ASSIGNMENT: "Yangi topshiriq",
+    NEW_ORDER: "Yangi hujjat e'loni",
 }
 
 # `link_type` -> the page the UI opens (the frontend mirrors this table).
@@ -75,11 +87,13 @@ TYPE_LABELS: dict[str, str] = {
 #   payment       -> /contract (student) | /group (tutor, staff)
 #   contract      -> same as payment, link_id = None
 #   assignment    -> /documents    link_id = None (seed rows)
+#   document      -> /documents    link_id = Document.id
 LINK_FLOW = "flow_document"
 LINK_SCHEDULE = "schedule"
 LINK_PAYMENT = "payment"
 LINK_CONTRACT = "contract"
 LINK_ASSIGNMENT = "assignment"
+LINK_DOCUMENT = "document"
 
 DEFAULT_LIMIT = 30
 MAX_LIMIT = 100
@@ -387,6 +401,59 @@ def notify_absent(
     for student_id in student_ids:
         written += write_notification(
             db, student_id, CLASS_ABSENT, text, LINK_SCHEDULE, schedule.id
+        )
+    if written:
+        db.commit()
+    return written
+
+
+def roles_for_access(level: AccessLevel) -> tuple[UserRole, ...]:
+    """Which roles may see a document at this access level (S14).
+
+    Mirrors `rag.search.allowed_access_levels` read the other way round: a role
+    sees `public` plus documents tagged with its own name, and admin sees
+    everything. No second permission rule is introduced.
+    """
+    if level == AccessLevel.public:
+        return tuple(UserRole)
+    return tuple(
+        role
+        for role in UserRole
+        if role == UserRole.admin or role.value == level.value
+    )
+
+
+def notify_new_document(
+    db: Session, document: Document, *, exclude_user_id: int | None = None
+) -> int:
+    """A document was published -> everyone whose role may read it (3.10).
+
+    `match_text=False` with `link_id=document.id`: one announcement per person
+    per document, whatever the wording.
+    """
+    label = (
+        "Yangi buyruq e'lon qilindi"
+        if document.doc_type == DocumentType.order
+        else "Yangi hujjat e'lon qilindi"
+    )
+    text = (
+        f"{label}: «{document.title}». "
+        "Hujjatlar bo'limida o'qishingiz mumkin."
+    )
+    roles = roles_for_access(document.access_level)
+    recipients = db.query(User.id).filter(User.role.in_(roles))
+    if exclude_user_id is not None:
+        recipients = recipients.filter(User.id != exclude_user_id)
+    written = 0
+    for (user_id,) in recipients.all():
+        written += write_notification(
+            db,
+            user_id,
+            NEW_ORDER,
+            text,
+            LINK_DOCUMENT,
+            document.id,
+            match_text=False,
         )
     if written:
         db.commit()

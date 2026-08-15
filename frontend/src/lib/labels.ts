@@ -169,6 +169,7 @@ export function notificationHref(
     case "contract":
       return role === "student" ? "/contract" : "/group";
     case "assignment":
+    case "document":
       return "/documents";
     default:
       return null;
@@ -187,6 +188,7 @@ export const notificationAccentClass = (type: string): string =>
     flow_status: "border-l-sky-500",
     flow_incoming: "border-l-sky-500",
     new_assignment: "border-l-blue-500",
+    new_order: "border-l-blue-500",
   })[type] ?? "border-l-gray-300 dark:border-l-gray-600";
 
 /** Percentage colouring for the monthly report (same threshold as students). */

@@ -168,7 +168,7 @@ export default function AdminUsersPanel({
             <tr>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colName}</th>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colUsername}</th>
-              <th className="px-2 py-1.5 font-medium">{uz.admin.colGroup}</th>
+              <th className="px-2 py-1.5 font-medium">{uz.admin.colScope}</th>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colCreated}</th>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colRole}</th>
             </tr>
@@ -185,7 +185,9 @@ export default function AdminUsersPanel({
                 </td>
                 <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
                   {row.group_name ??
-                    (row.faculty_id ? `#${row.faculty_id}` : "—")}
+                    (row.faculty_id
+                      ? `${uz.admin.facultyShort} ${row.faculty_id}`
+                      : "—")}
                 </td>
                 <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
                   {formatDate(row.created_at)}

@@ -148,22 +148,154 @@ class MockLLMClient(BaseLLMClient):
         return ToolCall(name=name, arguments=arguments)
 
 
-class GeminiLLMClient(BaseLLMClient):
-    """Google Gemini provider skeleton.
+class LLMError(RuntimeError):
+    """The provider could not answer (network, quota, bad key, blocked input)."""
 
-    The API key is connected at the end of the project (see PROGRESS.md).
-    Until then this class must not be used; construction validates the key,
-    chat() raises to prevent silent fallthrough. Implementation lands when
-    LLM_PROVIDER=gemini is enabled: google-genai SDK, tool declarations
-    mapped from the neutral format above.
+
+# Key the tool result is handed back under: Gemini's functionResponse payload is
+# an object, our tools return plain text.
+FUNCTION_RESULT_KEY = "result"
+
+
+def _new_sdk_client(api_key: str):
+    """Build the google-genai client. Imported lazily (mock mode needs no SDK)
+    and kept as a module-level function so tests can replace it."""
+    from google import genai
+
+    return genai.Client(api_key=api_key)
+
+
+class GeminiLLMClient(BaseLLMClient):
+    """Google Gemini provider (google-genai SDK).
+
+    Translation between the neutral formats above and the SDK:
+
+        {"role": "user", "content": t}       -> Content(role="user",  [Part(text=t)])
+        {"role": "assistant", "content": t}  -> Content(role="model", [Part(text=t)])
+        {"role": "tool", "tool_name": n,     -> Content(role="model", [Part(function_call=n)])
+                         "tool_result": r}      Content(role="user",  [Part(function_response=n, {result: r})])
+        {"name", "description", "parameters"} -> types.FunctionDeclaration(...)
+        system                                -> config.system_instruction
+
+    The synthetic `model` turn in front of every tool result is required: the
+    API only accepts a functionResponse that answers a functionCall. The
+    neutral history does not carry the original arguments (the orchestrator
+    stores the *result*), so the call is replayed with empty args — the model
+    reads the result text, which is what it needs.
+
+    Automatic function calling is switched OFF on purpose: the tool loop lives
+    in `agents/orchestrator.py`, where the role check runs before any handler.
     """
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str | None = None, client=None):
         if not api_key:
             raise ValueError(
                 "GEMINI_API_KEY is empty. Set it in .env or use LLM_PROVIDER=mock."
             )
         self.api_key = api_key
+        self.model = (model or get_settings().gemini_model).strip()
+        self._client = client  # tests inject a stub; otherwise built on demand
+
+    # --- SDK plumbing -------------------------------------------------------
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = _new_sdk_client(self.api_key)
+        return self._client
+
+    # --- neutral -> Gemini --------------------------------------------------
+
+    @staticmethod
+    def _append(contents: list, role: str, part) -> None:
+        """Add a part, merging into the previous turn when the role repeats
+        (an assistant sentence plus its tool call are one model turn)."""
+        if contents and contents[-1].role == role:
+            contents[-1].parts.append(part)
+            return
+        from google.genai import types
+
+        contents.append(types.Content(role=role, parts=[part]))
+
+    @classmethod
+    def to_contents(cls, messages: list[dict]) -> list:
+        from google.genai import types
+
+        contents: list = []
+        for message in messages or []:
+            role = message.get("role")
+            content = (message.get("content") or "").strip()
+            if role == "tool":
+                name = message.get("tool_name") or "tool"
+                result = message.get("tool_result") or message.get("content") or ""
+                cls._append(
+                    contents,
+                    "model",
+                    types.Part(function_call=types.FunctionCall(name=name, args={})),
+                )
+                cls._append(
+                    contents,
+                    "user",
+                    types.Part(
+                        function_response=types.FunctionResponse(
+                            name=name, response={FUNCTION_RESULT_KEY: result}
+                        )
+                    ),
+                )
+            elif role == "assistant":
+                if content:
+                    cls._append(contents, "model", types.Part(text=content))
+            elif content:
+                # "user" and any stray "system" message: plain user turn.
+                cls._append(contents, "user", types.Part(text=content))
+        return contents
+
+    @staticmethod
+    def to_tools(tools: list[dict] | None) -> list | None:
+        """Neutral declarations -> a single types.Tool with all functions."""
+        if not tools:
+            return None
+        from google.genai import types
+
+        declarations = [
+            types.FunctionDeclaration(
+                name=tool["name"],
+                description=tool.get("description", ""),
+                parameters=tool.get("parameters") or {"type": "object", "properties": {}},
+            )
+            for tool in tools
+        ]
+        return [types.Tool(function_declarations=declarations)]
+
+    # --- Gemini -> neutral --------------------------------------------------
+
+    @staticmethod
+    def parse_response(response) -> LLMResponse:
+        """First candidate only: text parts joined, function calls collected.
+
+        `response.text` is not used — it warns and returns None as soon as the
+        answer carries a function call, which is the normal case here.
+        """
+        texts: list[str] = []
+        calls: list[ToolCall] = []
+        candidates = getattr(response, "candidates", None) or []
+        for candidate in candidates[:1]:
+            content = getattr(candidate, "content", None)
+            for part in getattr(content, "parts", None) or []:
+                if getattr(part, "thought", None):
+                    continue  # thinking summary, not an answer
+                call = getattr(part, "function_call", None)
+                if call is not None and getattr(call, "name", None):
+                    calls.append(
+                        ToolCall(name=call.name, arguments=dict(call.args or {}))
+                    )
+                    continue
+                text = getattr(part, "text", None)
+                if text:
+                    texts.append(text)
+        return LLMResponse(text="\n".join(texts).strip(), tool_calls=calls)
+
+    # --- one turn -----------------------------------------------------------
 
     def chat(
         self,
@@ -171,9 +303,27 @@ class GeminiLLMClient(BaseLLMClient):
         tools: list[dict] | None = None,
         system: str | None = None,
     ) -> LLMResponse:
-        raise NotImplementedError(
-            "Gemini provider is not wired up yet (key connected at project end)."
+        from google.genai import types
+
+        contents = self.to_contents(messages)
+        if not contents:
+            raise LLMError("Gemini so'rovi bo'sh: birorta xabar berilmadi.")
+
+        config = types.GenerateContentConfig(
+            system_instruction=(system or None),
+            tools=self.to_tools(tools),
+            # The tool loop (and the role check in it) is ours, not the SDK's.
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                disable=True
+            ),
         )
+        try:
+            response = self.client.models.generate_content(
+                model=self.model, contents=contents, config=config
+            )
+        except Exception as exc:  # noqa: BLE001 - one clear error for the caller
+            raise LLMError(f"Gemini so'rovi bajarilmadi ({self.model}): {exc}") from exc
+        return self.parse_response(response)
 
 
 def get_llm_client() -> BaseLLMClient:
@@ -182,5 +332,7 @@ def get_llm_client() -> BaseLLMClient:
     if provider == "mock":
         return MockLLMClient()
     if provider == "gemini":
-        return GeminiLLMClient(api_key=settings.gemini_api_key)
+        return GeminiLLMClient(
+            api_key=settings.gemini_api_key, model=settings.gemini_model
+        )
     raise ValueError(f"Unknown LLM_PROVIDER: {provider!r} (expected 'mock' or 'gemini')")

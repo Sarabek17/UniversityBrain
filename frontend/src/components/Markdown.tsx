@@ -54,7 +54,7 @@ function cells(line: string): string[] {
 
 const BLOCK_START_RE = /^(#{1,6}\s|[-*+]\s|\d+\.\s|\||```|(-{3,}|\*{3,}|_{3,})$)/;
 
-function renderBlocks(source: string): ReactNode[] {
+function renderBlocks(source: string, breaks: boolean): ReactNode[] {
   const lines = source.replace(/\r\n/g, "\n").split("\n");
   const out: ReactNode[] = [];
   let i = 0;
@@ -217,8 +217,13 @@ function renderBlocks(source: string): ReactNode[] {
     }
     if (paragraph.length > 0) {
       out.push(
-        <p key={`b${key++}`} className="my-2 leading-relaxed">
-          {renderInline(paragraph.join(" "), `p${key}`)}
+        <p
+          key={`b${key++}`}
+          className={
+            "my-2 leading-relaxed" + (breaks ? " whitespace-pre-line" : "")
+          }
+        >
+          {renderInline(paragraph.join(breaks ? "\n" : " "), `p${key}`)}
         </p>,
       );
     } else {
@@ -232,9 +237,13 @@ function renderBlocks(source: string): ReactNode[] {
 export default function Markdown({
   text,
   className = "",
+  breaks = false,
 }: {
   text: string;
   className?: string;
+  /** Keep single newlines inside a paragraph (chat answers and tool output are
+   * line-oriented; document text is not). */
+  breaks?: boolean;
 }) {
-  return <div className={className}>{renderBlocks(text)}</div>;
+  return <div className={className}>{renderBlocks(text, breaks)}</div>;
 }

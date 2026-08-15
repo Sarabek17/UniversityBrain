@@ -84,11 +84,17 @@ def temp_user(db_session):
 
 @pytest.fixture
 def temp_document(db_session):
-    """Removes an uploaded document: Chroma entries, Chunk rows, row, file."""
+    """Removes an uploaded document: notifications, Chroma entries, Chunk rows,
+    the row itself and the file (S14 made publishing write announcements)."""
     created: list[int] = []
     yield created
     db_session.rollback()
     for document_id in created:
+        db_session.query(Notification).filter(
+            Notification.link_type == "document",
+            Notification.link_id == document_id,
+        ).delete(synchronize_session=False)
+        db_session.commit()
         document = db_session.get(Document, document_id)
         if document is None:
             continue

@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     app_name: str = "UniAgent"
     llm_provider: str = "mock"
     gemini_api_key: str = ""
+    # Model id used when LLM_PROVIDER=gemini (override without touching code).
+    gemini_model: str = "gemini-2.5-flash"
     database_url: str = "sqlite:///./app.db"
     cors_origins: str = "http://localhost:3000"
     jwt_secret: str = "dev-secret-change-me-0123456789abcdef"  # >= 32 bytes for HS256

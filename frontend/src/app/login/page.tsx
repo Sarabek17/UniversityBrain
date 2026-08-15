@@ -8,8 +8,11 @@ import uz from "@/i18n/uz.json";
 
 const DEMO_PASSWORD = "demo123";
 
+// Both demo teachers are one click away: umarov marks attendance, tursunov is
+// the "dars xavf ostida" case the dean's office sees.
 const DEMO_USERS: { username: string; role: UserRole }[] = [
   { username: "aliyev", role: "student" },
+  { username: "umarov", role: "teacher" },
   { username: "tursunov", role: "teacher" },
   { username: "nazarova", role: "tutor" },
   { username: "rashidova", role: "staff" },

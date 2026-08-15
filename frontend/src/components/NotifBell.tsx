@@ -127,16 +127,16 @@ export default function NotifBell({ role }: { role: UserRole }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-96 max-w-[90vw] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 dark:border-gray-700">
-            <div>
+        <div className="absolute right-0 z-30 mt-2 w-[26rem] max-w-[90vw] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+          <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700">
+            <div className="min-w-0">
               <p className="text-sm font-medium">{uz.notifications.title}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {unread} {uz.notifications.unreadCount} ·{" "}
                 {data?.total ?? 0} {uz.notifications.totalCount}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <button
                 type="button"
                 onClick={() => setUnreadOnly((value) => !value)}

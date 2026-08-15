@@ -15,6 +15,9 @@ __pycache__/
 # Databases / local data
 backend/app.db
 backend/test_app.db
+# SQLite WAL side files (app/db.py enables WAL so a slow write never blocks a read)
+backend/*.db-wal
+backend/*.db-shm
 backend/chroma_data/
 backend/test_chroma_data/
 # Admin-uploaded documents (S13) — the folder is tracked, its contents are not

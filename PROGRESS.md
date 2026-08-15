@@ -2,7 +2,43 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S14 (navbatda)
+## Joriy sessiya: LOYIHA TUGADI (S0–S14 yopildi)
+
+S14 yakunlandi (DoD 2/2: toza resetdan keyin demo ssenariy to'liq,
+qoqilmasdan o'tdi; vaqt o'lchandi — **6 daqiqadan ancha ichida**).
+`pytest` **281/281** (257 + S14: Gemini klienti 19 + hujjat e'loni 5),
+`npm run lint` va `npm run build` toza, demo baza asl seed holatida
+(43 foydalanuvchi, 10 hujjat / 28 bo'lak, 15 bildirishnoma, 4 flow,
+9 tarix, 0 suhbat, 0 tarjima; sharipova `partial` + 1 200 000 kutmoqda).
+
+**Foydalanuvchi uchun eslatma — Gemini kalitini ulash.** Butun tizim
+`LLM_PROVIDER=mock` da qurildi va shu holatda topshiriladi. Haqiqiy modelga
+o'tish uchun FAQAT `backend/.env` o'zgaradi:
+```dotenv
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=<aistudio.google.com/apikey dan>
+GEMINI_MODEL=gemini-2.5-flash    # ixtiyoriy, default shu
+```
+so'ng `uvicorn app.main:app --reload --port 8000` qayta ishga tushiriladi.
+Boshqa hech narsa (kod, migratsiya, frontend) o'zgarmaydi — chat, rezyume va
+tarjima uchalasi ham `app/llm/client.py` dagi bitta metoddan o'tadi.
+Kalit ulangach ko'rilishi kerak bo'lgan uchta narsa "Keyinga qoldirilganlar"
+da: tarjimada `[[n]]` markerlariga rioya (25 → 2 chaqiruv), rezyume sifati,
+qidiruv savolini kengaytirish.
+
+**S14 da o'lchangan demo vaqti** (mock rejim, headless brauzer avtomatikasi,
+sof tizim javobi — gapirish vaqtisiz): butun ssenariy **25.0 s**.
+Qadamlar: talaba login 1.2 s · chat savoli 0.5 s · yonma-yon tarjima 1.4 s ·
+rezyume 0.4 s · kontrakt 0.7 s · ariza yuborish 1.9 s · guruh to'lov svodi
+2.3 s · chek tasdiqlash 2.5 s · guruh mavjudligi 0.7 s · agent mavjudlik
+1.1 s · qo'ng'iroqcha 2.5 s · o'qituvchilar svodi 0.7 s · oylik jadval 0.4 s ·
+ariza tasdiqlash 3.6 s · dekanat 91-M 0.7 s · buyruq rezyumesi 1.1 s ·
+talabaga rad javobi 2.7 s · talabada 91-M yo'q 0.6 s. Qolgan rol yo'llari
+(o'qituvchi + admin) alohida 23.1 s: davomat belgilash, buyruq holati,
+statistika, hujjat yuklash → qidiruvda topilishi → e'lon bildirishnomasi,
+demo reset (7.0 s). **Konsolda xato nol** (ikkala skriptda ham).
+
+---
 
 S13 yakunlandi (DoD 3/3: `pytest` **257/257** — S2 12 + S3 9 + S4 9 + S5 9 +
 S6 15 + S7 20 + S8 29 + S9 39 + S10 24 + S11 28 + S12 17 + S13 **46**;
@@ -37,7 +73,10 @@ sharipova `partial` + 1 200 000 so'm tasdiq kutmoqda; baza asl holatda —
 43 foydalanuvchi, 10 hujjat / 28 bo'lak, 15 bildirishnoma, 4 flow,
 9 tarix yozuvi, 0 suhbat.
 
-S14 (Yakuniy integratsiya + taqdimot) uchun izohlar:
+S14 (Yakuniy integratsiya + taqdimot) uchun izohlar — **ARXIV: S14 shu
+ro'yxat bo'yicha ishladi va hammasini bajardi** (Gemini klienti yozildi,
+`new_order` bildirishnomasi ulandi, README/TAQDIMOT yozildi). Rol yo'llari
+ro'yxati hamon to'g'ri va demo repetitsiyasida qayta tekshirilgan:
 
 - **Demo ssenariy `FUNKSIONALLIK_LOGIKA.md` 8-bo'limida** (6 daqiqalik oqim).
   Har rol uchun HOZIR ishlaydigan yo'llar (hammasi jonli tekshirilgan):
@@ -339,7 +378,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S11 | Hujjat almashinuvi | ✅ tugadi | DoD 3/3 o'tdi (pytest 194/194, lint+build toza, curl bilan to'liq zanjir/404/403/409/422 + bildirishnomalar va brauzerda talaba, dekanat, o'qituvchi ko'rinishlari), commit "S11: document flow with status chain" |
 | S12 | Bildirishnomalar | ✅ tugadi | DoD 3/3 o'tdi (pytest 211/211, lint+build toza, curl bilan har trigger + dublikat tekshiruvi, brauzerda qo'ng'iroqcha/panel/havola/o'qildi 3 rolda), commit "S12: notifications center" |
 | S13 | Admin panel + reset | ✅ tugadi | DoD 3/3 o'tdi (pytest 257/257, lint+build toza, curl bilan 403/401 + yukla→qidir→top zanjiri va foydalanuvchi/rol amallari, brauzerda statistika, forma, yuklash va to'liq reset→logout; resetdan keyin demo qahramonlar joyida), commit "S13: admin panel and demo reset" |
-| S14 | Integratsiya + taqdimot | ⬜ boshlanmagan | |
+| S14 | Integratsiya + taqdimot | ✅ tugadi | DoD 2/2 o'tdi (pytest 281/281, lint+build toza; demo ssenariy toza resetdan keyin 3+ marta to'liq o'tdi, konsolda xato nol, o'lchangan vaqt 25 s — 6 daqiqa budjetidan ancha ichida). Gemini klienti yozildi va kalitsiz test qilindi, `new_order` bildirishnomasi ulandi, README + TAQDIMOT yozildi, commit "S14: final integration, Gemini client, docs" |
 
 Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
@@ -1065,6 +1104,105 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     hodisa ishlovchilarida va `.then()/.catch()` ichida, ro'yxatlar
     `useCallback` + `useEffect(() => { void load(); }, [load])` bilan
     yuklanadi.
+- **S14 qarorlar (yakuniy integratsiya + Gemini klienti + hujjatlar):**
+  - **Gemini klienti — `google-genai` 2.18.1** (`requirements.txt` da
+    `google-genai>=1.0`, izoh bilan). SDK **kechiktirilgan import**:
+    `from google import genai` faqat `_new_sdk_client()` ichida bajariladi,
+    ya'ni mock rejimda paket umuman yuklanmaydi. Klient obyekti ham
+    kechiktirilgan (`GeminiLLMClient.client` xossasi) — konstruktor kalitni
+    tekshiradi, tarmoqqa chiqmaydi.
+  - **API imzolari taxmin qilinmadi**, paket o'rnatilib introspeksiya bilan
+    tekshirildi: `genai.Client(api_key=...)`,
+    `client.models.generate_content(model=, contents=, config=)`,
+    `types.GenerateContentConfig(system_instruction=, tools=,
+    automatic_function_calling=)`, `types.Tool(function_declarations=[...])`,
+    `types.FunctionDeclaration(name=, description=, parameters=<JSON Schema
+    dict>)` (SDK dictni `types.Schema` ga o'zi o'giradi — `enum`, `minimum`,
+    `maximum` bilan sinalgan), `types.Part(text=/function_call=/
+    function_response=)`, `types.Content(role=, parts=)`.
+  - **Tool loop bizniki, SDK'niki emas:** `automatic_function_calling.disable
+    = True`. Sabab — ruxsat tekshiruvi `agents/registry.execute_tool` da
+    bo'lishi shart; SDK o'zi handler chaqirsa RBAC chetlab o'tiladi.
+  - **Neytral `tool` xabari IKKITA Content'ga o'giriladi:** avval sun'iy
+    `model` navbati (`Part(function_call=<nom>, args={})`), keyin `user`
+    navbati (`Part(function_response=<nom>, {"result": <matn>})`). Gemini
+    faqat `functionCall` ga javob bergan `functionResponse` ni qabul qiladi,
+    orkestrator esa tarixda faqat NATIJAni saqlaydi (argumentlar yo'q) —
+    shuning uchun chaqiruv bo'sh argument bilan qayta o'ynatiladi; modelga
+    kerak bo'lgani natija matni. Bir xil roldagi ketma-ket qismlar bitta
+    Content'ga birlashtiriladi (assistant matni + tool call = bitta `model`
+    navbati).
+  - **`response.text` ISHLATILMAYDI:** javobda function call bo'lsa u
+    ogohlantirish chiqarib `None` qaytaradi. Parser `candidates[0].content.
+    parts` ni o'zi aylanadi, `thought` qismlarini tashlab yuboradi.
+  - **Xato → `LLMError`** (yangi klass, `RuntimeError` merosi): SDK
+    istisnosi model nomi bilan o'ralgan bitta xatoga aylanadi. Bo'sh xabar
+    ro'yxati ham `LLMError` (so'rov yuborilmaydi). Bo'sh/blok qilingan javob
+    esa xato emas — bo'sh `LLMResponse`, orkestrator uni o'z fallbacki bilan
+    qoplaydi.
+  - **Kalitsiz testlash (`tests/test_s14_gemini.py`, 19 ta):** SDK klienti
+    stub bilan almashtiriladi (`GeminiLLMClient(api_key=..., client=Stub())`),
+    javob obyektlari `types.GenerateContentResponse(...)` bilan qo'lda
+    yig'iladi. Qamrov: xabar/tool konvertatsiyasi ikkala yo'nalishda, tool
+    call parslash, matn javobi, matn+tool birga, `thought` filtri, tizim
+    prompti/model/vositalarning SDK ga yetib borishi, AFC o'chirilgani,
+    xato holati, lazy qurish (`_new_sdk_client` monkeypatch). Haqiqiy kalit
+    hech qayerda yo'q, tarmoqqa chiqilmaydi.
+  - **`GEMINI_MODEL` sozlamasi qo'shildi** (`config.Settings.gemini_model`,
+    default `gemini-2.5-flash`) — modelni almashtirish uchun kodga tegish
+    kerak emas. `.env.example` ga `GEMINI_MODEL` va (S13 dan qolib ketgan)
+    `UPLOADS_PATH` yozildi.
+  - **Yagona spec-bo'shliq yopildi: hujjat e'loni.** `services/admin.
+    upload_document(..., uploaded_by=)` oxirida `notifications.
+    notify_new_document(db, document, exclude_user_id=<admin>)` chaqiriladi.
+    Yangi tur `new_order` (`TYPE_LABELS`: "Yangi hujjat e'loni"), yangi
+    `link_type="document"` → frontendda `/documents`. Kimga borishi —
+    **yangi qoida emas**: `roles_for_access(level)` `rag.search.
+    allowed_access_levels` ni teskari o'qiydi (public → hamma rol, `staff`
+    → dekanat + admin). `match_text=False` + `link_id=document.id`, ya'ni
+    bir odam bir hujjat uchun bitta yozuv oladi. Matn `doc_type == order`
+    bo'lsa "Yangi buyruq e'lon qilindi", aks holda "Yangi hujjat e'lon
+    qilindi". FUNKSIONALLIK 3.10 ning qolgan ikki triggeri (topshiriq
+    deadline'i, yangi topshiriq/material) TEGILMADI — `Assignment` ga
+    endpoint yo'q.
+  - **`tests/test_s13_admin.py` dagi `temp_document` fixture'iga tozalash
+    qo'shildi** (yuklash endi bildirishnoma yozadi; SQLite id ni qayta
+    ishlatgani uchun tozalanmagan qatorlar keyingi fayl testlarini
+    yiqitardi — bu aynan to'liq yugurishda topildi).
+  - **SQLite WAL + busy timeout (`app/db.py`) — repetitsiyada topilgan
+    haqiqiy bug.** Tarjima (mock rejimda 25 LLM chaqiruvi) yozuv
+    tranzaksiyasini ushlab turganda qo'ng'iroqchaning fon so'rovi bilan
+    to'qnashib `database is locked` → 500 → brauzerda "CORS" ko'rinishidagi
+    xato berdi. Yechim: `PRAGMA journal_mode=WAL` + `busy_timeout=30000` +
+    `connect_args={"timeout": 30}`. WAL yon fayllari (`*.db-wal`, `*.db-shm`)
+    gitignore'ga qo'shildi.
+  - **Chat javobi endi markdown sifatida chiziladi** (`ChatWindow` →
+    mavjud `Markdown` komponenti). Yangi `breaks` propi bilan: chatda bitta
+    yangi qator saqlanadi (`whitespace-pre-line`), hujjat matnida esa eski
+    xatti-harakat (paragrafga birlashtirish) o'zgarmadi — regressiya yo'q.
+    Aks holda javobdagi `**Fan:**` va ```` ``` ```` bloklari xom ko'rinardi.
+  - **Kichik pardoz (hammasi ssenariy yo'lida):** `next.config.ts` da
+    `devIndicators: false` (dev overlay dumaloq belgisi demo ustida
+    turardi); login sahifasiga `umarov` tugmasi qo'shildi (ikkala demo
+    o'qituvchisi ham bir bosishda); qo'ng'iroqcha sarlavhasi 26rem va
+    `whitespace-nowrap` (tugmalar ikki qatorga tushardi); admin
+    foydalanuvchilar jadvalidagi "Guruh" ustuni "Guruh / fakultet" bo'ldi
+    va `#1` o'rniga "fakultet 1" yoziladi; ariza shabloni izohiga
+    "[qavs] ichidagi joylarni to'ldiring" qo'shildi. Hammasi `i18n/uz.json`
+    orqali, hardcode yo'q.
+  - **Repetitsiya usuli (keyingi ish uchun):** demo ssenariysi ikkita Node
+    skripti bilan boshdan-oxir haydaldi (CDP, npm paketsiz) — asosiy oqim
+    (talaba → tyutor → dekanat → rol farqi) va qolgan rollar (o'qituvchi →
+    admin → demo reset). Har qadamda vaqt o'lchandi, `Runtime.
+    consoleAPICalled` / `Log.entryAdded` / `Runtime.exceptionThrown`
+    yig'ildi. **Tuzoq:** `Log.enable` avvalgi yugurishning xatolarini qayta
+    yuboradi — ulanishdan keyin `Log.clear` qilish kerak, aks holda
+    tuzatilgan xato hamon ko'rinadi.
+  - **Demo hujjat aylanmasi kimga tegishli:** dekanat buyrug'i seed'da
+    **tursunov** ga yuborilgan (umarovga emas), holati `in_progress` —
+    o'qituvchi yo'lida buyruq holatini tursunov o'zgartiradi. O'qituvchi
+    `/docflow` sahifasini default'da "Yuborilganlar" tabida ochadi (S11
+    qarori) — kelgan buyruqni ko'rsatish uchun "Kelgan hujjatlar" bosiladi.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (ichki tartib nizomi 3.1-band bilan bir xil):
     1) 08:30-09:50, 2) 10:00-11:20, 3) 11:30-12:50, 4) 13:30-14:50,
@@ -1096,16 +1234,17 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Keyinga qoldirilganlar
 
-- **FUNKSIONALLIK 3.10 jadvalining uch qatori hali triggersiz:** "Topshiriq
-  deadline'i yaqinlashdi (3 kun / 1 kun)", "Yangi topshiriq/material
-  qo'shildi" va "Yangi buyruq e'lon qilindi". Sabab — `Assignment` modeli
-  bor, lekin unga endpoint ham, UI ham yo'q (topshiriqlar faqat seed'da va
-  hujjat matnlarida), buyruq e'lon qilish esa admin ishi. Seed'dagi
-  `new_assignment` qatorlari demo uchun qoladi. **S13 admin hujjat yuklashni
-  qo'shdi, lekin bildirishnoma YOZMAYDI** (yuklash — korpusni to'ldirish,
-  e'lon emas): kerak bo'lsa S14 da `upload_document` oxirida barcha
-  talabalarga `new_order` yozilsin — `write_notification` tayyor, faqat
-  chaqiruv joyi kerak.
+> **Yakuniy holat (S14 dan keyin).** Quyidagilar ataylab qilinmagan ishlar —
+> har biri sababi bilan. Loyiha S0–S14 doirasida yopilgan; bu ro'yxat
+> keyingi bosqich uchun backlog.
+
+- **FUNKSIONALLIK 3.10 jadvalining ikki qatori hali triggersiz:** "Topshiriq
+  deadline'i yaqinlashdi (3 kun / 1 kun)" va "Yangi topshiriq/material
+  qo'shildi". Sabab — `Assignment` modeli bor, lekin unga endpoint ham, UI
+  ham yo'q (topshiriqlar faqat seed'da va hujjat matnlarida). Seed'dagi
+  `new_assignment` qatorlari demo uchun qoladi. **Uchinchi qator ("Yangi
+  buyruq e'lon qilindi") keyingi bosqichda yopildi:** admin hujjat yuklaganda
+  `notifications.notify_new_document` tegishli rollarga `new_order` yozadi.
 - **Bildirishnomani o'chirish/arxivlash YO'Q:** faqat "o'qildi" belgisi
   (orqaga qaytarish ham yo'q). Ro'yxat `limit` bilan cheklanadi
   (default 30, maksimum 100), sahifalash (`offset`/kursor) yo'q — demo
@@ -1126,12 +1265,12 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   faqat yaratish/yangilash mumkin (`DELETE` endpointi yozilmadi). Sabab —
   o'chirish bog'liq yozuvlarni (to'lov, davomat, ariza, bo'lak) yetim
   qoldiradi va demo hajmida kerak emas; noto'g'ri yaratilgan yozuvni demo
-  reset tozalaydi. Kerak bo'lsa S14 da kaskad qoidasi bilan qo'shilsin.
+  reset tozalaydi. Kerak bo'lsa keyingi bosqichda kaskad qoidasi bilan qo'shilsin.
 - **Yuklangan hujjat fayli resetdan keyin diskda qoladi:** `seed.generate
   --reset` `Document` qatorlarini o'chiradi, `backend/uploads/documents/`
   esa tegilmaydi — ya'ni fayl bor, lekin bazada ham, qidiruvda ham yo'q.
   Papkani tozalash (yoki resetda yuklangan hujjatlarni qayta ro'yxatga
-  olish) S14 ga qoldirildi.
+  olish) keyingi bosqichga qoldirildi.
 - **Reset holati jarayon xotirasida** (`services/admin._reset_state`,
   modul darajasidagi bayroq): uvicorn qayta ishga tushsa holat "hech qachon
   ishga tushmagan" ga qaytadi, ko'p ishchili (worker) rejimda esa har ishchi
@@ -1144,11 +1283,11 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 - **Rad etilgan arizani tahrirlab qayta yuborish yo'li yo'q** — yangi hujjat
   yaratiladi (zanjir orqaga qaytmaydi). "Qayta ishlash uchun qaytarish"
   (`returned`) holati kerak bo'lsa `FlowStatus` enumiga qo'shish kerak, ya'ni
-  S0 modeliga tegish — S14 gacha qilinmasin.
+  S0 modeliga tegish — S0 modeliga tegish kerak — qilinmadi.
 - **Ijro muddati bildirishnomasi faqat qo'ng'iroqcha ochilganda hisoblanadi**
   (S12 `record_flow_due_notifications`): hech kim `GET /notifications` ni
   chaqirmasa yozuv ham paydo bo'lmaydi. Hujjat ro'yxatining o'zi
-  (`/docflow`) buni chaqirmaydi — kerak bo'lsa S14 da `inbox`/`outbox` ga
+  (`/docflow`) buni chaqirmaydi — kerak bo'lsa keyingi bosqichda `inbox`/`outbox` ga
   ham qo'shiladi.
 - **Hujjat aylanmasida tyutor qabul qiluvchi emas:** birorta shablon
   `recipient_role=tutor` bilan kelmaydi, ya'ni tyutorning "Kelgan hujjatlar"
@@ -1166,30 +1305,30 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 - **Oylik svodda sana oralig'ini tanlash yo'q:** `?days=` (default 30,
   maksimum 180) faqat "oxirgi N kun" beradi; seed esa atigi 5 ish kuni +
   bugungi `ClassSession` yozadi, ya'ni "oylik" jadval amalda 6 kunlik.
-  Haqiqiy oy kesimi kerak bo'lsa seed tarixini uzaytirish kerak (S14).
+  Haqiqiy oy kesimi kerak bo'lsa seed tarixini uzaytirish kerak (keyingi bosqich).
 - **Eksport (P2) qilinmadi:** FUNKSIONALLIK 3.8 dagi "hisobot uchun eksport"
-  **[P2]** deb belgilangan — CSV/XLSX yuklab olish S14 ga qoldirildi.
+  **[P2]** deb belgilangan — CSV/XLSX yuklab olish keyingi bosqichga qoldirildi.
 - **Dekanat ko'rinishida fakultet kesimidagi talaba davomati foizi hamon
   yo'q** (S9 dan qolgan qayd): `/attendance/teachers` faqat o'qituvchilarni
   qamraydi, "fakultet bo'yicha bugun davomat 87%" ko'rsatkichi
-  `group_presence` ma'lumotidan S14 da yig'ilsin (admin paneli buni
+  `group_presence` ma'lumotidan keyingi bosqichda yig'ilsin (admin paneli buni
   universitet miqsiyosida allaqachon ko'rsatadi: `/admin/stats` →
   `presence.attendance_percent`).
 - **Kichik ekran (mobil) layouti:** hujjat paneli va dashboard `lg:` dan
   kichik ekranda yashiringan — telefonda manba chipini bosish ko'zga
-  ko'rinadigan natija bermaydi. S14 (sayqal) da modal/drawer qilinsin.
+  ko'rinadigan natija bermaydi. keyingi bosqichda modal/drawer qilinsin.
 - **`type: "schedule"` / `"turnstile"` / `"attendance"` manba chiplari
   bosilmaydi** — `SourceChips` faqat `document` chipini havolaga aylantiradi.
-  Endi ochadigan sahifa bor (`/attendance`), shuning uchun S14 (sayqal) da shu
+  Endi ochadigan sahifa bor (`/attendance`), shuning uchun keyingi bosqichda shu
   uch tur ham havolaga aylantirilsin.
 - Suhbatni o'chirish/nomini o'zgartirish YO'Q (faqat ro'yxat + yangi suhbat).
-  Kerak bo'lsa S14 da qo'shiladi (admin paneli ham suhbatlarga tegmaydi).
+  Kerak bo'lsa keyingi bosqichda qo'shiladi (admin paneli ham suhbatlarga tegmaydi).
 - `schemas.DocumentOut`, `ChunkOut`, `ContractOut`, `PaymentOut`,
   `FlowDocumentOut`, `FlowHistoryOut` (S0 dan qolgan) hech qayerda
   ishlatilmaydi — S5, S8 va S11 o'z sxemalarini qo'shdi
   (`DocumentListItemOut`/`DocumentDetailOut`, `ContractSummaryOut`/
   `PaymentRowOut`, `FlowItemOut`/`FlowDetailOut`/`FlowListOut`). Kerak
-  bo'lmasa S14 da tozalansin. `NotificationOut` S12 da ishga tushdi
+  bo'lmasa keyingi bosqichda tozalansin. `NotificationOut` S12 da ishga tushdi
   (`NotificationListOut` bilan birga).
 - **Davomat bildirishnomasi faqat talabaning o'ziga boradi** (S12
   `class_absent`): "farzandingiz darsga kelmadi" uchun ota-ona roli ham,
@@ -1197,8 +1336,8 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   10 ta talaba `absent` bo'lsa 10 ta yozuv yoziladi — demo hajmida muammo
   emas, ommaviy tizimda guruhlash kerak bo'ladi.
 - **`/attendance` sahifasi kichik ekranda siqiladi:** o'qituvchi ko'rinishi
-  ikki ustunli (`w-80` ro'yxat + varaq), telefonda tor bo'ladi. S14 da
-  ro'yxat drawer/accordion ga o'tkazilsin (chat va `/group` bilan bir xil
+  ikki ustunli (`w-80` ro'yxat + varaq), telefonda tor bo'ladi. Keyingi
+  bosqichda ro'yxat drawer/accordion ga o'tkazilsin (chat va `/group` bilan bir xil
   muammo).
 - **Guruh mavjudligida fakultet kesimi yo'q:** `attendance_percent` faqat
   chaqiruvchi doirasi bo'yicha hisoblanadi. FUNKSIONALLIK 3.7 dagi
@@ -1212,49 +1351,54 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   chaqiriladi (rol bo'yicha farq qilgani uchun kesh kaliti
   `(document_id, role)` bo'lishi kerak). S7 da `Translation` keshi yozildi
   (`services/translation.py` dagi `cached_row`/`store_translation` naqshi) —
-  S14 da xuddi shuni rezyumega qo'llash mumkin; hozircha demo tezligi yetarli.
+  keyingi bosqichda xuddi shuni rezyumega qo'llash mumkin; hozircha demo tezligi yetarli.
 - **Tarjima sifati Gemini bilan tekshirilmagan:** mock rejimda tarjima MATNI
   deterministik echo, shuning uchun ISH_REJA S7 DoD dagi "inglizcha maqola
   yonma-yon o'zbekchada o'qiladi" bandini faqat mexanika darajasida
   (paragraf tekisligi, kesh, ruxsat, prompt) tasdiqlash mumkin bo'ldi.
-  S14 da kalit ulangach ko'rilsin: (a) atama naqshi ("… (machine learning)")
+  kalit ulangach ko'rilsin: (a) atama naqshi ("… (machine learning)")
   haqiqatan chiqyaptimi, (b) model `[[n]]` markerlariga rioya qiladimi —
   qilsa chaqiruvlar soni 25 dan 2 ga tushadi (`translate_document` natijasidagi
   `llm_calls` shuni ko'rsatadi), qilmasa `BATCH_CHARS` ni kichraytirish yoki
   prompt matnini kuchaytirish kerak.
 - **Bo'lak (chunk) tarjimasi ishlatilmaydi:** `Translation.chunk_id` bo'sh
   qoladi — chatdagi sitata tarjimasi hozircha alohida keshlanmaydi (butun
-  hujjat tarjimasi kifoya). Kerak bo'lsa S14 da.
+  hujjat tarjimasi kifoya). Kerak bo'lsa keyingi bosqichda.
 - **`MAX_PARAGRAPHS = 80` chegarasi demo korpusida hech qachon urilmaydi**
   (eng uzun hujjatda 38 paragraf), ya'ni `truncated=true` yo'li jonli
-  ko'rilmagan — faqat testda. PDF/DOCX qo'shilsa (S14) qayta ko'rilsin.
+  ko'rilmagan — faqat testda. PDF/DOCX qo'shilsa (keyingi bosqich) qayta ko'rilsin.
 - **Tarjima keshi rolga bog'liq emas** (tarjima rakursi yo'q, rezyumeda bor).
   Bu ataylab: bir hujjatning bir tildagi tarjimasi hamma uchun bir xil.
-  Agar S14 da "fan bo'yicha lug'at" (FUNKSIONALLIK 3.5 dagi **[?]**) qo'shilsa,
+  Agar keyingi bosqichda "fan bo'yicha lug'at" (FUNKSIONALLIK 3.5 dagi **[?]**) qo'shilsa,
   kesh kalitiga lug'at versiyasi qo'shilishi kerak bo'ladi.
 - **Rezyume sifati Gemini bilan tekshirilmagan:** ISH_REJA S6 DoD dagi
   "2 sahifalik buyruq 5-6 qatorli aniq rezyumega tushadi" bandi mock
-  rejimda o'lchab bo'lmaydi (matn — deterministik echo). S14 da kalit
+  rejimda o'lchab bo'lmaydi (matn — deterministik echo). keyingi bosqichda kalit
   ulangach 3 rolda qayta ko'rilsin; kerak bo'lsa `SYSTEM_BASE` va
   `ROLE_POINTS` matnlari o'sha yerda sozlanadi.
 - **`_document_text` mantiqi ikki joyda emas, lekin `extract_text` faqat
-  `.md/.txt` ni biladi** — PDF/DOCX qo'shilsa (S14) rezyume ham, admin
+  `.md/.txt` ni biladi** — PDF/DOCX qo'shilsa (keyingi bosqich) rezyume ham, admin
   yuklashi ham avtomatik ishlaydi (ikkalasi ham shu funksiyaga tayanadi).
-- Gemini provayderi hali `NotImplementedError` — kalit ulangach
-  `GeminiLLMClient.chat()` yozilishi kerak (neytral message/tool formatini
-  google-genai formatiga o'girish). Butun tizim shu bitta metodga bog'liq.
+- **Gemini klienti YOZILDI (keyingi bosqich), lekin haqiqiy kalit bilan ishlatilmagan.**
+  `GeminiLLMClient.chat()` to'liq (`google-genai`, tool calling, tizim
+  prompti) va SDK stub bilan 19 ta test o'tadi, ammo jonli chaqiruv
+  qilinmagan — kalitni foydalanuvchi ulaydi. Kalit ulangach birinchi
+  tekshiriladigan narsalar: (a) tarjimada model `[[n]]` markerlariga rioya
+  qiladimi (chaqiruvlar 25 → 2), (b) rezyume sifati 3 rolda, (c) model
+  nomi (`GEMINI_MODEL`) hisobda bormi/kvota yetarlimi. Xato bo'lsa
+  `LLMError` matni model nomi bilan qaytadi.
 - **Chek FAYLI hech qachon yuklanmaydi** (S8 qarori: chek — strukturali
   ma'lumot). Yangi yuklangan to'lovlarda `Payment.receipt_file = None`,
   seed'dagilarda esa mavjud bo'lmagan yo'l turadi. S13 `multipart/form-data`
   endpointi va `uploads/` papkasini qo'shdi, ya'ni chek fayli uchun endi faqat
-  `ReceiptOut` ga `file_url` maydoni va yuklash formasi qoladi (S14).
+  `ReceiptOut` ga `file_url` maydoni va yuklash formasi qoladi (keyingi bosqich).
 - **To'lov bildirishnomasi tyutorga boradi, dekanatga emas** (S12):
   `upload_receipt` faqat guruh tyutoriga yozadi (`Group.tutor_id`), guruhda
   tyutor bo'lmasa hech kim xabar olmaydi. Dekanat/buxgalteriya kanali kerak
   bo'lsa `notifications._tutors_of` kengaytiriladi.
 - **`/group` sahifasining o'ng paneli `lg:` dan kichik ekranda yashirin**
   (chat sahifasidagi bilan bir xil muammo) — telefonda talaba qatorini bosish
-  ko'zga ko'rinadigan natija bermaydi. S14 da modal/drawer bilan yechilsin.
+  ko'zga ko'rinadigan natija bermaydi. keyingi bosqichda modal/drawer bilan yechilsin.
 - **Kontrakt to'lovlari uchun sana filtri yo'q:** `academic_year` bo'yicha eng
   oxirgi kontrakt olinadi (demo'da har talabada bittadan). Ko'p yillik tarix
   kerak bo'lsa endpointga `?academic_year=` qo'shiladi.
@@ -1262,7 +1406,7 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   birinchi qo'yadi (masalan "birlamchi kalit va tashqi kalit" → ruscha hujjat
   o'rniga inglizcha ML hujjati; savolda ruscha atama bilan hech qanday
   leksik moslik yo'q). Sabab — 118M parametrli kichik modelning chegarasi.
-  Agar S14 da vaqt bo'lsa: kattaroq model (`bge-m3`, `LaBSE`) yoki
+  Agar keyingi bosqichda vaqt bo'lsa: kattaroq model (`bge-m3`, `LaBSE`) yoki
   savolni LLM bilan inglizcha/ruschaga kengaytirish (query expansion)
   sinab ko'rilsin. MVP uchun hozirgi sifat yetarli (talaba ko'rinishida
   top-1 20/23, top-3 21/23).
@@ -1276,4 +1420,26 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Ochiq savollar
 
-`FUNKSIONALLIK_LOGIKA.md` 9-bo'limga qarang — javoblar shu yerga ko'chiriladi.
+`FUNKSIONALLIK_LOGIKA.md` 9-bo'limidagi savollarga loyiha davomida qabul
+qilingan javoblar:
+
+- **Yandex qanday resurs beradi?** Aniqlanmadi — shuning uchun provayderdan
+  mustaqil `llm/client.py` yozildi: yangi provayder = bitta klass +
+  `.env` dagi bitta qator. Tanlangan zaxira — Google Gemini (S14 da yozildi).
+- **Chekni tyutor tasdiqlashi kerakmi?** Ha (S8): yuklangan chek
+  `pending_amount` da turadi va qoldiqni kamaytirmaydi; tasdiqdan keyin
+  `paid` ga o'tadi. Aynan shu farq modul yopmoqchi bo'lgan muammo.
+- **Atamalar lug'ati fan bo'yicha alohida yuritiladimi?** Yo'q (S7): atama
+  qoidasi promptda ("mashinaviy o'qitish (machine learning)"), alohida
+  lug'at jadvali yaratilmadi. Kerak bo'lsa tarjima keshi kalitiga lug'at
+  versiyasi qo'shiladi.
+- **Ariza shablonlari ro'yxati?** 5 ta (S11, `services/docflow.TEMPLATES`):
+  `malumotnoma`, `akademik_tatil`, `qayta_topshirish`, `semestr_hisobot`,
+  `buyruq_topshiriq`.
+- **Interfeys tillari?** UI — o'zbekcha (`i18n/uz.json`, hardcode yo'q);
+  **korpus** uch tilli (uz/ru/en) va qidiruv tillar aro ishlaydi; hujjat
+  tarjimasi uchala tilga ham qiladi.
+- **Mobil versiya kerakmi?** Hackathon uchun yo'q — responsive veb, `lg:`
+  dan kichik ekranda o'ng panellar yashiriladi ("Keyinga qoldirilganlar").
+- **Jamoada nechta kishi?** Loyiha bitta ishlab chiquvchi + AI agent
+  sessiyalari (S0–S14) tarzida olib borildi.
