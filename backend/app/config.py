@@ -12,7 +12,9 @@ class Settings(BaseSettings):
     llm_provider: str = "mock"
     gemini_api_key: str = ""
     # Model id used when LLM_PROVIDER=gemini (override without touching code).
-    gemini_model: str = "gemini-2.5-flash"
+    # "-latest" alias tracks the newest stable Flash; pinned ids (e.g.
+    # gemini-2.5-flash) get retired for new API keys over time.
+    gemini_model: str = "gemini-flash-latest"
     database_url: str = "sqlite:///./app.db"
     cors_origins: str = "http://localhost:3000"
     jwt_secret: str = "dev-secret-change-me-0123456789abcdef"  # >= 32 bytes for HS256

@@ -17,7 +17,7 @@ o'tish uchun FAQAT `backend/.env` o'zgaradi:
 ```dotenv
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=<aistudio.google.com/apikey dan>
-GEMINI_MODEL=gemini-2.5-flash    # ixtiyoriy, default shu
+GEMINI_MODEL=gemini-flash-latest # ixtiyoriy, default shu
 ```
 so'ng `uvicorn app.main:app --reload --port 8000` qayta ishga tushiriladi.
 Boshqa hech narsa (kod, migratsiya, frontend) o'zgarmaydi — chat, rezyume va
@@ -1149,8 +1149,10 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     xato holati, lazy qurish (`_new_sdk_client` monkeypatch). Haqiqiy kalit
     hech qayerda yo'q, tarmoqqa chiqilmaydi.
   - **`GEMINI_MODEL` sozlamasi qo'shildi** (`config.Settings.gemini_model`,
-    default `gemini-2.5-flash`) — modelni almashtirish uchun kodga tegish
-    kerak emas. `.env.example` ga `GEMINI_MODEL` va (S13 dan qolib ketgan)
+    default `gemini-flash-latest`; avval `gemini-2.5-flash` edi — jonli
+    kalit bilan tekshirilganda u "no longer available to new users" 404
+    qaytardi, `-latest` aliasi doim eng so'nggi barqaror Flash'ga ishora
+    qiladi) — modelni almashtirish uchun kodga tegish kerak emas. `.env.example` ga `GEMINI_MODEL` va (S13 dan qolib ketgan)
     `UPLOADS_PATH` yozildi.
   - **Yagona spec-bo'shliq yopildi: hujjat e'loni.** `services/admin.
     upload_document(..., uploaded_by=)` oxirida `notifications.

@@ -15,6 +15,9 @@ os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB.as_posix()}"
 os.environ["CHROMA_PATH"] = str(BACKEND_DIR / "test_chroma_data")
 # Isolated upload folder (S13), so tests never write into backend/uploads.
 os.environ["UPLOADS_PATH"] = str(BACKEND_DIR / "test_uploads")
+# Tests always run against the deterministic mock provider, even after a real
+# Gemini key is connected in the local .env (env vars override .env values).
+os.environ["LLM_PROVIDER"] = "mock"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

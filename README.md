@@ -161,7 +161,7 @@ manba → javob) kalitisiz ham jonli ishlaydi. Haqiqiy modelga o'tish uchun
 ```dotenv
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=<https://aistudio.google.com/apikey dan olingan kalit>
-GEMINI_MODEL=gemini-2.5-flash     # ixtiyoriy, default shu
+GEMINI_MODEL=gemini-flash-latest  # ixtiyoriy, default shu (doim eng so'nggi barqaror Flash)
 ```
 
 Keyin backendni qayta ishga tushiring:
