@@ -11,6 +11,7 @@ import type {
   PaymentState,
   PaymentStatus,
   PresenceState,
+  UserRole,
 } from "@/lib/api";
 import uz from "@/i18n/uz.json";
 
@@ -144,6 +145,49 @@ export const dueClass = (days: number | null, overdue: boolean): string =>
     : days !== null && days <= 3
       ? "text-amber-700 dark:text-amber-300"
       : "text-gray-600 dark:text-gray-300";
+
+// --- notifications (S12) ----------------------------------------------------
+
+const NOTIFICATION_TYPE_LABELS: Record<string, string> = uz.notifications.types;
+
+export const notificationTypeLabel = (type: string): string =>
+  NOTIFICATION_TYPE_LABELS[type] ?? uz.notifications.title;
+
+/** `link_type` -> the page the bell opens. The table is the backend's
+ * convention (services/notifications.py); money is the only role-dependent
+ * one: a student has a contract page, a tutor/dean a group page. */
+export function notificationHref(
+  linkType: string | null,
+  role: UserRole,
+): string | null {
+  switch (linkType) {
+    case "flow_document":
+      return "/docflow";
+    case "schedule":
+      return "/attendance";
+    case "payment":
+    case "contract":
+      return role === "student" ? "/contract" : "/group";
+    case "assignment":
+      return "/documents";
+    default:
+      return null;
+  }
+}
+
+/** Left border of a row: red for money/absence, amber for deadlines. */
+export const notificationAccentClass = (type: string): string =>
+  ({
+    payment_debt: "border-l-red-500",
+    teacher_absence: "border-l-red-500",
+    class_absent: "border-l-red-500",
+    flow_due: "border-l-amber-500",
+    payment_uploaded: "border-l-amber-500",
+    payment_confirmed: "border-l-emerald-500",
+    flow_status: "border-l-sky-500",
+    flow_incoming: "border-l-sky-500",
+    new_assignment: "border-l-blue-500",
+  })[type] ?? "border-l-gray-300 dark:border-l-gray-600";
 
 /** Percentage colouring for the monthly report (same threshold as students). */
 export const percentClass = (percent: number | null): string =>

@@ -367,5 +367,29 @@
       "approved": "Tasdiqlandi",
       "rejected": "Rad etildi"
     }
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "open": "Bildirishnomalarni ochish",
+    "empty": "Yangi bildirishnoma yo'q",
+    "emptyAll": "Bildirishnoma yo'q",
+    "loadError": "Bildirishnomalarni yuklab bo'lmadi",
+    "markAll": "Hammasini o'qildi",
+    "unreadOnly": "Faqat o'qilmaganlar",
+    "showAll": "Hammasi",
+    "unreadCount": "o'qilmagan",
+    "totalCount": "jami",
+    "hint": "Bildirishnomani bosing — tegishli sahifa ochiladi va o'qildi deb belgilanadi",
+    "types": {
+      "flow_status": "Ariza holati",
+      "flow_incoming": "Yangi hujjat",
+      "flow_due": "Ijro muddati",
+      "teacher_absence": "Dars xavf ostida",
+      "payment_uploaded": "To'lov cheki",
+      "payment_confirmed": "To'lov tasdiqlandi",
+      "payment_debt": "Kontrakt qarzdorligi",
+      "class_absent": "Davomat",
+      "new_assignment": "Yangi topshiriq"
+    }
   }
 }

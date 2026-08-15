@@ -34,13 +34,13 @@ from app.models import (
     ClassSession,
     ClassSessionStatus,
     Group,
-    Notification,
     Schedule,
     TurnstileDirection,
     TurnstileLog,
     User,
     UserRole,
 )
+from app.services import notifications
 
 # --- pair times: THE single table --------------------------------------------
 # `seed/generate.py` and `agents/tools/schedule_view.py` import it from here, so
@@ -1175,6 +1175,18 @@ def mark_attendance(
         if session.teacher_arrived_at is None:
             session.teacher_arrived_at = arrived
     db.commit()
+    # S12 trigger (FUNKSIONALLIK 3.10): whoever was marked absent hears about
+    # it. Duplicate-safe, so re-saving the same class writes nothing new.
+    notifications.notify_absent(
+        db,
+        schedule,
+        on_date,
+        [
+            student_id
+            for student_id, status in marks.items()
+            if status == AttendanceStatus.absent
+        ],
+    )
     return class_roster(db, actor, schedule, on_date, moment)
 
 
@@ -1834,7 +1846,9 @@ def record_risk_notifications(db: Session, overview: TeacherDayOverview) -> int:
     """One notification per (dean, class) per day — never a duplicate.
 
     Recipients are the staff of the teacher's own faculty. The seed already
-    wrote today's row for the pinned class; it is recognised and kept.
+    wrote today's row for the pinned class; it is recognised and kept. The row
+    itself is written by `services/notifications.py` (S12) — this function only
+    decides *who* hears about *which* class.
     """
     risky = [
         (row, item)
@@ -1855,32 +1869,21 @@ def record_risk_notifications(db: Session, overview: TeacherDayOverview) -> int:
     # weekly, so a window this wide can never hide a genuinely new alert.
     window_start = datetime.combine(overview.date, time.min) - timedelta(days=1)
     day_end = datetime.combine(overview.date, time.max)
-    seen = {
-        (row.user_id, row.link_id)
-        for row in db.query(Notification).filter(
-            Notification.notif_type == TEACHER_ABSENCE_NOTIF,
-            Notification.created_at >= window_start,
-            Notification.created_at <= day_end,
-        )
-    }
 
     written = 0
     for row, item in risky:
         for recipient in by_faculty.get(row.faculty_id, []):
-            key = (recipient.id, item.schedule_id)
-            if key in seen:
-                continue
-            seen.add(key)
-            db.add(
-                Notification(
-                    user_id=recipient.id,
-                    notif_type=TEACHER_ABSENCE_NOTIF,
-                    text=risk_notification_text(row, item),
-                    link_type="schedule",
-                    link_id=item.schedule_id,
-                )
+            written += notifications.write_notification(
+                db,
+                recipient.id,
+                TEACHER_ABSENCE_NOTIF,
+                risk_notification_text(row, item),
+                notifications.LINK_SCHEDULE,
+                item.schedule_id,
+                match_text=False,
+                since=window_start,
+                until=day_end,
             )
-            written += 1
     if written:
         db.commit()
     return written

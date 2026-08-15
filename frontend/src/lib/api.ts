@@ -859,3 +859,57 @@ export const docflowApi = {
     }),
   summary: (id: number) => api.post<FlowSummary>(`/docflow/${id}/summary`),
 };
+
+// --- notifications (S12) ----------------------------------------------------
+
+/** Backend `notif_type` values (services/notifications.py). */
+export type NotificationType =
+  | "flow_status"
+  | "flow_incoming"
+  | "flow_due"
+  | "teacher_absence"
+  | "payment_uploaded"
+  | "payment_confirmed"
+  | "payment_debt"
+  | "class_absent"
+  | "new_assignment";
+
+/** What the notification points at; the UI turns it into a page (labels.ts). */
+export type NotificationLink =
+  | "flow_document"
+  | "schedule"
+  | "payment"
+  | "contract"
+  | "assignment";
+
+export interface NotificationItem {
+  id: number;
+  user_id: number;
+  notif_type: NotificationType | string;
+  text: string;
+  link_type: NotificationLink | string | null;
+  link_id: number | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+/** The bell in one answer: the page **and** the unread counter. */
+export interface NotificationList {
+  rows: NotificationItem[];
+  total: number;
+  unread_count: number;
+  unread_only: boolean;
+  limit: number;
+}
+
+export const notificationsApi = {
+  list: (unread?: boolean, limit?: number | null) =>
+    api.get<NotificationList>(
+      `/notifications${query({ unread: unread ? "true" : null, limit })}`,
+    ),
+  // Both writes answer with the refreshed list, so the bell never needs a
+  // second request to update its counter.
+  read: (id: number) =>
+    api.post<NotificationList>(`/notifications/${id}/read`),
+  readAll: () => api.post<NotificationList>("/notifications/read-all"),
+};

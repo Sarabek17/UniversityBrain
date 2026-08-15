@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import type { UserRole } from "@/lib/api";
+import NotifBell from "@/components/NotifBell";
 import uz from "@/i18n/uz.json";
 
 // `roles: null` = everyone. Money pages follow the backend rule: the student
@@ -71,6 +72,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <NotifBell role={user.role} />
           <span className="text-sm">
             {user.full_name}
             <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">

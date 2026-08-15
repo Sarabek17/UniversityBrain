@@ -2,95 +2,97 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S12 (navbatda)
+## Joriy sessiya: S13 (navbatda)
 
-S11 yakunlandi (DoD 3/3: `pytest` **194/194** — S2 12 + S3 9 + S4 9 + S5 9 +
-S6 15 + S7 20 + S8 29 + S9 39 + S10 24 + S11 **28**; `npm run lint` va
-`npm run build` toza; jonli tekshiruv uvicorn+curl: aliyev chatda
-`use_tool:ariza_holati:{"ariza": "malumotnoma"}` → "Ariza №1, 12.08.2026,
-holat: tasdiqlandi" + to'liq tarix + rashidovaning "204-xona" izohi + manba
-chipi; talaba `akademik_tatil` arizasini yubordi (id 5, tarix 1 yozuv) →
-rashidova uni kelganlar ro'yxatida "yangi" deb ko'rdi → **ko'rildi** →
-**tasdiqlandi** (tarix **3 yozuv**) → talaba yangi statusni va izohni ko'rdi;
-yusupov (IQ dekanati) o'sha arizani ochsa **404**, aliyev o'z arizasi statusini
-o'zgartirsa **403**, sababsiz rad etish **422**, tasdiqlangandan keyin qayta
-o'zgartirish **409**; bildirishnomalar: rashidovaga 1 ta `flow_incoming`,
-aliyevga 2 ta `flow_status` (dublikat yo'q, seed qatorlari saqlandi).
-**Brauzerda** (headless Chrome/CDP, 1440x900): talaba — "Arizalarim" (2 ariza,
-tarix 3 qator, qaror tugmalari YO'Q, manba + disclaimer bor, "Yangi ariza"
-formasida 3 shablon va namuna matn avtomatik qo'yiladi); dekanat — "Hujjat
-aylanmasi" (4 qator, "Ochiq: 2 / Yangi: 1" chiplari, "Kelgan hujjatlar" /
-"Yuborilganlar" tablari, saralash tanlagichi; ochiq hujjatda
-Ko'rildi/Ijroda/Tasdiqlash/**Rad etish** tugmalari, "Rad etish" sabab maydonini
-ochadi va bo'sh sabab bilan yuborilmaydi, "Rezyume" tugmasi S6 servisidan
-dekanat rakursidagi rezyumeni chiqardi, UI dan "Ko'rildi" bosilganda tarix
-2 qatorga o'sdi); o'qituvchi — "Topshirilgan hujjatlar" (1 ta hisobot, kelganlar
-tabi bo'sh); konsolda xato yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga
-qaytarildi**: 4 flow hujjat, 9 tarix yozuvi, 15 bildirishnoma.
+S12 yakunlandi (DoD 3/3: `pytest` **211/211** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15 + S7 20 + S8 29 + S9 39 + S10 24 + S11 28 + S12 **17**; `npm run lint`
+va `npm run build` toza; jonli tekshiruv uvicorn+curl bilan HAR TRIGGER
+bo'yicha: chek yuklandi (karimov → nazarovaga `payment_uploaded`), chek
+tasdiqlandi (nazarova → sharipovaga `payment_confirmed`; 6 000 000 →
+7 200 000, qoldiq 4 800 000), darsda `absent` (umarov belgiladi → talabaga
+`class_absent`, qayta belgilaganda dublikat YO'Q), `flow_due` (rashidova
+tursunovga ertangi muddat bilan buyruq yubordi → IKKALASI ham "Ijro muddati
+yaqin" oldi, qo'ng'iroqcha qayta ochilganda dublikat yo'q), `flow_status`
+(tursunov "ko'rildi" → rashidovaga), qarzdorlik (karimovda seed qatori qayta
+ishlatildi — 1 ta; nazarovaga guruh svodi "4 ta talaba qarzdor"),
+`POST /notifications/{id}/read` unread 3→2, `read-all` → 0, begona yozuvni
+o'qish **404**, chatda `use_tool:bildirishnomalar:{}` → manba
+"Bildirishnomalar ro'yxati, 15.08.2026 (2 ta o'qilmagan)".
+**Brauzerda** (headless Chrome/CDP, 1440x900): tursunov — qo'ng'iroqchada
+**2**, panelda `flow_due` + `flow_incoming` qatorlari, "Ijro muddati" qatorini
+bosish → **/docflow** va sanoq 2→1; nazarova — **3** (qarzdorlik svodi +
+2 chek), chek qatori → **/group**, 3→2, "Hammasini o'qildi" → **0** (uchala
+qator xiralashdi); aliyev — "Davomat" qatori → **/attendance**; konsolda xato
+yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga qaytarildi**
+(`seed.generate --reset` + `seed.ingest_documents --reset`): 4 flow hujjat,
+9 tarix yozuvi, 15 bildirishnoma, 10 hujjat / 28 bo'lak.
 
-S12 (Bildirishnomalar) uchun izohlar:
+S13 (Admin panel + demo reset) uchun izohlar:
 
-- **Notification yozadigan BARCHA joylar (S12 shu ro'yxatni yig'adi):**
-  1. `seed/generate.py: create_notifications` — demo uchun 15 qator:
-     `flow_status` 2, `flow_incoming` 1, `teacher_absence` 2,
-     `payment_uploaded` 1, `payment_debt` 1, `new_assignment` 8.
-  2. `services/presence.py: record_risk_notifications` (S10) —
-     `teacher_absence`, `link_type="schedule"`, `link_id=schedule_id`.
-     **Faqat `GET /attendance/teachers` chaqirilganda yoziladi** (GET yon
-     ta'siri, fon vazifasi yo'q). Dublikat oynasi kechagi yarim tundan
-     boshlanadi (UTC tuzog'i, pastda).
-  3. `services/docflow.py` (S11) — `_write_notification` yordamchisi +
-     `notify_incoming` (`flow_incoming`, hujjat yaratilganda qabul
-     qiluvchilarga) va `notify_status` (`flow_status`, har status
-     o'zgarishida yuboruvchiga). Dublikat kaliti ikki xil:
-     `flow_incoming` — `(user_id, type, link_id)` (matn solishtirilmaydi,
-     shuning uchun seed yozgan boshqacha matnli qator ham tanib olinadi),
-     `flow_status` — `(user_id, type, link_id, text)` (har qadamning matni
-     boshqacha, ya'ni haqiqiy ikkinchi qadam yutib yuborilmaydi).
-  4. **To'lovlar (S8) hech narsa yozmaydi** — `upload_receipt` va
-     `confirm_payment` ga bittadan chaqiruv qo'shilsa yetadi.
-  5. **`mark_attendance` (S9) hech narsa yozmaydi** — "darsga kelmadi"
-     triggeri shu yerga qo'shiladi.
-- **`services/notifications.py` hali YO'Q** (CLAUDE.md arxitekturasida bor).
-  S12 uni yaratib, yuqoridagi 2- va 3-bandlarni o'sha faylga ko'chirsin:
-  ikkalasi ham bitta umumiy yordamchiga tushadi —
-  `write_notification(db, user_id, notif_type, text, link_type, link_id, *,
-  match_text=True) -> bool`. Ko'chirilgandan keyin `presence.py` va
-  `docflow.py` faqat chaqiradi (testlar `record_risk_notifications` va
-  `docflow.notify_incoming` nomlariga tayanadi — nom o'zgarsa test ham
-  yangilansin).
-- **`link_type` / `link_id` konventsiyasi (o'zgarmaydi, UI havolani shundan
-  yasaydi):**
+- **Admin allaqachon hamma joyga ruxsatli** — yangi RBAC qoidasi yozish shart
+  emas: `rbac.require_role(*roles)` ro'yxatdan qat'i nazar adminni o'tkazadi,
+  `registry.Tool.is_allowed_for` ham (`role == UserRole.admin`), doira
+  helperlari (`visible_group_ids` → `None` = cheklovsiz, `can_access_user` →
+  `True`) ham. Ya'ni admin paneli MAVJUD endpointlarni to'g'ridan-to'g'ri
+  chaqira oladi; S13 ning ishi — yangi **boshqaruv** endpointlari
+  (`app/api/admin.py`; `main.py` da unga joy izoh bilan qoldirilgan) va
+  ularga `require_role()` (argumentsiz — faqat admin o'tadi).
+- **Statistika uchun tayyor servis funksiyalari** (yangi SQL yozilmasin):
   ```
-  flow_document -> /docflow      link_id = FlowDocument.id
-  schedule      -> /attendance   link_id = Schedule.id
-  payment       -> /contract yoki /group   link_id = Payment.id
-  contract      -> /contract     link_id = None (karimovning qarzdorlik yozuvi)
+  payments.group_payment_summary(db, admin)      -> butun universitet bo'yicha
+                                                    (admin doirasi = hammasi):
+                                                    debtor/partial/paid_count,
+                                                    pending_count, summalar
+  presence.group_presence(db, admin, now=...)    -> bugun binoda/chiqqan/kelmagan
+  presence.teacher_day_overview(db, admin, ...)  -> o'qituvchilar svodi
+                                                    (notify=False bering!)
+  presence.teacher_month_summary(db, admin, days)-> oylik foizlar
+  docflow.inbox/outbox/overview(db, admin)       -> hamma hujjat (admin filtri yo'q)
+  notifications.feed(db, user, refresh=False)    -> bildirishnomalar
+  services/documents.visible_documents(db, admin)-> hujjatlar ro'yxati
+  rag.ingest.ingest_all(db, reset=False)         -> {documents, chunks, missing}
   ```
-- **`notif_type` ro'yxati:** hozir DB da `flow_status`, `flow_incoming`,
-  `teacher_absence`, `payment_uploaded`, `payment_debt`, `new_assignment`.
-  FUNKSIONALLIK 3.10 jadvalidan qolgan triggerlar: topshiriq deadline'i
-  (masalan `assignment_deadline`), ijro muddati o'tayapti (`flow_due`),
-  yangi buyruq e'lon qilindi (`new_order`).
-- **O'qilmagan hisoblagich uchun maydonlar tayyor:** `Notification.is_read`
-  (Boolean, index) va `created_at`. `schemas.NotificationOut` **allaqachon
-  yozilgan** (S0 dan, hali hech qayerda ishlatilmaydi):
-  `id, user_id, notif_type, text, link_type, link_id, is_read, created_at`.
-  Kutilayotgan endpointlar: `GET /notifications[?unread=true&limit=]`
-  (javobda `unread_count` bo'lsa qo'ng'iroqchaga ikkinchi so'rov kerak
-  bo'lmaydi), `POST /notifications/{id}/read`, `POST /notifications/read-all`.
-- **UTC tuzog'i (S10 da topilgan, kuchda):** `Notification.created_at`
-  `server_default=func.now()` orqali **UTC** yoziladi, loyihadagi qolgan
-  hamma vaqt lokal (O'zbekiston UTC+5). "Bugun" filtri yoki sana ko'rsatish
-  shuni hisobga olsin — S10 dagi "oyna kechagi yarim tundan" naqshi.
-- **Docflow tayyor hisoblagich beradi:** `services/docflow.overview(db, user)`
-  → `FlowList` (`new_count`, `open_count`, `overdue_count`, `due_soon_count`,
-  `DUE_SOON_DAYS = 3`). "Ijro muddati o'tayapti/o'tdi" triggeri uchun yangi
-  so'rov yozish shart emas — shu hisoblagichlar va `FlowItem.overdue`
-  maydoni ishlatilsin.
-- **Agent uchun:** "menda yangi nima bor?" savoliga alohida tool kerak
-  (`bildirishnomalar`) — `ariza_holati` naqshi: `ALL_ROLES`, cheklov ma'lumot
-  qatlamida (`Notification.user_id == user.id`), javobda manba majburiy.
+  Hammasi dataclass qaytaradi (`asdict()` bilan sxemaga o'giriladi) va
+  DISCLAIMER/manba maydonlari bor.
+- **Demo reset IKKI buyruqni ham chaqirishi shart:** `python -m
+  seed.generate --reset` (barcha jadvallarni `ALL_MODELS` bo'yicha tozalaydi
+  va qayta yozadi) → `python -m seed.ingest_documents --reset` (Chroma
+  kolleksiyasi + `Chunk` jadvali). Ikkinchisisiz qidiruv bo'sh qoladi.
+  Endpoint qilishning xavfsiz yo'li:
+  - `seed.generate.main()` ni `sys.argv = ["seed.generate", "--reset"]` bilan
+    chaqirish mumkin (aynan shu naqsh `tests/conftest.py` da ishlatiladi va
+    ishlaydi), indekslash uchun esa CLI shart emas —
+    `app.rag.ingest.ingest_all(db, reset=True)` to'g'ridan-to'g'ri chaqiriladi.
+  - **Uzoq ishlaydi:** embedding modeli birinchi chaqiruvda yuklanadi
+    (~10 s, 450 MB) va 28 bo'lak vektorlanadi — jami ~15-30 s. Demo paytida
+    HTTP timeout bo'lmasligi uchun: alohida `POST /admin/reset` (faqat admin),
+    frontendda uzun "yuklanmoqda" holati + tugmani bloklash; yoki
+    `BackgroundTasks` bilan ishga tushirib, holatni `GET /admin/reset/status`
+    dan so'rash. Bir vaqtda ikki reset ketmasin (oddiy modul darajasidagi
+    bayroq yetadi).
+  - **Reset ochiq turgan sessiyalarni buzadi:** foydalanuvchi id lari qayta
+    yaratiladi, ya'ni eski JWT dagi `sub` boshqa odamga tegishli bo'lib
+    qolishi mumkin. Demo oldidan reset qilinadi va hamma qaytadan kiradi —
+    frontendda resetdan keyin `logout()` chaqirilsin.
+- **Foydalanuvchi/rol boshqaruvi uchun endpoint hali YO'Q:** `User` modeli
+  (`username`, `password_hash`, `role`, `group_id`, `faculty_id`, `language`)
+  va `auth/passwords.hash_password` tayyor; `schemas.UserOut` login javobida
+  ishlatiladi. S13 ro'yxat/yaratish/rol o'zgartirishni `app/api/admin.py` ga
+  qo'shsin (`services/admin.py` da logika — routerlar yupqa qoidasi).
+- **Hujjat yuklash + teglash:** `app/rag/ingest.py` da `SUPPORTED_SUFFIXES`
+  faqat `.md`/`.txt`; `Document.file_path` — `backend/` ga nisbatan yo'l.
+  Yuklangan faylni `seed/documents/` ga emas, alohida `uploads/documents/`
+  ga qo'yish tavsiya etiladi (reset uni o'chirmaydi, lekin `Document` qatori
+  o'chadi — S13 buni PROGRESS ga yozsin). Yuklangandan keyin darhol
+  `ingest_document(db, document)` yoki `ingest_all(db)` chaqirilsa hujjat
+  qidiruvda topiladi (DoD shu).
+- **Frontend admin sahifasi uchun kerakli API'lar:** `/admin/users` (GET,
+  POST, PATCH rol), `/admin/documents` (GET ro'yxat + POST yuklash,
+  `multipart/form-data` — `lib/api.ts` da hozir faqat JSON yordamchilari bor,
+  bittasi qo'shiladi), `/admin/stats` (yuqoridagi servislardan yig'ilgan
+  raqamlar), `/admin/reset` (POST). Navigatsiyaga "Admin" havolasi
+  `(protected)/layout.tsx` dagi `NAV` ga `roles: ["admin"]` bilan
+  qo'shiladi. UI matnlari — `src/i18n/uz.json` ga yangi `admin` bo'limi.
 
 **Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
 bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
@@ -207,6 +209,27 @@ Umumiy (o'zgarmaydigan) izohlar:
   `change_status`, `summarize_flow`, `find_flow`, `overview`,
   `notify_incoming`, `notify_status`, `format_flow_for_tool`,
   `format_flow_list_for_tool`.
+- **Bildirishnomalar API (`app/api/notifications.py`) — to'liq ro'yxat (S12):**
+  ```
+  GET  /notifications[?unread=true&limit=]  -> NotificationListOut
+  POST /notifications/{id}/read             -> NotificationListOut (begona -> 404)
+  POST /notifications/read-all              -> NotificationListOut
+  ```
+  `NotificationListOut`: `rows[NotificationOut], total, unread_count,
+  unread_only, limit` (qo'ng'iroqchaga bitta so'rov yetadi; ikkala POST ham
+  yangilangan ro'yxatni qaytaradi). `NotificationOut` (S0 dan): `id, user_id,
+  notif_type, text, link_type, link_id, is_read, created_at` — **`created_at`
+  LOKAL vaqtga o'girilgan** (DB da UTC). Biznes logika
+  `app/services/notifications.py` da: `write_notification` (YAGONA yozuvchi,
+  dublikat himoyasi), `feed`, `unread_count`, `mark_read`, `mark_all_read`,
+  `get_own`, triggerlar (`notify_receipt_uploaded`, `notify_payment_confirmed`,
+  `notify_absent`, `record_debt_notifications`,
+  `record_flow_due_notifications`, `refresh_triggers`),
+  `format_feed_for_tool`, `to_local`. Turlar: `flow_status`, `flow_incoming`,
+  `flow_due`, `teacher_absence`, `payment_uploaded`, `payment_confirmed`,
+  `payment_debt`, `class_absent`, `new_assignment` (`TYPE_LABELS` da
+  o'zbekcha yorliqlar, UI esa `i18n/uz.json` dagi `notifications.types` ni
+  ishlatadi).
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
@@ -292,7 +315,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S9 | Davomat + mavjudlik (talaba) | ✅ tugadi | DoD 3/3 o'tdi (pytest 142/142, lint+build toza, curl bilan 4 holat/doira/davomat belgilash + brauzerda o'qituvchi, tyutor va talaba sahifalari), commit "S9: student presence and attendance" |
 | S10 | O'qituvchilar davomati | ✅ tugadi | DoD 3/3 o'tdi (pytest 166/166, lint+build toza, curl bilan svod/oylik/doira/403 + bildirishnoma dublikati va brauzerda dekanat ko'rinishi — tursunov qizil), commit "S10: teacher attendance monitoring" |
 | S11 | Hujjat almashinuvi | ✅ tugadi | DoD 3/3 o'tdi (pytest 194/194, lint+build toza, curl bilan to'liq zanjir/404/403/409/422 + bildirishnomalar va brauzerda talaba, dekanat, o'qituvchi ko'rinishlari), commit "S11: document flow with status chain" |
-| S12 | Bildirishnomalar | ⬜ boshlanmagan | |
+| S12 | Bildirishnomalar | ✅ tugadi | DoD 3/3 o'tdi (pytest 211/211, lint+build toza, curl bilan har trigger + dublikat tekshiruvi, brauzerda qo'ng'iroqcha/panel/havola/o'qildi 3 rolda), commit "S12: notifications center" |
 | S13 | Admin panel + reset | ⬜ boshlanmagan | |
 | S14 | Integratsiya + taqdimot | ⬜ boshlanmagan | |
 
@@ -776,10 +799,10 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     kalit `(user_id, link_id=schedule_id, notif_type="teacher_absence")` +
     o'sha kun. Seed yozgan qatorlar shu kalit bo'yicha tanib olinadi va
     dublikat yaratilmaydi (jonli tekshiruvda: 1-so'rov 1 yangi yozuv,
-    2-so'rov 0). Matn seed bilan bir xil formatda. **Servis
-    `services/notifications.py` da EMAS, `presence.py` da** — S12 uni o'sha
-    faylga ko'chirib, `mark_attendance` va deadline triggerlarini ham shu
-    yerga yig'sin (bu S10 doirasidan tashqarida edi).
+    2-so'rov 0). Matn seed bilan bir xil formatda. **Kim va qaysi dars
+    haqida — `presence.py` da, yozuvning o'zi esa S12 dan beri
+    `services/notifications.write_notification` da** (kunlik oyna
+    `since`/`until` argumentlari orqali).
   - **`Notification.created_at` — UTC, qolgan hamma narsa lokal vaqt.**
     `server_default=func.now()` SQLite'da `CURRENT_TIMESTAMP` ga aylanadi,
     u esa **UTC** yozadi; O'zbekiston UTC+5, ya'ni lokal 00:00-05:00 oralig'ida
@@ -876,6 +899,75 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     holat derivatsiya qilinadi: ochilgan hujjat `detail.id === selectedId`,
     rezyume `summary.flow_id === detail.id`, qaror formasi
     `pending.flowId === detail.id`, yangi hujjat matni `body ?? body_hint`.
+- **S12 qarorlar (bildirishnomalar markazi):**
+  - **Yagona yozuvchi: `services/notifications.write_notification(db, user_id,
+    notif_type, text, link_type, link_id, *, match_text=True, since=None,
+    until=None)`.** Loyihada bildirishnoma FAQAT shu funksiya orqali
+    yoziladi. Dublikat kaliti `(user_id, notif_type, link_type, link_id
+    [, text])`: `match_text=False` — hodisa obyektga bir marta bo'ladi
+    (`flow_incoming`, `payment_uploaded`, `payment_confirmed`,
+    `payment_debt`, `teacher_absence`), shuning uchun seed yozgan
+    boshqacha matnli qator ham tanib olinadi va ustiga yozilmaydi;
+    `match_text=True` — har qadam yangi voqea (`flow_status`, `flow_due`,
+    `class_absent`). `since`/`until` — S10 ning "kunlik oyna" ehtiyoji
+    (haftalik takrorlanadigan jadval satri keyingi hafta yana ogohlantirsin).
+    `db.commit()` chaqiruvchida (bir trigger bir nechta qator yozadi).
+  - **Ikki xil trigger, ataylab:** (a) hodisa yozadiganlar —
+    `payments.upload_receipt`/`confirm_payment` (S8), `presence.mark_attendance`
+    (S9), `presence.record_risk_notifications` (S10),
+    `docflow.notify_incoming`/`notify_status` (S11); (b) qo'ng'iroqcha
+    ochilganda **hisoblanadiganlar** — kontrakt qarzdorligi va ijro muddati
+    (`refresh_triggers`, `GET /notifications` ichida). Cron/fon vazifasi
+    YO'Q (ISH_REJA S12: "sodda yo'l — login/sahifa ochilganda hisoblash").
+    GET ning yon ta'siri S10 da qabul qilingan naqsh.
+  - **`flow_due` matnida "N kun qoldi" YO'Q** — aks holda har kuni yangi
+    qator paydo bo'lardi. Bitta hujjat butun umri davomida ko'pi bilan
+    ikkita yozuv beradi: "Ijro muddati yaqin: … — 16.08.2026 gacha." va
+    "Ijro muddati o'tdi: … — muddat 16.08.2026 edi.". Ijrochi ham,
+    yuboruvchi ham o'z `inbox`/`outbox` ro'yxatidan oladi — S11 ning
+    `overdue` / `due_in_days` / `DUE_SOON_DAYS` hisoblagichlari ishlatildi,
+    yangi so'rov yozilmadi.
+  - **UTC → lokal servisda o'giriladi:** `Notification.created_at` DB da UTC
+    (SQLite `CURRENT_TIMESTAMP`), lekin `feed()` qaytaradigan har qator
+    `to_local()` dan o'tadi (`datetime.now().astimezone().utcoffset()` —
+    mashinaga bog'liq, +5 hardcode qilinmagan). Shuning uchun qo'ng'iroqcha,
+    chat javobi va qolgan hamma sahifa bir xil soatni ko'rsatadi. Dublikat
+    oynalari esa hamon kechagi yarim tundan boshlanadi (S10 tuzog'i).
+  - **Qarzdorlik: `link_type="contract"`, `link_id=None`, `match_text=False`**
+    — ya'ni har odamda ko'pi bilan bitta eslatma bo'ladi va seed'dagi
+    karimov qatori qayta ishlatiladi (summa matni o'zgarsa ham ikkinchi
+    qator yozilmaydi). Talabaga — o'z qoldig'i, tyutorga — guruh svodi
+    ("Guruhingizda 4 ta talaba … qarzdor"). O'qituvchi/dekanat qarzdorlik
+    eslatmasini olmaydi (FUNKSIONALLIK 3.10: "talaba, tyutor").
+  - **`link_type` → sahifa jadvali frontendda bitta joyda**
+    (`lib/labels.ts: notificationHref`): `flow_document` → `/docflow`,
+    `schedule` → `/attendance`, `assignment` → `/documents`,
+    `payment`/`contract` → **rolga qarab** `/contract` (talaba) yoki
+    `/group` (tyutor/dekanat/admin) — konventsiyaning yagona rolga bog'liq
+    satri, chunki tyutorda kontrakt sahifasi yo'q.
+  - **Ikkala POST ham yangilangan ro'yxatni qaytaradi** (`NotificationListOut`)
+    — S8 dagi `confirm` naqshi: qo'ng'iroqcha sanoqni yangilash uchun
+    ikkinchi so'rov yubormaydi. Begona bildirishnoma → **404**
+    (hujjat/suhbat qoidasi: mavjudligi ham oshkor bo'lmaydi).
+  - **`bildirishnomalar` tooli — `ALL_ROLES`** (`ariza_holati` naqshi):
+    cheklov ma'lumot qatlamida (`Notification.user_id == user.id`).
+    Javobning BIRINCHI qatori manba yorlig'ining o'zi
+    ("Bildirishnomalar ro'yxati, 15.08.2026 (2 ta o'qilmagan)") va
+    `sources[0]["label"]` bilan aynan bir xil — test shuni qotiradi.
+    Argumentlar: `holat` ("hammasi" bo'lsa o'qilganlar ham), `nechta`.
+  - **`NotifBell` — bitta so'rov, 60 s polling.** Ro'yxat va `unread_count`
+    bitta javobda kelgani uchun badge alohida so'rov talab qilmaydi;
+    "faqat o'qilmaganlar" filtri klientda (qo'shimcha so'rov yo'q).
+    `setState` faqat `.then()` va hodisa ishlovchilarida (Next 16
+    `react-hooks/set-state-in-effect`). Panel tashqarisiga bosilsa yopiladi.
+  - **Seed O'ZGARMADI** — 15 demo qatori (jumladan sharipovaning
+    `payment_uploaded` i va karimovning `payment_debt` i) joyida qoldi va
+    yangi triggerlar ular bilan dublikat yaratmaydi (jonli tekshiruvda
+    isbotlangan).
+  - **Ko'chirish, qayta yozish emas:** `presence.record_risk_notifications`
+    va `docflow.notify_incoming`/`notify_status` NOMLARI saqlandi (S10/S11
+    testlari ularga tayanadi), ichkarida esa endi `write_notification`
+    chaqiriladi; `docflow._write_notification` yupqa o'ram bo'lib qoldi.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (ichki tartib nizomi 3.1-band bilan bir xil):
     1) 08:30-09:50, 2) 10:00-11:20, 3) 11:30-12:50, 4) 13:30-14:50,
@@ -907,11 +999,25 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 
 ## Keyinga qoldirilganlar
 
-- **Bildirishnoma yozish `services/presence.py` va `services/docflow.py` da
-  qoldi** (S10: `record_risk_notifications`; S11: `_write_notification`,
-  `notify_incoming`, `notify_status`). S12 da `services/notifications.py`
-  yaratilib, bu funksiyalar + `mark_attendance` (S9 qaydi) + to'lov
-  triggerlari (S8 qaydi) bitta joyga yig'ilsin.
+- **FUNKSIONALLIK 3.10 jadvalining uch qatori hali triggersiz:** "Topshiriq
+  deadline'i yaqinlashdi (3 kun / 1 kun)", "Yangi topshiriq/material
+  qo'shildi" va "Yangi buyruq e'lon qilindi". Sabab — `Assignment` modeli
+  bor, lekin unga endpoint ham, UI ham yo'q (topshiriqlar faqat seed'da va
+  hujjat matnlarida), buyruq e'lon qilish esa admin ishi. Seed'dagi
+  `new_assignment` qatorlari demo uchun qoladi. S13 (admin hujjat yuklashi →
+  `new_order`) yoki S14 da qo'shilsin — `write_notification` tayyor, faqat
+  chaqiruv joyi kerak.
+- **Bildirishnomani o'chirish/arxivlash YO'Q:** faqat "o'qildi" belgisi
+  (orqaga qaytarish ham yo'q). Ro'yxat `limit` bilan cheklanadi
+  (default 30, maksimum 100), sahifalash (`offset`/kursor) yo'q — demo
+  hajmida 15-25 qator bo'ladi.
+- **Real-time yo'q:** qo'ng'iroqcha 60 soniyada bir marta so'rov yuboradi
+  (`NotifBell.POLL_MS`); WebSocket/SSE yoki push/SMS/Telegram —
+  FUNKSIONALLIK 3.10 dagi **[P2]** kengaytma.
+- **`assignment` havolasi taxminiy:** `link_type="assignment"` (seed'dagi
+  `new_assignment` qatorlari) `/documents` ga olib boradi — alohida
+  "Topshiriqlar" sahifasi yo'q. Sahifa paydo bo'lsa `notificationHref` dagi
+  bitta qator o'zgaradi.
 - **Hujjatga fayl ilova qilinmaydi:** `FlowDocument.file_path` hech qachon
   to'ldirilmaydi (ariza — faqat matn). S13 da fayl saqlash qo'shilsa
   `multipart/form-data` endpoint + `uploads/` papkasi kerak bo'ladi (S8 dagi
@@ -920,9 +1026,11 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   yaratiladi (zanjir orqaga qaytmaydi). "Qayta ishlash uchun qaytarish"
   (`returned`) holati kerak bo'lsa `FlowStatus` enumiga qo'shish kerak, ya'ni
   S0 modeliga tegish — S14 gacha qilinmasin.
-- **Ijro muddati o'tayotgan hujjat uchun bildirishnoma yozilmaydi:**
-  `FlowItem.overdue` / `due_soon_count` hisoblanadi va UI da qizil/sariq
-  ko'rinadi, lekin trigger S12 ishi (FUNKSIONALLIK 3.10).
+- **Ijro muddati bildirishnomasi faqat qo'ng'iroqcha ochilganda hisoblanadi**
+  (S12 `record_flow_due_notifications`): hech kim `GET /notifications` ni
+  chaqirmasa yozuv ham paydo bo'lmaydi. Hujjat ro'yxatining o'zi
+  (`/docflow`) buni chaqirmaydi — kerak bo'lsa S14 da `inbox`/`outbox` ga
+  ham qo'shiladi.
 - **Hujjat aylanmasida tyutor qabul qiluvchi emas:** birorta shablon
   `recipient_role=tutor` bilan kelmaydi, ya'ni tyutorning "Kelgan hujjatlar"
   tabi doim bo'sh (faqat unga shaxsan yuborilgan buyruq tushishi mumkin).
@@ -930,9 +1038,12 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 - **Flow rezyumesi keshlanmaydi** (hujjat rezyumesi bilan bir xil muammo):
   har bosishda LLM qayta chaqiriladi.
 - **"Xavf ostida" bildirishnomasi faqat svod so'ralganda yoziladi**
-  (GET yon ta'siri). Fon vazifasi/scheduler yo'q — hech kim dekanat
-  sahifasini ochmasa yozuv ham paydo bo'lmaydi. S12 da trigger ro'yxati
-  qilinsa (FUNKSIONALLIK 3.10) shu ham o'sha mexanizmga o'tkazilsin.
+  (`GET /attendance/teachers` yon ta'siri). S12 uni umumiy servisga ko'chirdi,
+  lekin **qo'ng'iroqcha ochilganda hisoblanmaydi**: butun fakultetning
+  kunlik svodini har `GET /notifications` da qayta qurish qimmat. Ya'ni
+  dekanat `/attendance` sahifasini ochmasa yangi "xavf ostida" yozuvi
+  paydo bo'lmaydi (seed bugungi qatorni oldindan yozgani uchun demo
+  baribir ishlaydi).
 - **Oylik svodda sana oralig'ini tanlash yo'q:** `?days=` (default 30,
   maksimum 180) faqat "oxirgi N kun" beradi; seed esa atigi 5 ish kuni +
   bugungi `ClassSession` yozadi, ya'ni "oylik" jadval amalda 6 kunlik.
@@ -957,12 +1068,13 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   ishlatilmaydi — S5, S8 va S11 o'z sxemalarini qo'shdi
   (`DocumentListItemOut`/`DocumentDetailOut`, `ContractSummaryOut`/
   `PaymentRowOut`, `FlowItemOut`/`FlowDetailOut`/`FlowListOut`). Kerak
-  bo'lmasa S14 da tozalansin. `NotificationOut` esa S12 da ishlatiladi.
-- **Davomat belgilash bildirishnoma yozmaydi:** `mark_attendance` faqat
-  `Attendance` + `ClassSession` yozadi. "Farzandingiz darsga kelmadi" /
-  "dars xavf ostida" bildirishnomalari S12 ishi — o'sha yerda
-  `services/presence.mark_attendance` va S10 ning holat hisoblagichiga
-  bittadan chaqiruv qo'shilsa yetadi.
+  bo'lmasa S14 da tozalansin. `NotificationOut` S12 da ishga tushdi
+  (`NotificationListOut` bilan birga).
+- **Davomat bildirishnomasi faqat talabaning o'ziga boradi** (S12
+  `class_absent`): "farzandingiz darsga kelmadi" uchun ota-ona roli ham,
+  aloqa kanali ham yo'q (FUNKSIONALLIK 3.10 da ota-ona yo'q). Bir darsda
+  10 ta talaba `absent` bo'lsa 10 ta yozuv yoziladi — demo hajmida muammo
+  emas, ommaviy tizimda guruhlash kerak bo'ladi.
 - **`/attendance` sahifasi kichik ekranda siqiladi:** o'qituvchi ko'rinishi
   ikki ustunli (`w-80` ro'yxat + varaq), telefonda tor bo'ladi. S14 da
   ro'yxat drawer/accordion ga o'tkazilsin (chat va `/group` bilan bir xil
@@ -1015,11 +1127,10 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   seed'dagilarda esa mavjud bo'lmagan yo'l turadi. Agar S13 da fayl saqlash
   qo'shilsa: `multipart/form-data` endpoint + `uploads/` papkasi + `ReceiptOut`
   ga `file_url` maydoni kerak bo'ladi.
-- **To'lov bildirishnomalari yozilmaydi:** seed'da `payment_uploaded`
-  (nazarova uchun) va `payment_debt` (karimov uchun) `Notification` qatorlari
-  bor, lekin S8 chek yuklashda/tasdiqlashda YANGI bildirishnoma yaratmaydi —
-  bu S12 (Bildirishnomalar) ishi. O'sha yerda `services/payments.upload_receipt`
-  va `confirm_payment` ga bittadan chaqiruv qo'shilsa yetadi.
+- **To'lov bildirishnomasi tyutorga boradi, dekanatga emas** (S12):
+  `upload_receipt` faqat guruh tyutoriga yozadi (`Group.tutor_id`), guruhda
+  tyutor bo'lmasa hech kim xabar olmaydi. Dekanat/buxgalteriya kanali kerak
+  bo'lsa `notifications._tutors_of` kengaytiriladi.
 - **`/group` sahifasining o'ng paneli `lg:` dan kichik ekranda yashirin**
   (chat sahifasidagi bilan bir xil muammo) — telefonda talaba qatorini bosish
   ko'zga ko'rinadigan natija bermaydi. S14 da modal/drawer bilan yechilsin.

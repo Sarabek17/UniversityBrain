@@ -20,7 +20,8 @@ Three rules keep the module honest:
    the existence of a stranger's application is not disclosed either.
 3. **Every status change writes both a `FlowHistory` row and a
    `Notification`** (`flow_status` to the sender, `flow_incoming` to the
-   recipients on creation), with the same duplicate guard S10 uses.
+   recipients on creation) through `services/notifications.py` (S12), which
+   owns the duplicate guard.
 
 Transitions are checked, not trusted: an approved/rejected document is final,
 and a rejection without a reason is refused (422).
@@ -41,11 +42,10 @@ from app.models import (
     FlowDocumentType,
     FlowHistory,
     FlowStatus,
-    Notification,
     User,
     UserRole,
 )
-from app.services import summarization
+from app.services import notifications, summarization
 
 FLOW_SOURCE_TYPE = "flow_document"
 
@@ -608,35 +608,24 @@ def _write_notification(
     *,
     match_text: bool = True,
 ) -> bool:
-    """Write one notification unless an equivalent row already exists.
+    """One flow notification — written by the shared service (S12).
 
-    Same guard as S10's `record_risk_notifications`, with one twist: a document
-    *arrives* exactly once, so `flow_incoming` is keyed on (user, type, link)
-    alone — that is how the rows the seed already wrote are recognised even
-    though their wording differs. A *status* step is keyed on the text too, so
-    a genuine second step is never swallowed.
+    The duplicate guard lives in `services/notifications.py` now; the twist
+    this module needs stays here: a document *arrives* exactly once, so
+    `flow_incoming` is keyed on (user, type, link) alone — that is how the rows
+    the seed already wrote are recognised even though their wording differs. A
+    *status* step is keyed on the text too, so a genuine second step is never
+    swallowed.
     """
-    query = db.query(Notification.id).filter(
-        Notification.user_id == user_id,
-        Notification.notif_type == notif_type,
-        Notification.link_type == FLOW_SOURCE_TYPE,
-        Notification.link_id == link_id,
+    return notifications.write_notification(
+        db,
+        user_id,
+        notif_type,
+        text,
+        FLOW_SOURCE_TYPE,
+        link_id,
+        match_text=match_text,
     )
-    if match_text:
-        query = query.filter(Notification.text == text)
-    exists = query.first()
-    if exists is not None:
-        return False
-    db.add(
-        Notification(
-            user_id=user_id,
-            notif_type=notif_type,
-            text=text,
-            link_type=FLOW_SOURCE_TYPE,
-            link_id=link_id,
-        )
-    )
-    return True
 
 
 def incoming_text(db: Session, flow: FlowDocument) -> str:

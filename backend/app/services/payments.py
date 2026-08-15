@@ -30,6 +30,7 @@ from sqlalchemy.orm import Session
 from app.agents.orchestrator import DISCLAIMER
 from app.auth.rbac import ensure_can_access_user, visible_group_ids
 from app.models import Contract, Group, Payment, PaymentStatus, User, UserRole
+from app.services import notifications
 
 # --- payment state of one student -------------------------------------------
 
@@ -464,6 +465,8 @@ def upload_receipt(
     db.add(payment)
     db.commit()
     db.refresh(payment)
+    # S12 trigger (FUNKSIONALLIK 3.10): the tutor has something to confirm.
+    notifications.notify_receipt_uploaded(db, student, payment)
     return payment
 
 
@@ -482,6 +485,8 @@ def confirm_payment(db: Session, actor: User, payment: Payment) -> Payment:
     payment.status = PaymentStatus.confirmed
     db.commit()
     db.refresh(payment)
+    # S12 trigger: the student learns the money is now counted as paid.
+    notifications.notify_payment_confirmed(db, student, payment)
     return payment
 
 

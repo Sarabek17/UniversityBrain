@@ -297,7 +297,23 @@ class NotificationOut(ORMSchema):
     link_type: str | None
     link_id: int | None
     is_read: bool
+    # Local time already: the row is stored in UTC, `services/notifications`
+    # converts it so the bell shows the same clock as the rest of the app.
     created_at: datetime
+
+
+class NotificationListOut(BaseModel):
+    """The bell in one request (S12): the page **and** the unread counter.
+
+    `type_label` is not sent — the UI names the types in `i18n/uz.json`, the
+    same way it labels every other backend enum.
+    """
+
+    rows: list[NotificationOut] = []
+    total: int = 0
+    unread_count: int = 0
+    unread_only: bool = False
+    limit: int = 30
 
 
 # --- payments (S8) ----------------------------------------------------------
