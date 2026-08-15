@@ -26,6 +26,8 @@ const NAV: { href: string; label: string; roles: UserRole[] | null }[] = [
   // Document flow: the student tracks their application, the teacher hands in
   // reports, the dean's office decides — one page, three questions.
   { href: "/docflow", label: uz.nav.docflow, roles: null },
+  // Management panel: users, document upload and the demo reset (S13).
+  { href: "/admin", label: uz.nav.admin, roles: ["admin"] },
 ];
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {

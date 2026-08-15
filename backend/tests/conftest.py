@@ -13,6 +13,8 @@ TEST_DB = BACKEND_DIR / "test_app.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB.as_posix()}"
 # Isolated vector store, so tests never touch backend/chroma_data.
 os.environ["CHROMA_PATH"] = str(BACKEND_DIR / "test_chroma_data")
+# Isolated upload folder (S13), so tests never write into backend/uploads.
+os.environ["UPLOADS_PATH"] = str(BACKEND_DIR / "test_uploads")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

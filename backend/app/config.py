@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     embedding_center: bool = True
     chroma_path: str = "./chroma_data"
     chroma_collection: str = "uniagent_documents"
+    # Where admin-uploaded document files land (S13). Kept out of
+    # `seed/documents/` so a demo reset never deletes uploaded files.
+    uploads_path: str = "./uploads"
     # Hybrid search: keyword overlap weight when re-ranking the vector hits.
     # 0 = pure semantic. Measured on the seed corpus (24 queries, top-1):
     # 14/24 plain -> 16/24 centered -> 19/24 centered + lexical at 0.3.

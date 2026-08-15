@@ -2,97 +2,90 @@
 
 > Har sessiya oxirida yangilanadi. Yangi sessiya SHU FAYLDAN boshlanadi.
 
-## Joriy sessiya: S13 (navbatda)
+## Joriy sessiya: S14 (navbatda)
 
-S12 yakunlandi (DoD 3/3: `pytest` **211/211** — S2 12 + S3 9 + S4 9 + S5 9 +
-S6 15 + S7 20 + S8 29 + S9 39 + S10 24 + S11 28 + S12 **17**; `npm run lint`
-va `npm run build` toza; jonli tekshiruv uvicorn+curl bilan HAR TRIGGER
-bo'yicha: chek yuklandi (karimov → nazarovaga `payment_uploaded`), chek
-tasdiqlandi (nazarova → sharipovaga `payment_confirmed`; 6 000 000 →
-7 200 000, qoldiq 4 800 000), darsda `absent` (umarov belgiladi → talabaga
-`class_absent`, qayta belgilaganda dublikat YO'Q), `flow_due` (rashidova
-tursunovga ertangi muddat bilan buyruq yubordi → IKKALASI ham "Ijro muddati
-yaqin" oldi, qo'ng'iroqcha qayta ochilganda dublikat yo'q), `flow_status`
-(tursunov "ko'rildi" → rashidovaga), qarzdorlik (karimovda seed qatori qayta
-ishlatildi — 1 ta; nazarovaga guruh svodi "4 ta talaba qarzdor"),
-`POST /notifications/{id}/read` unread 3→2, `read-all` → 0, begona yozuvni
-o'qish **404**, chatda `use_tool:bildirishnomalar:{}` → manba
-"Bildirishnomalar ro'yxati, 15.08.2026 (2 ta o'qilmagan)".
-**Brauzerda** (headless Chrome/CDP, 1440x900): tursunov — qo'ng'iroqchada
-**2**, panelda `flow_due` + `flow_incoming` qatorlari, "Ijro muddati" qatorini
-bosish → **/docflow** va sanoq 2→1; nazarova — **3** (qarzdorlik svodi +
-2 chek), chek qatori → **/group**, 3→2, "Hammasini o'qildi" → **0** (uchala
-qator xiralashdi); aliyev — "Davomat" qatori → **/attendance**; konsolda xato
-yo'q. **Demo bazasi tekshiruvdan keyin asl holatiga qaytarildi**
-(`seed.generate --reset` + `seed.ingest_documents --reset`): 4 flow hujjat,
-9 tarix yozuvi, 15 bildirishnoma, 10 hujjat / 28 bo'lak.
+S13 yakunlandi (DoD 3/3: `pytest` **257/257** — S2 12 + S3 9 + S4 9 + S5 9 +
+S6 15 + S7 20 + S8 29 + S9 39 + S10 24 + S11 28 + S12 17 + S13 **46**;
+`npm run lint` va `npm run build` toza; jonli tekshiruv uvicorn+curl bilan:
+`GET /admin/stats` haqiqiy demo raqamlarini berdi (43 foydalanuvchi —
+30 talaba / 8 o'qituvchi / 2 tyutor / 2 dekanat / 1 admin, 10 hujjat /
+28 bo'lak, 4 qarzdor, binoda 26 talaba / 84%, tursunov `at_risk=1`,
+4 flow, 15 bildirishnoma), **403** to'rt rolda ham (aliyev, umarov, nazarova,
+rashidova × `/admin/stats`, `/admin/users`, `/admin/documents`,
+`POST /admin/reset`), tokensiz **401**; foydalanuvchi yaratildi
+(`demo_yordamchi` → login **200**, dublikat login **409**, `PATCH` bilan
+tyutor→dekanat, o'z rolini o'zgartirish **409**).
+**DoD zanjiri (yukla→qidir→top):** `POST /admin/documents` bilan
+"Kutubxona ish tartibi (2026)" yuklandi (**201**, 1 bo'lak,
+`uploads/documents/`), keyin TALABA (aliyev) chatida
+`use_tool:hujjat_qidir:{"query": "kutubxonada kitob necha kunga beriladi va
+jarima qancha"}` — yangi hujjat **1-o'rinda** (`document_id=11`).
+**Brauzerda** (headless Chrome/CDP, 1440x900): nav'dagi "Admin" havolasi
+faqat adminda ko'rinadi (aliyev/rashidova ro'yxatida yo'q; to'g'ridan-to'g'ri
+`/admin` ochilsa faqat "Ma'lumotni yuklab bo'lmadi"), admin sahifasida 6 ta
+statistika kartasi to'ldi, formadan foydalanuvchi yaratildi
+("… Foydalanuvchi yaratildi" + jadvalda yangi qator), jadvaldagi `select`
+bilan rol o'zgartirildi ("… Rol o'zgartirildi"), formadan hujjat yuklandi
+("«Talaba qo'llanmasi (2026 UI sinov)» yuklandi va 1 bo'lakda indekslandi",
+jadvalda "Yuklangan" + bo'laklar soni), **demo reset** tugmasi bosildi:
+tasdiqlash dialogi → tugma bloklandi ("Qayta yaratilmoqda…") → holat
+`GET /admin/reset/status` bilan pollangan holda tugadi → avtomatik `/login`
+va token o'chdi; konsolda xato yo'q. **Resetdan keyin demo qahramonlar
+joyida:** aliyev binoda (10:02 da kirgan) va kontrakti to'liq to'langan
+(qoldiq 0), tursunov "bugun binoga kirmagan" (`at_risk=1`, `unclear=2`),
+sharipova `partial` + 1 200 000 so'm tasdiq kutmoqda; baza asl holatda —
+43 foydalanuvchi, 10 hujjat / 28 bo'lak, 15 bildirishnoma, 4 flow,
+9 tarix yozuvi, 0 suhbat.
 
-S13 (Admin panel + demo reset) uchun izohlar:
+S14 (Yakuniy integratsiya + taqdimot) uchun izohlar:
 
-- **Admin allaqachon hamma joyga ruxsatli** — yangi RBAC qoidasi yozish shart
-  emas: `rbac.require_role(*roles)` ro'yxatdan qat'i nazar adminni o'tkazadi,
-  `registry.Tool.is_allowed_for` ham (`role == UserRole.admin`), doira
-  helperlari (`visible_group_ids` → `None` = cheklovsiz, `can_access_user` →
-  `True`) ham. Ya'ni admin paneli MAVJUD endpointlarni to'g'ridan-to'g'ri
-  chaqira oladi; S13 ning ishi — yangi **boshqaruv** endpointlari
-  (`app/api/admin.py`; `main.py` da unga joy izoh bilan qoldirilgan) va
-  ularga `require_role()` (argumentsiz — faqat admin o'tadi).
-- **Statistika uchun tayyor servis funksiyalari** (yangi SQL yozilmasin):
-  ```
-  payments.group_payment_summary(db, admin)      -> butun universitet bo'yicha
-                                                    (admin doirasi = hammasi):
-                                                    debtor/partial/paid_count,
-                                                    pending_count, summalar
-  presence.group_presence(db, admin, now=...)    -> bugun binoda/chiqqan/kelmagan
-  presence.teacher_day_overview(db, admin, ...)  -> o'qituvchilar svodi
-                                                    (notify=False bering!)
-  presence.teacher_month_summary(db, admin, days)-> oylik foizlar
-  docflow.inbox/outbox/overview(db, admin)       -> hamma hujjat (admin filtri yo'q)
-  notifications.feed(db, user, refresh=False)    -> bildirishnomalar
-  services/documents.visible_documents(db, admin)-> hujjatlar ro'yxati
-  rag.ingest.ingest_all(db, reset=False)         -> {documents, chunks, missing}
-  ```
-  Hammasi dataclass qaytaradi (`asdict()` bilan sxemaga o'giriladi) va
-  DISCLAIMER/manba maydonlari bor.
-- **Demo reset IKKI buyruqni ham chaqirishi shart:** `python -m
-  seed.generate --reset` (barcha jadvallarni `ALL_MODELS` bo'yicha tozalaydi
-  va qayta yozadi) → `python -m seed.ingest_documents --reset` (Chroma
-  kolleksiyasi + `Chunk` jadvali). Ikkinchisisiz qidiruv bo'sh qoladi.
-  Endpoint qilishning xavfsiz yo'li:
-  - `seed.generate.main()` ni `sys.argv = ["seed.generate", "--reset"]` bilan
-    chaqirish mumkin (aynan shu naqsh `tests/conftest.py` da ishlatiladi va
-    ishlaydi), indekslash uchun esa CLI shart emas —
-    `app.rag.ingest.ingest_all(db, reset=True)` to'g'ridan-to'g'ri chaqiriladi.
-  - **Uzoq ishlaydi:** embedding modeli birinchi chaqiruvda yuklanadi
-    (~10 s, 450 MB) va 28 bo'lak vektorlanadi — jami ~15-30 s. Demo paytida
-    HTTP timeout bo'lmasligi uchun: alohida `POST /admin/reset` (faqat admin),
-    frontendda uzun "yuklanmoqda" holati + tugmani bloklash; yoki
-    `BackgroundTasks` bilan ishga tushirib, holatni `GET /admin/reset/status`
-    dan so'rash. Bir vaqtda ikki reset ketmasin (oddiy modul darajasidagi
-    bayroq yetadi).
-  - **Reset ochiq turgan sessiyalarni buzadi:** foydalanuvchi id lari qayta
-    yaratiladi, ya'ni eski JWT dagi `sub` boshqa odamga tegishli bo'lib
-    qolishi mumkin. Demo oldidan reset qilinadi va hamma qaytadan kiradi —
-    frontendda resetdan keyin `logout()` chaqirilsin.
-- **Foydalanuvchi/rol boshqaruvi uchun endpoint hali YO'Q:** `User` modeli
-  (`username`, `password_hash`, `role`, `group_id`, `faculty_id`, `language`)
-  va `auth/passwords.hash_password` tayyor; `schemas.UserOut` login javobida
-  ishlatiladi. S13 ro'yxat/yaratish/rol o'zgartirishni `app/api/admin.py` ga
-  qo'shsin (`services/admin.py` da logika — routerlar yupqa qoidasi).
-- **Hujjat yuklash + teglash:** `app/rag/ingest.py` da `SUPPORTED_SUFFIXES`
-  faqat `.md`/`.txt`; `Document.file_path` — `backend/` ga nisbatan yo'l.
-  Yuklangan faylni `seed/documents/` ga emas, alohida `uploads/documents/`
-  ga qo'yish tavsiya etiladi (reset uni o'chirmaydi, lekin `Document` qatori
-  o'chadi — S13 buni PROGRESS ga yozsin). Yuklangandan keyin darhol
-  `ingest_document(db, document)` yoki `ingest_all(db)` chaqirilsa hujjat
-  qidiruvda topiladi (DoD shu).
-- **Frontend admin sahifasi uchun kerakli API'lar:** `/admin/users` (GET,
-  POST, PATCH rol), `/admin/documents` (GET ro'yxat + POST yuklash,
-  `multipart/form-data` — `lib/api.ts` da hozir faqat JSON yordamchilari bor,
-  bittasi qo'shiladi), `/admin/stats` (yuqoridagi servislardan yig'ilgan
-  raqamlar), `/admin/reset` (POST). Navigatsiyaga "Admin" havolasi
-  `(protected)/layout.tsx` dagi `NAV` ga `roles: ["admin"]` bilan
-  qo'shiladi. UI matnlari — `src/i18n/uz.json` ga yangi `admin` bo'limi.
+- **Demo ssenariy `FUNKSIONALLIK_LOGIKA.md` 8-bo'limida** (6 daqiqalik oqim).
+  Har rol uchun HOZIR ishlaydigan yo'llar (hammasi jonli tekshirilgan):
+  - **talaba (aliyev/karimov/sodiqova/mahmudov):** `/chat` (hujjat qidiruvi,
+    rezyume, tarjima), `/documents`, `/contract` (chek yuklash),
+    `/attendance` (o'z holati), `/docflow` (ariza yuborish), qo'ng'iroqcha.
+  - **o'qituvchi (umarov / tursunov):** `/attendance` da "Bugungi darslar" →
+    ro'yxat → "Turniket bo'yicha to'ldirish" → "Saqlash"; `/docflow` da
+    dekanat buyrug'ining holatini o'zgartirish.
+  - **tyutor (nazarova):** `/group` (qarzdorlar, sharipovaning chekini
+    tasdiqlash: 6 000 000 → 7 200 000), `/attendance` guruh mavjudligi.
+  - **dekanat (rashidova):** `/attendance` "O'qituvchilar" tabi (tursunov
+    qizil), "Oylik jadval" (tursunov 80%), `/docflow` (ariza tasdiqlash,
+    buyruq yuborish).
+  - **admin:** `/admin` (statistika, foydalanuvchi yaratish/rol, hujjat
+    yuklash → qidiruvda topilishi, demo reset).
+- **Gemini kalitini ulash tartibi:** `backend/.env` ga `LLM_PROVIDER=gemini`
+  va `GEMINI_API_KEY=...` (nomlar `app/config.py` dagi `Settings` maydonlari
+  bilan bir xil: `llm_provider`, `gemini_api_key`). **`app/llm/client.py`
+  dagi `GeminiLLMClient.chat()` hali `NotImplementedError`** — S14 uni
+  yozishi kerak: neytral `{"role","content","tool_name","tool_result"}`
+  xabarlarini va `{"name","description","parameters"}` vositalarini
+  google-genai formatiga o'girish, javobdan `LLMResponse(text, tool_calls)`
+  yasash. Butun tizim (chat, rezyume, tarjima) shu bitta metodga bog'liq;
+  qolgan hech qayerda provayder SDK chaqirilmaydi. Kalit ulangach qayta
+  ko'rilishi kerak bo'lgan uchta narsa "Keyinga qoldirilganlar" da:
+  tarjima `[[n]]` markerlariga rioya (25 → 2 chaqiruv), rezyume sifati,
+  qidiruv savolini kengaytirish.
+- **README uchun kerak ma'lumotlar** (hammasi tayyor, faqat yig'ish kerak):
+  o'rnatish va ishga tushirish buyruqlari — `CLAUDE.md` "Buyruqlar"
+  bo'limida (venv, `pip install -r requirements.txt`, `uvicorn`,
+  `python -m seed.generate --reset`, `python -m seed.ingest_documents
+  --reset`, `pytest`; frontend `npm install` / `npm run dev`); torch CPU
+  g'ildiragi haqidagi izoh `requirements.txt` da; portlar 8000/3000 va
+  CORS qoidasi shu faylning "Jonli tekshiruv retsepti" izohida; demo
+  loginlar va parol (`demo123`) "S1 demo qahramonlar" ro'yxatida; rollar,
+  modullar va domen qoidalari `CLAUDE.md` + `FUNKSIONALLIK_LOGIKA.md` da.
+  Demo bazani bir bosishda tiklash endi UI dan ham mumkin: admin →
+  `/admin` → "Demo ma'lumotni qayta yaratish".
+- **Ma'lum bo'sh joylar (S14 ga qolgani):** Gemini klienti (yuqorida);
+  FUNKSIONALLIK 3.10 jadvalining uch triggeri (topshiriq deadline'i, yangi
+  topshiriq/material, yangi buyruq e'loni) — `Assignment` modeliga endpoint
+  yo'q, admin hujjat yuklaganda `new_order` bildirishnomasi hali yozilmaydi
+  (`write_notification` tayyor, faqat chaqiruv joyi kerak); mobil layout
+  (`lg:` panellar telefonda yashirin); `schedule`/`turnstile`/`attendance`
+  manba chiplari bosilmaydi; eksport (CSV/XLSX) yo'q; PDF/DOCX yuklash yo'q
+  (`SUPPORTED_SUFFIXES` faqat `.md`/`.txt`). To'liq ro'yxat — shu faylning
+  "Keyinga qoldirilganlar" bo'limida.
 
 **Kesh isboti (mock rejimda vaqt bilan o'lchab bo'lmaydi!):** mock provayder
 bir zumda javob beradi, shuning uchun curl vaqtlari sovuq/issiq keshda bir xil
@@ -230,6 +223,33 @@ Umumiy (o'zgarmaydigan) izohlar:
   `payment_debt`, `class_absent`, `new_assignment` (`TYPE_LABELS` da
   o'zbekcha yorliqlar, UI esa `i18n/uz.json` dagi `notifications.types` ni
   ishlatadi).
+- **Admin API (`app/api/admin.py`) — to'liq ro'yxat (S13):**
+  ```
+  GET    /admin/users[?role=&q=]  -> [AdminUserOut] (rol filtri + ism/login qidiruvi)
+  POST   /admin/users             -> AdminUserOut (201; dublikat login 409, zaif parol 422)
+  PATCH  /admin/users/{id}        -> AdminUserOut (rol/ism/guruh/parol; 404, o'zini 409)
+  GET    /admin/groups            -> [AdminGroupOut] (formadagi guruh tanlagichi)
+  GET    /admin/documents         -> [AdminDocumentOut] (+ chunk_count, indexed, uploaded)
+  POST   /admin/documents         -> AdminUploadOut (201; multipart/form-data)
+  GET    /admin/stats             -> AdminStatsOut
+  POST   /admin/reset             -> AdminResetOut (202; ikkinchi so'rov 409)
+  GET    /admin/reset/status      -> AdminResetOut
+  ```
+  Hammasi `require_role()` (argumentsiz — faqat admin; boshqa rol **403**).
+  `AdminStatsOut` ichki bloklari: `users{total, by_role[], group_count,
+  faculty_count}`, `corpus{document_count, indexed_count, chunk_count,
+  uploaded_count}`, `payments{student_count, total/paid/pending/remaining,
+  debtor/partial/paid/pending_count}`, `presence{at, current_pair, pair_label,
+  student_count, inside/left/absent_count, attendance_percent}`,
+  `teachers{teacher_count, inside/absent_count, class_count, held_count,
+  at_risk_count, unclear_count}`, `docflow{total, new/open/overdue/
+  due_soon_count}`, `notifications{total, unread_count}` + `source`,
+  `disclaimer`. `AdminResetOut`: `running, started_at, finished_at, ok,
+  message, documents, chunks`. Biznes logika `app/services/admin.py` da:
+  `list_users`, `create_user`, `update_user`, `user_row`, `list_documents`,
+  `upload_document`, `uploads_dir`, `safe_filename`, `is_uploaded`,
+  `chunk_counts`, `stats`, `begin_reset`, `finish_reset`, `run_reset`,
+  `reset_status`.
 - **Chat API (frontend shu bilan ishlaydi, `lib/api.ts` orqali):**
   ```
   POST /chat                     {message, conversation_id?}
@@ -288,8 +308,10 @@ Umumiy (o'zgarmaydigan) izohlar:
   rejimda ishlaydi).
 - **Demo/reset ketma-ketligi ikki buyruq:** `python -m seed.generate --reset`
   (Chunk va Translation jadvallarini ham tozalaydi) → `python -m
-  seed.ingest_documents --reset` (Chroma kolleksiyasini qayta quradi). S13
-  dagi "demo reset" tugmasi IKKALASINI ham chaqirishi kerak.
+  seed.ingest_documents --reset` (Chroma kolleksiyasini qayta quradi).
+  S13 dan beri buni `POST /admin/reset` ham qiladi
+  (`services/admin.run_reset` — CLI emas, `generate.main()` +
+  `ingest_all(db, reset=True)`).
 - **Jonli tekshiruv retsepti:** CORS faqat `http://localhost:3000` ga ochiq va
   `NEXT_PUBLIC_API_URL` build paytida qotadi — backend **8000**, frontend
   **3000** portida. Brauzer sinovi Chrome'ni `--headless=new
@@ -316,7 +338,7 @@ Umumiy (o'zgarmaydigan) izohlar:
 | S10 | O'qituvchilar davomati | ✅ tugadi | DoD 3/3 o'tdi (pytest 166/166, lint+build toza, curl bilan svod/oylik/doira/403 + bildirishnoma dublikati va brauzerda dekanat ko'rinishi — tursunov qizil), commit "S10: teacher attendance monitoring" |
 | S11 | Hujjat almashinuvi | ✅ tugadi | DoD 3/3 o'tdi (pytest 194/194, lint+build toza, curl bilan to'liq zanjir/404/403/409/422 + bildirishnomalar va brauzerda talaba, dekanat, o'qituvchi ko'rinishlari), commit "S11: document flow with status chain" |
 | S12 | Bildirishnomalar | ✅ tugadi | DoD 3/3 o'tdi (pytest 211/211, lint+build toza, curl bilan har trigger + dublikat tekshiruvi, brauzerda qo'ng'iroqcha/panel/havola/o'qildi 3 rolda), commit "S12: notifications center" |
-| S13 | Admin panel + reset | ⬜ boshlanmagan | |
+| S13 | Admin panel + reset | ✅ tugadi | DoD 3/3 o'tdi (pytest 257/257, lint+build toza, curl bilan 403/401 + yukla→qidir→top zanjiri va foydalanuvchi/rol amallari, brauzerda statistika, forma, yuklash va to'liq reset→logout; resetdan keyin demo qahramonlar joyida), commit "S13: admin panel and demo reset" |
 | S14 | Integratsiya + taqdimot | ⬜ boshlanmagan | |
 
 Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
@@ -968,6 +990,81 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
     va `docflow.notify_incoming`/`notify_status` NOMLARI saqlandi (S10/S11
     testlari ularga tayanadi), ichkarida esa endi `write_notification`
     chaqiriladi; `docflow._write_notification` yupqa o'ram bo'lib qoldi.
+- **S13 qarorlar (admin panel + demo reset):**
+  - **Yangi RBAC qoidasi yozilmadi:** `app/api/admin.py` ning HAR endpointi
+    `Depends(require_role())` — argumentsiz chaqiruvda ruxsat to'plami
+    `{admin}` bo'ladi (mexanizm S2 dan, `auth/rbac.py`). Dependency
+    admin `User` ni ham qaytaradi, statistikaga aynan shu kerak: adminning
+    doirasi "hammasi", shuning uchun tyutor/dekanat servislarining O'ZI
+    universitet miqyosidagi raqamlarni beradi.
+  - **Statistika yig'iladi, qayta so'ralmaydi:** `stats()` faqat mavjud
+    servislarni chaqiradi — `payments.group_payment_summary`,
+    `presence.group_presence`, `presence.teacher_day_overview(notify=False)`,
+    `docflow.overview` (admin uchun `inbox` = BARCHA hujjatlar),
+    `services/documents.visible_documents`. "Qarzdor" yoki "xavf ostida"
+    ta'rifi ikkinchi marta yozilmadi. **`notify=False` majburiy** — panelni
+    ochish `teacher_absence` bildirishnomasi yozmasligi kerak (test bor).
+    Faqat uchta narsa to'g'ridan-to'g'ri sanaladi (ularga servis yo'q):
+    rol bo'yicha foydalanuvchilar, `Chunk` soni (hujjat bo'yicha guruhlab)
+    va **tizim bo'yicha** bildirishnomalar — `notifications.feed()` "mening
+    bildirishnomalarim" ni beradi, adminda esa ular yo'q.
+  - **Yuklangan fayl `uploads/documents/` da, `seed/documents/` da EMAS.**
+    Papka `.gitkeep` bilan commit qilinadi, ichi gitignore'da; yo'l
+    `config.uploads_path` (`UPLOADS_PATH`) orqali sozlanadi va testlar uni
+    `backend/test_uploads/` ga o'zgartiradi (CHROMA_PATH naqshi,
+    `tests/conftest.py`). Fayl nomi `safe_filename()` bilan tozalanadi
+    (`../../etc/passwd.txt` → `passwd.txt`), to'qnashuvda `_2` qo'shiladi.
+    **Reset `Document` qatorini o'chiradi, faylni esa o'chirmaydi** — ya'ni
+    demo resetdan keyin yuklangan hujjat qidiruvda YO'Q, lekin fayl diskda
+    qoladi (ataylab: taqdimotda yuklangan hujjat yo'qolmasin, kerak bo'lsa
+    qayta yuklanadi).
+  - **Indekslash so'rov ichida:** `upload_document` faylni yozadi →
+    `Document` qatorini qo'shadi → darhol `rag.ingest.ingest_document`
+    chaqiradi va bo'laklar sonini qaytaradi. Fon vazifasiga o'tkazilmadi:
+    S13 ning DoD i aynan "yuklangandan keyingi birinchi qidiruvda topiladi".
+    Format cheklovi bitta joydan — `admin.SUPPORTED_SUFFIXES =
+    rag_ingest.SUPPORTED_SUFFIXES` (`.md`/`.txt`/`.markdown`), boshqasi
+    **422**, bo'sh matn ham 422.
+  - **Reset = ikki qadam, fon vazifasi, modul bayrog'i.** `run_reset()`
+    `seed.generate.main()` ni (`sys.argv = ["seed.generate", "--reset"]`
+    naqshi bilan) va `rag.ingest.ingest_all(db, reset=True)` ni ketma-ket
+    chaqiradi (CLI ishlatilmaydi). `POST /admin/reset` **202** qaytaradi va
+    ishni `BackgroundTasks` ga beradi; holat `GET /admin/reset/status` dan
+    o'qiladi. Bir vaqtda ikki reset yo'q: `begin_reset()` `threading.Lock`
+    ostida bayroqni oladi, band bo'lsa endpoint **409**. Sovuq jarayonda
+    ~15-30 s (embedding modeli), issiqda ~5 s (jonli o'lchov).
+  - **Resetdan keyin frontend chiqadi (`logout()` + `/login`).** Panel
+    holatni 1.5 s da bir marta so'raydi; seed users jadvalini tozalagan
+    lahzada `GET /admin/reset/status` **401/403** berishi mumkin — bu xato
+    emas, shuning uchun `lib/api.ts` dagi avtomatik logout shu bitta yo'l
+    uchun o'chirilgan (`SELF_HANDLED_AUTH`, `/auth/login` bilan bir qatorda)
+    va poll bir necha muvaffaqiyatsiz urinishga chidaydi. Aks holda brauzer
+    reset tugashini kutmasdan `/login` ga otilar va operator yarim
+    tiklangan bazaga qaytib kirishi mumkin edi.
+  - **Admin o'z rolini o'zgartira olmaydi** (`SelfDemotionError` → **409**):
+    bitta admin bo'lgan demo tizimda bu panelni butunlay yopib qo'yardi.
+    Boshqa cheklovlar: dublikat login **409**, parol < 6 belgi **422**,
+    mavjud bo'lmagan guruh **422**, noma'lum foydalanuvchi **404**.
+    Foydalanuvchini O'CHIRISH yo'q (S14 ga qoldirildi — quyida).
+  - **`GET /admin/documents` alohida endpoint** (`GET /documents` dan
+    foydalanilmadi): adminga hujjatning INDEKSLANGAN-yo'qligi (`indexed`,
+    `chunk_count`) va manbasi (`uploaded` — yuklangan yoki demo korpus)
+    kerak, bu maydonlar esa umumiy hujjat ro'yxatiga (talaba ham ko'radi)
+    aloqasiz. Ruxsat filtri baribir bitta joyda — `visible_documents`.
+  - **`multipart/form-data` uchun `lib/api.ts` ga BITTA yordamchi:**
+    `api.postForm(path, FormData)`; `request()` esa `FormData` bodyga
+    `Content-Type` qo'ymaydi (chegara (boundary) sarlavhasini brauzerning
+    o'zi yozadi). `python-multipart` `requirements.txt` ga qo'shildi
+    (avval tranzitiv o'rnatilgan edi).
+  - **UI: bitta sahifa, to'rt blok** (`/admin`, navigatsiyada "Admin" faqat
+    `roles: ["admin"]`): statistika kartalari (`AdminStatsCards`),
+    foydalanuvchilar jadvali + yaratish formasi (`AdminUsersPanel`, roli
+    jadvaldagi `select` bilan o'zgaradi), hujjat yuklash + korpus jadvali
+    (`AdminUploadPanel`), demo reset (`AdminResetPanel`). Next 16
+    `react-hooks/set-state-in-effect` qoidasi saqlangan: `setState` faqat
+    hodisa ishlovchilarida va `.then()/.catch()` ichida, ro'yxatlar
+    `useCallback` + `useEffect(() => { void load(); }, [load])` bilan
+    yuklanadi.
 - **S1 texnik qarorlar:**
   - Juftlik vaqtlari (ichki tartib nizomi 3.1-band bilan bir xil):
     1) 08:30-09:50, 2) 10:00-11:20, 3) 11:30-12:50, 4) 13:30-14:50,
@@ -1004,8 +1101,10 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   qo'shildi" va "Yangi buyruq e'lon qilindi". Sabab — `Assignment` modeli
   bor, lekin unga endpoint ham, UI ham yo'q (topshiriqlar faqat seed'da va
   hujjat matnlarida), buyruq e'lon qilish esa admin ishi. Seed'dagi
-  `new_assignment` qatorlari demo uchun qoladi. S13 (admin hujjat yuklashi →
-  `new_order`) yoki S14 da qo'shilsin — `write_notification` tayyor, faqat
+  `new_assignment` qatorlari demo uchun qoladi. **S13 admin hujjat yuklashni
+  qo'shdi, lekin bildirishnoma YOZMAYDI** (yuklash — korpusni to'ldirish,
+  e'lon emas): kerak bo'lsa S14 da `upload_document` oxirida barcha
+  talabalarga `new_order` yozilsin — `write_notification` tayyor, faqat
   chaqiruv joyi kerak.
 - **Bildirishnomani o'chirish/arxivlash YO'Q:** faqat "o'qildi" belgisi
   (orqaga qaytarish ham yo'q). Ro'yxat `limit` bilan cheklanadi
@@ -1019,9 +1118,29 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   "Topshiriqlar" sahifasi yo'q. Sahifa paydo bo'lsa `notificationHref` dagi
   bitta qator o'zgaradi.
 - **Hujjatga fayl ilova qilinmaydi:** `FlowDocument.file_path` hech qachon
-  to'ldirilmaydi (ariza — faqat matn). S13 da fayl saqlash qo'shilsa
-  `multipart/form-data` endpoint + `uploads/` papkasi kerak bo'ladi (S8 dagi
-  chek fayli bilan bir xil qaror).
+  to'ldirilmaydi (ariza — faqat matn). S13 dan beri `multipart/form-data`
+  naqshi ham, `uploads/` papkasi ham bor (`api/admin.py` +
+  `services/admin.upload_document`), ya'ni kerak bo'lsa ariza fayli shu
+  yo'lni takrorlaydi (S8 dagi chek fayli bilan bir xil qaror).
+- **Admin panelda O'CHIRISH amali yo'q:** foydalanuvchini ham, hujjatni ham
+  faqat yaratish/yangilash mumkin (`DELETE` endpointi yozilmadi). Sabab —
+  o'chirish bog'liq yozuvlarni (to'lov, davomat, ariza, bo'lak) yetim
+  qoldiradi va demo hajmida kerak emas; noto'g'ri yaratilgan yozuvni demo
+  reset tozalaydi. Kerak bo'lsa S14 da kaskad qoidasi bilan qo'shilsin.
+- **Yuklangan hujjat fayli resetdan keyin diskda qoladi:** `seed.generate
+  --reset` `Document` qatorlarini o'chiradi, `backend/uploads/documents/`
+  esa tegilmaydi — ya'ni fayl bor, lekin bazada ham, qidiruvda ham yo'q.
+  Papkani tozalash (yoki resetda yuklangan hujjatlarni qayta ro'yxatga
+  olish) S14 ga qoldirildi.
+- **Reset holati jarayon xotirasida** (`services/admin._reset_state`,
+  modul darajasidagi bayroq): uvicorn qayta ishga tushsa holat "hech qachon
+  ishga tushmagan" ga qaytadi, ko'p ishchili (worker) rejimda esa har ishchi
+  o'z bayrog'ini ko'radi. Demo bitta jarayonda ishlaydi, shuning uchun
+  yetarli; ommaviy tizimda holat DB ga yoki Redis'ga chiqariladi.
+- **Admin paneli faqat o'qish + yaratish darajasida:** guruh/fakultet
+  yaratish, jadval tahriri, kontrakt summasi kabi ma'lumotlar hamon faqat
+  seed orqali o'zgaradi (FUNKSIONALLIK 3.11 ham foydalanuvchi/rol, hujjat
+  va demo reset bilan cheklangan).
 - **Rad etilgan arizani tahrirlab qayta yuborish yo'li yo'q** — yangi hujjat
   yaratiladi (zanjir orqaga qaytmaydi). "Qayta ishlash uchun qaytarish"
   (`returned`) holati kerak bo'lsa `FlowStatus` enumiga qo'shish kerak, ya'ni
@@ -1047,13 +1166,15 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
 - **Oylik svodda sana oralig'ini tanlash yo'q:** `?days=` (default 30,
   maksimum 180) faqat "oxirgi N kun" beradi; seed esa atigi 5 ish kuni +
   bugungi `ClassSession` yozadi, ya'ni "oylik" jadval amalda 6 kunlik.
-  Haqiqiy oy kesimi kerak bo'lsa seed tarixini uzaytirish kerak (S13/S14).
+  Haqiqiy oy kesimi kerak bo'lsa seed tarixini uzaytirish kerak (S14).
 - **Eksport (P2) qilinmadi:** FUNKSIONALLIK 3.8 dagi "hisobot uchun eksport"
   **[P2]** deb belgilangan — CSV/XLSX yuklab olish S14 ga qoldirildi.
 - **Dekanat ko'rinishida fakultet kesimidagi talaba davomati foizi hamon
   yo'q** (S9 dan qolgan qayd): `/attendance/teachers` faqat o'qituvchilarni
   qamraydi, "fakultet bo'yicha bugun davomat 87%" ko'rsatkichi
-  `group_presence` ma'lumotidan S13/S14 da yig'ilsin.
+  `group_presence` ma'lumotidan S14 da yig'ilsin (admin paneli buni
+  universitet miqsiyosida allaqachon ko'rsatadi: `/admin/stats` →
+  `presence.attendance_percent`).
 - **Kichik ekran (mobil) layouti:** hujjat paneli va dashboard `lg:` dan
   kichik ekranda yashiringan — telefonda manba chipini bosish ko'zga
   ko'rinadigan natija bermaydi. S14 (sayqal) da modal/drawer qilinsin.
@@ -1062,7 +1183,7 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   Endi ochadigan sahifa bor (`/attendance`), shuning uchun S14 (sayqal) da shu
   uch tur ham havolaga aylantirilsin.
 - Suhbatni o'chirish/nomini o'zgartirish YO'Q (faqat ro'yxat + yangi suhbat).
-  Kerak bo'lsa S13 (admin) yoki S14 da qo'shiladi.
+  Kerak bo'lsa S14 da qo'shiladi (admin paneli ham suhbatlarga tegmaydi).
 - `schemas.DocumentOut`, `ChunkOut`, `ContractOut`, `PaymentOut`,
   `FlowDocumentOut`, `FlowHistoryOut` (S0 dan qolgan) hech qayerda
   ishlatilmaydi — S5, S8 va S11 o'z sxemalarini qo'shdi
@@ -1106,7 +1227,7 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   hujjat tarjimasi kifoya). Kerak bo'lsa S14 da.
 - **`MAX_PARAGRAPHS = 80` chegarasi demo korpusida hech qachon urilmaydi**
   (eng uzun hujjatda 38 paragraf), ya'ni `truncated=true` yo'li jonli
-  ko'rilmagan — faqat testda. PDF/DOCX qo'shilsa (S13) qayta ko'rilsin.
+  ko'rilmagan — faqat testda. PDF/DOCX qo'shilsa (S14) qayta ko'rilsin.
 - **Tarjima keshi rolga bog'liq emas** (tarjima rakursi yo'q, rezyumeda bor).
   Bu ataylab: bir hujjatning bir tildagi tarjimasi hamma uchun bir xil.
   Agar S14 da "fan bo'yicha lug'at" (FUNKSIONALLIK 3.5 dagi **[?]**) qo'shilsa,
@@ -1117,16 +1238,16 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   ulangach 3 rolda qayta ko'rilsin; kerak bo'lsa `SYSTEM_BASE` va
   `ROLE_POINTS` matnlari o'sha yerda sozlanadi.
 - **`_document_text` mantiqi ikki joyda emas, lekin `extract_text` faqat
-  `.md/.txt` ni biladi** — S13 da PDF/DOCX qo'shilsa rezyume ham avtomatik
-  ishlaydi (u `services/documents.document_text` ga tayanadi).
+  `.md/.txt` ni biladi** — PDF/DOCX qo'shilsa (S14) rezyume ham, admin
+  yuklashi ham avtomatik ishlaydi (ikkalasi ham shu funksiyaga tayanadi).
 - Gemini provayderi hali `NotImplementedError` — kalit ulangach
   `GeminiLLMClient.chat()` yozilishi kerak (neytral message/tool formatini
   google-genai formatiga o'girish). Butun tizim shu bitta metodga bog'liq.
 - **Chek FAYLI hech qachon yuklanmaydi** (S8 qarori: chek — strukturali
   ma'lumot). Yangi yuklangan to'lovlarda `Payment.receipt_file = None`,
-  seed'dagilarda esa mavjud bo'lmagan yo'l turadi. Agar S13 da fayl saqlash
-  qo'shilsa: `multipart/form-data` endpoint + `uploads/` papkasi + `ReceiptOut`
-  ga `file_url` maydoni kerak bo'ladi.
+  seed'dagilarda esa mavjud bo'lmagan yo'l turadi. S13 `multipart/form-data`
+  endpointi va `uploads/` papkasini qo'shdi, ya'ni chek fayli uchun endi faqat
+  `ReceiptOut` ga `file_url` maydoni va yuklash formasi qoladi (S14).
 - **To'lov bildirishnomasi tyutorga boradi, dekanatga emas** (S12):
   `upload_receipt` faqat guruh tyutoriga yozadi (`Group.tutor_id`), guruhda
   tyutor bo'lmasa hech kim xabar olmaydi. Dekanat/buxgalteriya kanali kerak
@@ -1149,8 +1270,9 @@ Holatlar: ⬜ boshlanmagan · 🔄 jarayonda · ✅ tugadi (DoD tekshirilgan)
   til bo'yicha FILTR hali qo'llanilmaydi (tillar aro qidiruv shart) — S7
   tarjima moduli kerak bo'lsa shu metadatadan foydalanadi.
 - Faqat `.md`/`.txt` fayllar indekslanadi (`app/rag/ingest.py`
-  `SUPPORTED_SUFFIXES`) — S13 da PDF/DOCX yuklash kerak bo'lsa,
-  `extract_text()` kengaytiriladi.
+  `SUPPORTED_SUFFIXES`) — S13 admin yuklashi ham AYNAN shu ro'yxatga
+  tayanadi (boshqa format **422**). PDF/DOCX kerak bo'lsa `extract_text()`
+  kengaytiriladi va shu bilan yuklash ham, rezyume ham avtomatik ishlaydi.
 
 ## Ochiq savollar
 

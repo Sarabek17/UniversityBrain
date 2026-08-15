@@ -866,3 +866,168 @@ class FlowSummaryOut(BaseModel):
     truncated: bool
     source: ChatSource
     disclaimer: str = AGENT_DISCLAIMER
+
+
+# --- S13: admin panel (users, uploads, stats, demo reset) --------------------
+
+
+class AdminUserOut(ORMSchema):
+    """One account in the admin user table."""
+
+    id: int
+    username: str
+    full_name: str
+    role: UserRole
+    role_label: str
+    group_id: int | None
+    group_name: str | None
+    faculty_id: int | None
+    language: str
+    created_at: datetime
+
+
+class AdminUserCreateIn(BaseModel):
+    """New account. Synthetic/demo data only (domain rule 1)."""
+
+    username: str
+    full_name: str
+    role: UserRole
+    password: str
+    group_id: int | None = None
+    faculty_id: int | None = None
+    language: str = "uz"
+
+
+class AdminUserUpdateIn(BaseModel):
+    """Role change (the main use) and the other editable fields."""
+
+    role: UserRole | None = None
+    full_name: str | None = None
+    group_id: int | None = None
+    faculty_id: int | None = None
+    language: str | None = None
+    password: str | None = None
+
+
+class AdminGroupOut(ORMSchema):
+    """Group picker for the user form."""
+
+    id: int
+    name: str
+    faculty_id: int | None
+
+
+class AdminDocumentOut(ORMSchema):
+    """A document plus its indexing state (`indexed` = found by search)."""
+
+    id: int
+    title: str
+    doc_type: DocumentType
+    language: str
+    access_level: AccessLevel
+    file_path: str | None
+    uploaded_at: datetime
+    chunk_count: int
+    indexed: bool
+    uploaded: bool  # admin upload (uploads/) vs. seed corpus
+
+
+class AdminUploadOut(BaseModel):
+    """POST /admin/documents — the document and how many chunks it produced."""
+
+    document: AdminDocumentOut
+    chunks: int
+    message: str
+
+
+class AdminRoleCountOut(ORMSchema):
+    role: UserRole
+    label: str
+    count: int
+
+
+class AdminUserStatsOut(ORMSchema):
+    total: int
+    by_role: list[AdminRoleCountOut]
+    group_count: int
+    faculty_count: int
+
+
+class AdminCorpusStatsOut(ORMSchema):
+    document_count: int
+    indexed_count: int
+    chunk_count: int
+    uploaded_count: int
+
+
+class AdminPaymentStatsOut(ORMSchema):
+    student_count: int
+    total_amount: float
+    paid_amount: float
+    pending_amount: float
+    remaining_amount: float
+    debtor_count: int
+    partial_count: int
+    paid_count: int
+    pending_count: int
+
+
+class AdminPresenceStatsOut(ORMSchema):
+    at: datetime
+    current_pair: int | None
+    pair_label: str | None
+    student_count: int
+    inside_count: int
+    left_count: int
+    absent_count: int
+    attendance_percent: int | None
+
+
+class AdminTeacherStatsOut(ORMSchema):
+    teacher_count: int
+    inside_count: int
+    absent_count: int
+    class_count: int
+    held_count: int
+    at_risk_count: int
+    unclear_count: int
+
+
+class AdminDocflowStatsOut(ORMSchema):
+    total: int
+    new_count: int
+    open_count: int
+    overdue_count: int
+    due_soon_count: int
+
+
+class AdminNotificationStatsOut(ORMSchema):
+    total: int
+    unread_count: int
+
+
+class AdminStatsOut(ORMSchema):
+    """GET /admin/stats — every figure collected from the existing services."""
+
+    generated_at: datetime
+    users: AdminUserStatsOut
+    corpus: AdminCorpusStatsOut
+    payments: AdminPaymentStatsOut
+    presence: AdminPresenceStatsOut
+    teachers: AdminTeacherStatsOut
+    docflow: AdminDocflowStatsOut
+    notifications: AdminNotificationStatsOut
+    source: ChatSource
+    disclaimer: str = AGENT_DISCLAIMER
+
+
+class AdminResetOut(ORMSchema):
+    """State of the demo reset (POST /admin/reset, GET /admin/reset/status)."""
+
+    running: bool
+    started_at: datetime | None
+    finished_at: datetime | None
+    ok: bool | None
+    message: str
+    documents: int
+    chunks: int

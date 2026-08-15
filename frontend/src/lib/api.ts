@@ -29,22 +29,31 @@ export class ApiError extends Error {
   }
 }
 
+/** Paths whose 401 is handled by the caller, not by the global auto-logout. */
+const SELF_HANDLED_AUTH = ["/auth/login", "/admin/reset/status"];
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
+  // multipart/form-data: the browser has to set the header itself (it carries
+  // the boundary), so we must NOT put a Content-Type on a FormData body.
+  const isFormData =
+    typeof FormData !== "undefined" && init?.body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
   });
   if (!res.ok) {
     // Expired/invalid token -> drop it and return to the login page.
-    // (Not for /auth/login itself: a wrong password is handled by the form.)
+    // (Not for the paths in SELF_HANDLED_AUTH: a wrong password is the login
+    // form's business, and the demo reset deletes every user for a moment —
+    // redirecting there would abort the poll that waits for it to finish.)
     if (
       res.status === 401 &&
-      path !== "/auth/login" &&
+      !SELF_HANDLED_AUTH.includes(path) &&
       typeof window !== "undefined"
     ) {
       setToken(null);
@@ -78,6 +87,9 @@ export const api = {
       method: "POST",
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
+  /** File upload (multipart/form-data) — the only non-JSON write we make. */
+  postForm: <T>(path: string, form: FormData, init?: RequestInit) =>
+    request<T>(path, { ...init, method: "POST", body: form }),
   patch: <T>(path: string, body?: unknown, init?: RequestInit) =>
     request<T>(path, {
       ...init,
@@ -912,4 +924,171 @@ export const notificationsApi = {
   read: (id: number) =>
     api.post<NotificationList>(`/notifications/${id}/read`),
   readAll: () => api.post<NotificationList>("/notifications/read-all"),
+};
+
+// --- admin panel (S13) ------------------------------------------------------
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  full_name: string;
+  role: UserRole;
+  role_label: string;
+  group_id: number | null;
+  group_name: string | null;
+  faculty_id: number | null;
+  language: string;
+  created_at: string;
+}
+
+export interface AdminUserCreateInput {
+  username: string;
+  full_name: string;
+  role: UserRole;
+  password: string;
+  group_id?: number | null;
+  faculty_id?: number | null;
+  language?: string;
+}
+
+export interface AdminUserUpdateInput {
+  role?: UserRole;
+  full_name?: string;
+  group_id?: number | null;
+  faculty_id?: number | null;
+  language?: string;
+  password?: string;
+}
+
+export interface AdminGroup {
+  id: number;
+  name: string;
+  faculty_id: number | null;
+}
+
+/** A document plus its indexing state: `indexed` = the search can find it. */
+export interface AdminDocument extends DocumentListItem {
+  file_path: string | null;
+  chunk_count: number;
+  indexed: boolean;
+  uploaded: boolean; // admin upload vs. the seed corpus
+}
+
+export interface AdminUpload {
+  document: AdminDocument;
+  chunks: number;
+  message: string;
+}
+
+export interface AdminRoleCount {
+  role: UserRole;
+  label: string;
+  count: number;
+}
+
+export interface AdminStats {
+  generated_at: string;
+  users: {
+    total: number;
+    by_role: AdminRoleCount[];
+    group_count: number;
+    faculty_count: number;
+  };
+  corpus: {
+    document_count: number;
+    indexed_count: number;
+    chunk_count: number;
+    uploaded_count: number;
+  };
+  payments: {
+    student_count: number;
+    total_amount: number;
+    paid_amount: number;
+    pending_amount: number;
+    remaining_amount: number;
+    debtor_count: number;
+    partial_count: number;
+    paid_count: number;
+    pending_count: number;
+  };
+  presence: {
+    at: string;
+    current_pair: number | null;
+    pair_label: string | null;
+    student_count: number;
+    inside_count: number;
+    left_count: number;
+    absent_count: number;
+    attendance_percent: number | null;
+  };
+  teachers: {
+    teacher_count: number;
+    inside_count: number;
+    absent_count: number;
+    class_count: number;
+    held_count: number;
+    at_risk_count: number;
+    unclear_count: number;
+  };
+  docflow: {
+    total: number;
+    new_count: number;
+    open_count: number;
+    overdue_count: number;
+    due_soon_count: number;
+  };
+  notifications: { total: number; unread_count: number };
+  source: ChatSource;
+  disclaimer: string;
+}
+
+/** Demo reset progress. It re-creates user ids, so every old token dies with
+ * it — the panel logs out as soon as `running` turns false. */
+export interface AdminReset {
+  running: boolean;
+  started_at: string | null;
+  finished_at: string | null;
+  ok: boolean | null;
+  message: string;
+  documents: number;
+  chunks: number;
+}
+
+export interface AdminUploadInput {
+  file: File;
+  title: string;
+  doc_type: DocumentType;
+  language: string;
+  access_level: AccessLevel;
+}
+
+export const adminApi = {
+  users: (role?: UserRole | null, q?: string | null) =>
+    api.get<AdminUser[]>(`/admin/users${query({ role, q })}`),
+  createUser: (input: AdminUserCreateInput) =>
+    api.post<AdminUser>("/admin/users", {
+      username: input.username,
+      full_name: input.full_name,
+      role: input.role,
+      password: input.password,
+      group_id: input.group_id ?? null,
+      faculty_id: input.faculty_id ?? null,
+      language: input.language ?? "uz",
+    }),
+  updateUser: (id: number, input: AdminUserUpdateInput) =>
+    api.patch<AdminUser>(`/admin/users/${id}`, input),
+  groups: () => api.get<AdminGroup[]>("/admin/groups"),
+  documents: () => api.get<AdminDocument[]>("/admin/documents"),
+  uploadDocument: (input: AdminUploadInput) => {
+    const form = new FormData();
+    form.append("file", input.file);
+    form.append("title", input.title);
+    form.append("doc_type", input.doc_type);
+    form.append("language", input.language);
+    form.append("access_level", input.access_level);
+    return api.postForm<AdminUpload>("/admin/documents", form);
+  },
+  stats: () => api.get<AdminStats>("/admin/stats"),
+  reset: () => api.post<AdminReset>("/admin/reset"),
+  resetStatus: () => api.get<AdminReset>("/admin/reset/status"),
 };

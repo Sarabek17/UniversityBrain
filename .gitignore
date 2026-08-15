@@ -17,6 +17,10 @@ backend/app.db
 backend/test_app.db
 backend/chroma_data/
 backend/test_chroma_data/
+# Admin-uploaded documents (S13) — the folder is tracked, its contents are not
+backend/uploads/documents/*
+!backend/uploads/documents/.gitkeep
+backend/test_uploads/
 
 # Node
 node_modules/

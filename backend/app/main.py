@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.admin import router as admin_router
 from app.api.attendance import router as attendance_router
 from app.api.chat import router as chat_router
 from app.api.docflow import router as docflow_router
@@ -33,7 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# The admin router is wired here in a later session (S13).
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
@@ -41,6 +41,7 @@ app.include_router(payments_router)
 app.include_router(attendance_router)
 app.include_router(docflow_router)
 app.include_router(notifications_router)
+app.include_router(admin_router)  # S13: management endpoints (admin only)
 
 
 @app.get("/health", response_model=HealthOut)

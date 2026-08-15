@@ -13,3 +13,7 @@ httpx>=0.27
 #   pip install --index-url https://download.pytorch.org/whl/cpu torch
 sentence-transformers>=3.0
 chromadb>=0.5
+
+# --- S13: admin panel ---
+# multipart/form-data parsing for the document upload endpoint
+python-multipart>=0.0.9
