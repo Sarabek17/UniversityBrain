@@ -67,7 +67,7 @@ export default function PresenceList({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+      <p className="px-4 py-3 text-sm text-ink-faint">
         {uz.attendance.groupEmpty}
       </p>
     );
@@ -77,7 +77,7 @@ export default function PresenceList({
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-faint">
             <th className="py-2 pr-3 font-medium">{uz.attendance.student}</th>
             <th className="py-2 pr-3 font-medium">{uz.attendance.group}</th>
             <th className="py-2 pr-3 font-medium">{uz.attendance.turnstile}</th>
@@ -89,13 +89,13 @@ export default function PresenceList({
             <th className="py-2 font-medium">{uz.attendance.dayAttendance}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+        <tbody className="divide-y divide-line">
           {rows.map((row) => (
             <tr
               key={row.student_id}
               className={
                 row.student_id === activeStudentId
-                  ? "bg-blue-50 dark:bg-blue-950/40"
+                  ? "bg-raised"
                   : ""
               }
             >
@@ -104,7 +104,7 @@ export default function PresenceList({
                   <button
                     type="button"
                     onClick={() => onSelect(row.student_id)}
-                    className="text-left font-medium text-blue-700 hover:underline dark:text-blue-300"
+                    className="text-left font-medium text-accent-ink hover:underline"
                   >
                     {row.full_name}
                   </button>
@@ -112,7 +112,7 @@ export default function PresenceList({
                   <span className="font-medium">{row.full_name}</span>
                 )}
               </td>
-              <td className="py-1.5 pr-3 whitespace-nowrap text-gray-600 dark:text-gray-300">
+              <td className="py-1.5 pr-3 whitespace-nowrap text-ink-soft">
                 {row.group_name ?? "—"}
               </td>
               <td className="py-1.5 pr-3 whitespace-nowrap">
@@ -124,7 +124,7 @@ export default function PresenceList({
                 >
                   {presenceStateLabel(row.state)}
                 </span>
-                <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
+                <span className="ml-2 text-[11px] text-ink-faint">
                   {row.state === "inside" && row.entered_at
                     ? `${formatTime(row.entered_at)} ${uz.attendance.entered}`
                     : row.state === "left" && row.left_at
@@ -132,25 +132,25 @@ export default function PresenceList({
                       : uz.attendance.noEntry}
                 </span>
               </td>
-              <td className="py-1.5 pr-3 whitespace-nowrap text-gray-600 dark:text-gray-300">
+              <td className="py-1.5 pr-3 whitespace-nowrap text-ink-soft">
                 {row.room ? (
                   <>
                     <span className="font-medium">
                       {row.room}-{uz.attendance.room}
                     </span>
-                    <span className="ml-1 text-[11px] text-gray-500 dark:text-gray-400">
+                    <span className="ml-1 text-[11px] text-ink-faint">
                       {row.subject}
                     </span>
                   </>
                 ) : (
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                  <span className="text-[11px] text-ink-faint">
                     {uz.attendance.noCurrentClass}
                   </span>
                 )}
               </td>
               <td className="py-1.5 pr-3 whitespace-nowrap">
                 {row.pair_number === null ? (
-                  <span className="text-[11px] text-gray-400">—</span>
+                  <span className="text-[11px] text-ink-faint">—</span>
                 ) : (
                   <span
                     className={
@@ -166,13 +166,13 @@ export default function PresenceList({
               </td>
               <td className="py-1.5 whitespace-nowrap">
                 {row.attendance_percent === null ? (
-                  <span className="text-[11px] text-gray-400">—</span>
+                  <span className="text-[11px] text-ink-faint">—</span>
                 ) : (
                   <span
                     className={
                       row.attendance_percent >= 75
-                        ? "text-emerald-700 dark:text-emerald-300"
-                        : "text-red-700 dark:text-red-300"
+                        ? "text-ok"
+                        : "text-bad"
                     }
                   >
                     {row.attended_count}/{row.marked_count} (

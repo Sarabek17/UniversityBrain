@@ -22,13 +22,13 @@ export default function ConversationList({
   onNew: () => void;
 }) {
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 dark:border-gray-700">
+    <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-sidebar">
       <div className="flex items-center justify-between px-3 py-3">
         <h2 className="text-sm font-semibold">{uz.chat.conversations}</h2>
         <button
           type="button"
           onClick={onNew}
-          className="rounded-md border border-blue-300 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-950"
+          className="rounded-md px-2 py-1 text-xs text-ink-soft hover:bg-raised"
         >
           + {uz.chat.newConversation}
         </button>
@@ -36,11 +36,11 @@ export default function ConversationList({
 
       <div className="flex-1 overflow-y-auto px-2 pb-3">
         {loading && (
-          <p className="px-1 text-xs text-gray-500">{uz.common.loading}</p>
+          <p className="px-1 text-xs text-ink-faint">{uz.common.loading}</p>
         )}
-        {error && <p className="px-1 text-xs text-red-600">{error}</p>}
+        {error && <p className="px-1 text-xs text-bad">{error}</p>}
         {!loading && !error && conversations.length === 0 && (
-          <p className="px-1 text-xs text-gray-500">{uz.chat.noConversations}</p>
+          <p className="px-1 text-xs text-ink-faint">{uz.chat.noConversations}</p>
         )}
         <ul className="flex flex-col gap-1">
           {conversations.map((conversation) => (
@@ -51,14 +51,14 @@ export default function ConversationList({
                 className={
                   "w-full rounded-md px-2 py-2 text-left text-xs " +
                   (conversation.id === activeId
-                    ? "bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800")
+                    ? "bg-raised text-ink"
+                    : "hover:bg-raised")
                 }
               >
                 <span className="line-clamp-2 block font-medium">
                   {conversation.title ?? uz.chat.untitled}
                 </span>
-                <span className="mt-0.5 block text-[10px] text-gray-500 dark:text-gray-400">
+                <span className="mt-0.5 block text-[10px] text-ink-faint">
                   {formatDateTime(conversation.created_at)}
                 </span>
               </button>

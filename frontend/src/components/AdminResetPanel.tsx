@@ -88,12 +88,12 @@ export default function AdminResetPanel() {
   }
 
   return (
-    <section className="rounded-lg border border-amber-300 p-4 dark:border-amber-800">
+    <section className="rounded-lg border border-warn-line p-4">
       <h2 className="text-sm font-semibold">{uz.admin.resetTitle}</h2>
-      <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-300">
+      <p className="mt-0.5 text-[11px] text-ink-soft">
         {uz.admin.resetHint}
       </p>
-      <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+      <p className="mt-1 text-[11px] text-warn">
         {uz.admin.resetWarning}
       </p>
 
@@ -101,25 +101,25 @@ export default function AdminResetPanel() {
         type="button"
         onClick={start}
         disabled={busy}
-        className="mt-3 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+        className="mt-3 rounded-md bg-warn-solid px-3 py-1.5 text-xs font-medium text-accent-fg hover:bg-warn-solid-hover disabled:bg-raised disabled:text-ink-faint"
       >
         {busy ? uz.admin.resetRunning : uz.admin.resetButton}
       </button>
 
       {busy && (
-        <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+        <p className="mt-2 text-xs text-ink-soft">
           {state?.message ?? uz.admin.resetRunning}
         </p>
       )}
       {done && (
-        <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+        <p className="mt-2 text-xs text-ok">
           {state?.ok ? `${state.message} ` : ""}
           {uz.admin.resetDone}
         </p>
       )}
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-bad">{error}</p>}
       {!busy && state?.finished_at && (
-        <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-[11px] text-ink-faint">
           {uz.admin.resetLast}: {formatDateTime(state.finished_at)}
         </p>
       )}

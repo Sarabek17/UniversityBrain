@@ -65,32 +65,32 @@ export default function ReceiptPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-background max-h-full w-full max-w-md overflow-y-auto rounded-xl border border-gray-200 p-4 shadow-xl dark:border-gray-700">
+      <div className="bg-surface max-h-full w-full max-w-md overflow-y-auto rounded-xl border border-line p-4 shadow-xl">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold">{uz.payments.receiptTitle}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            className="rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-raised"
           >
             {uz.common.close}
           </button>
         </div>
 
         {!receipt && !error && (
-          <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+          <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
         )}
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
         {receipt && (
           <>
-            <dl className="mt-3 divide-y divide-dashed divide-gray-200 text-sm dark:divide-gray-700">
+            <dl className="mt-3 divide-y divide-dashed divide-line text-sm">
               {rows.map((row) => (
                 <div
                   key={row.label}
                   className="flex items-start justify-between gap-3 py-1.5"
                 >
-                  <dt className="text-xs text-gray-500 dark:text-gray-400">
+                  <dt className="text-xs text-ink-faint">
                     {row.label}
                   </dt>
                   <dd className="text-right font-medium">{row.value}</dd>
@@ -98,14 +98,14 @@ export default function ReceiptPanel({
               ))}
             </dl>
             {!receipt.file_available && (
-              <p className="mt-3 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              <p className="mt-3 rounded-md bg-warn-soft px-2 py-1.5 text-[11px] text-warn">
                 {receipt.note}
               </p>
             )}
-            <p className="mt-2 text-[11px] text-gray-600 dark:text-gray-300">
+            <p className="mt-2 text-[11px] text-ink-soft">
               {uz.payments.source}: {receipt.source.label}
             </p>
-            <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-[11px] italic text-ink-faint">
               {receipt.disclaimer}
             </p>
           </>

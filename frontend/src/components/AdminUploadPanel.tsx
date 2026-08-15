@@ -97,39 +97,39 @@ export default function AdminUploadPanel({
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <section className="rounded-lg border border-line p-4">
       <h2 className="text-sm font-semibold">{uz.admin.uploadTitle}</h2>
-      <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="mt-0.5 text-[11px] text-ink-faint">
         {uz.admin.uploadHint}
       </p>
 
       <form onSubmit={submit} className="mt-2 grid gap-2 sm:grid-cols-2">
-        <label className="text-[11px] text-gray-600 sm:col-span-2 dark:text-gray-300">
+        <label className="text-[11px] text-ink-soft sm:col-span-2">
           {uz.admin.uploadFile}
           <input
             ref={fileRef}
             type="file"
             accept=".md,.txt,.markdown"
-            className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+            className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
           />
         </label>
-        <label className="text-[11px] text-gray-600 sm:col-span-2 dark:text-gray-300">
+        <label className="text-[11px] text-ink-soft sm:col-span-2">
           {uz.admin.uploadName}
           <input
             required
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+            className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
           />
         </label>
-        <label className="text-[11px] text-gray-600 dark:text-gray-300">
+        <label className="text-[11px] text-ink-soft">
           {uz.admin.uploadType}
           <select
             value={docType}
             onChange={(event) =>
               setDocType(event.target.value as DocumentType)
             }
-            className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+            className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
           >
             {DOC_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -139,12 +139,12 @@ export default function AdminUploadPanel({
           </select>
         </label>
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.uploadLanguage}
             <select
               value={language}
               onChange={(event) => setLanguage(event.target.value)}
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             >
               {LANGUAGES.map((code) => (
                 <option key={code} value={code}>
@@ -153,14 +153,14 @@ export default function AdminUploadPanel({
               ))}
             </select>
           </label>
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.uploadAccess}
             <select
               value={access}
               onChange={(event) =>
                 setAccess(event.target.value as AccessLevel)
               }
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             >
               {ACCESS_LEVELS.map((level) => (
                 <option key={level} value={level}>
@@ -174,7 +174,7 @@ export default function AdminUploadPanel({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg hover:bg-accent-hover disabled:bg-raised disabled:text-ink-faint"
           >
             {busy ? uz.admin.uploadLoading : uz.admin.uploadSubmit}
           </button>
@@ -182,16 +182,16 @@ export default function AdminUploadPanel({
       </form>
 
       {notice && (
-        <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+        <p className="mt-2 text-xs text-ok">
           {notice}
         </p>
       )}
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-bad">{error}</p>}
 
       <h3 className="mt-4 text-xs font-semibold">{uz.admin.documentsTitle}</h3>
-      <div className="mt-1.5 max-h-64 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700">
+      <div className="mt-1.5 max-h-64 overflow-y-auto rounded-md border border-line">
         <table className="w-full text-left text-xs">
-          <thead className="sticky top-0 bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+          <thead className="sticky top-0 bg-raised text-ink-faint">
             <tr>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colDocument}</th>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colType}</th>
@@ -204,30 +204,30 @@ export default function AdminUploadPanel({
             {documents?.map((row) => (
               <tr
                 key={row.id}
-                className="border-t border-gray-100 dark:border-gray-800"
+                className="border-t border-line"
               >
                 <td className="px-2 py-1.5">
                   {row.title}
-                  <span className="ml-1 text-gray-400">
+                  <span className="ml-1 text-ink-faint">
                     ({languageLabel(row.language)})
                   </span>
                 </td>
-                <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
+                <td className="px-2 py-1.5 text-ink-faint">
                   {docTypeLabel(row.doc_type)}
                 </td>
-                <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
+                <td className="px-2 py-1.5 text-ink-faint">
                   {accessLabel(row.access_level)}
                 </td>
                 <td className="px-2 py-1.5">
                   {row.indexed ? (
                     row.chunk_count
                   ) : (
-                    <span className="text-amber-700 dark:text-amber-300">
+                    <span className="text-warn">
                       {uz.admin.notIndexed}
                     </span>
                   )}
                 </td>
-                <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
+                <td className="px-2 py-1.5 text-ink-faint">
                   {row.uploaded
                     ? uz.admin.sourceUploaded
                     : uz.admin.sourceSeed}
@@ -238,7 +238,7 @@ export default function AdminUploadPanel({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-2 py-3 text-center text-gray-500 dark:text-gray-400"
+                  className="px-2 py-3 text-center text-ink-faint"
                 >
                   {uz.admin.documentsEmpty}
                 </td>
@@ -247,7 +247,7 @@ export default function AdminUploadPanel({
           </tbody>
         </table>
         {!documents && !error && (
-          <p className="px-2 py-3 text-xs text-gray-500">{uz.common.loading}</p>
+          <p className="px-2 py-3 text-xs text-ink-faint">{uz.common.loading}</p>
         )}
       </div>
     </section>

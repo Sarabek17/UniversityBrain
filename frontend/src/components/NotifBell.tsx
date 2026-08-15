@@ -101,7 +101,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
         type="button"
         aria-label={uz.notifications.open}
         onClick={() => setOpen((value) => !value)}
-        className="relative rounded-md border border-gray-300 px-2.5 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+        className="relative rounded-md border border-line-strong px-2.5 py-1.5 text-sm hover:bg-raised"
       >
         <svg
           viewBox="0 0 24 24"
@@ -119,7 +119,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
         {unread > 0 && (
           <span
             data-testid="notif-count"
-            className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-red-600 px-1 text-xs font-medium text-white"
+            className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-bad-solid px-1 text-xs font-medium text-accent-fg"
           >
             {unread > 99 ? "99+" : unread}
           </span>
@@ -127,11 +127,11 @@ export default function NotifBell({ role }: { role: UserRole }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-[26rem] max-w-[90vw] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
-          <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700">
+        <div className="absolute right-0 z-30 mt-2 w-[26rem] max-w-[90vw] rounded-lg border border-line bg-surface shadow-lg">
+          <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2">
             <div className="min-w-0">
               <p className="text-sm font-medium">{uz.notifications.title}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-ink-faint">
                 {unread} {uz.notifications.unreadCount} ·{" "}
                 {data?.total ?? 0} {uz.notifications.totalCount}
               </p>
@@ -140,7 +140,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
               <button
                 type="button"
                 onClick={() => setUnreadOnly((value) => !value)}
-                className="rounded-md px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="rounded-md px-2 py-1 text-xs text-ink-soft hover:bg-raised"
               >
                 {unreadOnly
                   ? uz.notifications.showAll
@@ -150,7 +150,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
                 type="button"
                 onClick={markAll}
                 disabled={unread === 0}
-                className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-800"
+                className="rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-raised disabled:opacity-40"
               >
                 {uz.notifications.markAll}
               </button>
@@ -159,12 +159,12 @@ export default function NotifBell({ role }: { role: UserRole }) {
 
           <div className="max-h-96 overflow-y-auto">
             {failed && (
-              <p className="px-4 py-3 text-sm text-red-600 dark:text-red-400">
+              <p className="px-4 py-3 text-sm text-bad">
                 {uz.notifications.loadError}
               </p>
             )}
             {!failed && rows.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+              <p className="px-4 py-6 text-center text-sm text-ink-faint">
                 {unreadOnly
                   ? uz.notifications.empty
                   : uz.notifications.emptyAll}
@@ -177,22 +177,22 @@ export default function NotifBell({ role }: { role: UserRole }) {
                     type="button"
                     onClick={() => openItem(row)}
                     className={
-                      "w-full border-b border-l-4 border-gray-100 px-4 py-2.5 text-left hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800 " +
+                      "w-full border-b border-l-4 border-line px-4 py-2.5 text-left hover:bg-raised " +
                       notificationAccentClass(row.notif_type) +
                       (row.is_read ? " opacity-60" : "")
                     }
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                      <span className="text-xs font-medium text-ink-soft">
                         {notificationTypeLabel(row.notif_type)}
                       </span>
-                      <span className="shrink-0 text-xs text-gray-400">
+                      <span className="shrink-0 text-xs text-ink-faint">
                         {formatDateTime(row.created_at)}
                       </span>
                     </div>
                     <p className="mt-0.5 text-sm">
                       {!row.is_read && (
-                        <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-blue-600 align-middle" />
+                        <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-accent align-middle" />
                       )}
                       {row.text}
                     </p>
@@ -202,7 +202,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
             </ul>
           </div>
 
-          <p className="border-t border-gray-200 px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <p className="border-t border-line px-4 py-2 text-xs text-ink-faint">
             {uz.notifications.hint}
           </p>
         </div>

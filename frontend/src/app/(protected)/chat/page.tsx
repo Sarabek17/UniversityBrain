@@ -142,7 +142,7 @@ export default function ChatPage() {
       />
 
       {(openDocumentId !== null || showDashboard) && (
-        <aside className="hidden w-96 shrink-0 border-l border-gray-200 lg:flex lg:min-h-0 lg:flex-col dark:border-gray-700">
+        <aside className="hidden w-96 shrink-0 border-l border-line lg:flex lg:min-h-0 lg:flex-col">
           {openDocumentId !== null ? (
             <DocumentPanel
               documentId={openDocumentId}

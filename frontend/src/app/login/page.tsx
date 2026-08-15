@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { ApiError, type UserRole } from "@/lib/api";
 import uz from "@/i18n/uz.json";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const DEMO_PASSWORD = "demo123";
 
@@ -57,28 +58,31 @@ export default function LoginPage() {
   if (loading || user) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">{uz.common.loading}</p>
+        <p className="text-ink-faint">{uz.common.loading}</p>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+      <div className="absolute right-6 top-6">
+        <ThemeToggle />
+      </div>
       <div className="text-center">
         <h1 className="text-3xl font-bold">{uz.login.title}</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">
+        <p className="mt-2 text-ink-soft">
           {uz.login.subtitle}
         </p>
       </div>
 
       <form
         onSubmit={onSubmit}
-        className="flex w-full max-w-sm flex-col gap-3 rounded-xl border border-gray-200 p-6 shadow-sm dark:border-gray-700"
+        className="flex w-full max-w-sm flex-col gap-3 rounded-xl border border-line bg-surface p-6 shadow-sm"
       >
         <label className="flex flex-col gap-1 text-sm">
           {uz.login.username}
           <input
-            className="rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+            className="rounded-md border border-line-strong px-3 py-2"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
@@ -89,38 +93,41 @@ export default function LoginPage() {
           {uz.login.password}
           <input
             type="password"
-            className="rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+            className="rounded-md border border-line-strong px-3 py-2"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
           />
         </label>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-bad">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="mt-2 rounded-md bg-accent px-4 py-2 font-medium text-accent-fg hover:bg-accent-hover disabled:bg-raised disabled:text-ink-faint"
         >
           {submitting ? uz.login.submitting : uz.login.submit}
         </button>
       </form>
 
       <div className="w-full max-w-sm text-center">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <h2 className="text-sm font-semibold text-ink-soft">
           {uz.login.demoTitle}
         </h2>
-        <p className="mb-3 text-xs text-gray-500">{uz.login.demoHint}</p>
-        <div className="flex flex-wrap justify-center gap-2">
+        <p className="mb-3 text-xs text-ink-faint">{uz.login.demoHint}</p>
+        <div className="grid grid-cols-2 gap-2">
           {DEMO_USERS.map((d) => (
             <button
               key={d.username}
               type="button"
               disabled={submitting}
               onClick={() => void doLogin(d.username, DEMO_PASSWORD)}
-              className="rounded-full border border-blue-300 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-950"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-left transition-colors hover:bg-raised disabled:opacity-50"
             >
-              {uz.roles[d.role]} · {d.username}
+              <span className="block text-sm font-medium text-ink">
+                {uz.roles[d.role]}
+              </span>
+              <span className="block text-xs text-ink-faint">{d.username}</span>
             </button>
           ))}
         </div>

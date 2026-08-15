@@ -26,7 +26,7 @@ export default function FlowList({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+      <p className="mt-3 text-sm text-ink-faint">
         {uz.docflow.empty}
       </p>
     );
@@ -44,10 +44,10 @@ export default function FlowList({
               className={
                 "w-full rounded-lg border px-3 py-2.5 text-left transition " +
                 (active
-                  ? "border-blue-400 bg-blue-50 dark:border-blue-700 dark:bg-blue-950"
+                  ? "border-line-strong bg-raised"
                   : row.overdue
-                    ? "border-red-300 hover:bg-gray-50 dark:border-red-800 dark:hover:bg-gray-800"
-                    : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800")
+                    ? "border-bad-line hover:bg-raised"
+                    : "border-line hover:bg-raised")
               }
             >
               <div className="flex items-start justify-between gap-2">
@@ -63,7 +63,7 @@ export default function FlowList({
                   {flowStatusLabel(row.status)}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+              <p className="mt-1 text-xs text-ink-soft">
                 {box === "inbox"
                   ? `${uz.docflow.from}: ${row.sender_name}`
                   : `${uz.docflow.to}: ${row.recipient_label}`}
@@ -85,7 +85,7 @@ export default function FlowList({
                 </p>
               )}
               {row.last_comment && (
-                <p className="mt-1 line-clamp-2 text-xs italic text-gray-500 dark:text-gray-400">
+                <p className="mt-1 line-clamp-2 text-xs italic text-ink-faint">
                   {row.last_comment}
                 </p>
               )}

@@ -78,11 +78,11 @@ export default function AttendanceMarker({
         <div>
           <h2 className="text-base font-semibold">
             {roster.subject}{" "}
-            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+            <span className="text-sm font-normal text-ink-faint">
               · {roster.group_name}
             </span>
           </h2>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 text-xs text-ink-faint">
             {roster.pair_label} · {roster.room}-{uz.attendance.room}{" "}
             <span className="italic">({uz.attendance.scheduleNote})</span>
             {roster.session_label ? (
@@ -90,7 +90,7 @@ export default function AttendanceMarker({
             ) : null}
           </p>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-ink-faint">
           {roster.marked_count}/{roster.students.length}{" "}
           {uz.attendance.markedOf}
         </p>
@@ -101,7 +101,7 @@ export default function AttendanceMarker({
           <button
             type="button"
             onClick={() => setDraft({ key, marks: turnstileMarks(roster) })}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            className="rounded-md border border-line-strong px-3 py-1.5 text-xs hover:bg-raised"
           >
             {uz.attendance.fillFromTurnstile}
           </button>
@@ -116,19 +116,19 @@ export default function AttendanceMarker({
                 })),
               )
             }
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg hover:bg-accent-hover disabled:bg-raised disabled:text-ink-faint"
           >
             {saving ? uz.attendance.saving : uz.attendance.save}
           </button>
-          <span className="text-[11px] text-gray-500 dark:text-gray-400">
+          <span className="text-[11px] text-ink-faint">
             {uz.attendance.fillHint}
           </span>
         </div>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-bad">{error}</p>}
       {saved && !error && (
-        <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <p className="mt-2 text-sm text-ok">
           {uz.attendance.saveSuccess}
         </p>
       )}
@@ -136,7 +136,7 @@ export default function AttendanceMarker({
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-faint">
               <th className="py-2 pr-3 font-medium">{uz.attendance.student}</th>
               <th className="py-2 pr-3 font-medium">
                 {uz.attendance.turnstile}
@@ -147,7 +147,7 @@ export default function AttendanceMarker({
               <th className="py-2 font-medium">{uz.attendance.status}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <tbody className="divide-y divide-line">
             {roster.students.map((student) => (
               <tr key={student.student_id}>
                 <td className="py-1.5 pr-3 font-medium">{student.full_name}</td>
@@ -160,7 +160,7 @@ export default function AttendanceMarker({
                   >
                     {presenceStateLabel(student.state)}
                   </span>
-                  <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
+                  <span className="ml-2 text-[11px] text-ink-faint">
                     {student.state === "inside" && student.entered_at
                       ? `${formatTime(student.entered_at)} ${uz.attendance.entered}`
                       : student.state === "left" && student.left_at
@@ -182,7 +182,7 @@ export default function AttendanceMarker({
                             "rounded-full px-2 py-0.5 text-[11px] " +
                             (active
                               ? attendanceStatusClass(status)
-                              : "border border-gray-300 text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800") +
+                              : "border border-line-strong text-ink-faint hover:bg-raised") +
                             (roster.can_mark ? "" : " opacity-60")
                           }
                         >
@@ -192,7 +192,7 @@ export default function AttendanceMarker({
                     })}
                   </div>
                 </td>
-                <td className="py-1.5 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">
+                <td className="py-1.5 whitespace-nowrap text-[11px] text-ink-faint">
                   {student.status
                     ? attendanceStatusLabel(student.status)
                     : uz.attendance.notMarked}
@@ -203,10 +203,10 @@ export default function AttendanceMarker({
         </table>
       </div>
 
-      <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+      <p className="mt-3 text-[11px] text-ink-soft">
         {uz.attendance.source}: {roster.source.label}
       </p>
-      <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-[11px] italic text-ink-faint">
         {roster.schedule_note}
       </p>
     </section>

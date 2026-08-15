@@ -45,7 +45,7 @@ export default function FlowComposer({
   if (!selected) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        <p className="text-sm text-gray-500">{uz.common.loading}</p>
+        <p className="text-sm text-ink-faint">{uz.common.loading}</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function FlowComposer({
     >
       <h2 className="text-base font-semibold">{uz.docflow.composeTitle}</h2>
 
-      <label className="mt-3 block text-xs text-gray-600 dark:text-gray-300">
+      <label className="mt-3 block text-xs text-ink-soft">
         {uz.docflow.template}
         <select
           value={selected.id}
@@ -73,7 +73,7 @@ export default function FlowComposer({
             setTemplateId(event.target.value);
             setBody(null); // the new template brings its own prefilled text
           }}
-          className="mt-1 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1.5 text-sm dark:border-gray-600"
+          className="mt-1 w-full rounded-md border border-line-strong bg-transparent px-2 py-1.5 text-sm"
         >
           {templates.map((template) => (
             <option key={template.id} value={template.id}>
@@ -82,17 +82,17 @@ export default function FlowComposer({
           ))}
         </select>
       </label>
-      <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-[11px] text-ink-faint">
         {selected.description} · {uz.docflow.templateHint}
       </p>
 
       {selected.needs_recipient_user && (
-        <label className="mt-3 block text-xs text-gray-600 dark:text-gray-300">
+        <label className="mt-3 block text-xs text-ink-soft">
           {uz.docflow.recipient}
           <select
             value={recipient ?? ""}
             onChange={(event) => setRecipientId(Number(event.target.value))}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1.5 text-sm dark:border-gray-600"
+            className="mt-1 w-full rounded-md border border-line-strong bg-transparent px-2 py-1.5 text-sm"
           >
             {recipients.map((person) => (
               <option key={person.id} value={person.id}>
@@ -100,55 +100,55 @@ export default function FlowComposer({
               </option>
             ))}
           </select>
-          <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-gray-400">
+          <span className="mt-0.5 block text-[11px] text-ink-faint">
             {uz.docflow.recipientHint}
           </span>
         </label>
       )}
 
       {!selected.needs_recipient_user && (
-        <p className="mt-3 text-xs text-gray-600 dark:text-gray-300">
+        <p className="mt-3 text-xs text-ink-soft">
           {uz.docflow.to}: {selected.recipient_label}
         </p>
       )}
 
       {selected.needs_due_date && (
-        <label className="mt-3 block text-xs text-gray-600 dark:text-gray-300">
+        <label className="mt-3 block text-xs text-ink-soft">
           {uz.docflow.dueDate}
           <input
             type="date"
             value={dueDate}
             onChange={(event) => setDueDate(event.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1.5 text-sm dark:border-gray-600"
+            className="mt-1 w-full rounded-md border border-line-strong bg-transparent px-2 py-1.5 text-sm"
           />
         </label>
       )}
 
-      <label className="mt-3 block flex-1 text-xs text-gray-600 dark:text-gray-300">
+      <label className="mt-3 block flex-1 text-xs text-ink-soft">
         {uz.docflow.bodyLabel}
         <textarea
           value={text}
           rows={12}
           placeholder={uz.docflow.bodyPlaceholder}
           onChange={(event) => setBody(event.target.value)}
-          className="mt-1 w-full rounded-md border border-gray-300 bg-transparent px-2.5 py-2 text-sm dark:border-gray-600"
+          className="mt-1 w-full rounded-md border border-line-strong bg-transparent px-2.5 py-2 text-sm"
         />
       </label>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-bad">{error}</p>}
 
       <div className="mt-3 flex gap-2">
         <button
           type="submit"
           disabled={sending || text.trim().length < 10}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:bg-raised disabled:text-ink-faint"
         >
           {sending ? uz.docflow.sending : uz.docflow.send}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+          className="rounded-md border border-line-strong px-3 py-1.5 text-sm hover:bg-raised"
         >
           {uz.docflow.cancel}
         </button>

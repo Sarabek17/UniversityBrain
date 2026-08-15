@@ -37,7 +37,7 @@ export default function DocumentsPage() {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <aside className="flex w-72 shrink-0 flex-col border-r border-gray-200 dark:border-gray-700">
+      <aside className="flex w-72 shrink-0 flex-col border-r border-line bg-sidebar">
         <DocumentList
           documents={documents}
           activeId={activeId}

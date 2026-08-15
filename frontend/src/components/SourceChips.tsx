@@ -17,7 +17,7 @@ export default function SourceChips({
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5">
-      <span className="text-xs text-gray-500 dark:text-gray-400">
+      <span className="text-xs text-ink-faint">
         {uz.chat.sources}:
       </span>
       {sources.map((source, index) => {
@@ -26,8 +26,8 @@ export default function SourceChips({
         const className =
           "rounded-full border px-2.5 py-1 text-left text-xs leading-tight " +
           (openable
-            ? "border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-950"
-            : "border-gray-300 text-gray-600 dark:border-gray-600 dark:text-gray-300");
+            ? "border-line-strong text-accent-ink hover:bg-raised"
+            : "border-line-strong text-ink-soft");
 
         if (!openable) {
           return (

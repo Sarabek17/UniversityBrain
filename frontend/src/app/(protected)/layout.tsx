@@ -10,6 +10,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import type { UserRole } from "@/lib/api";
 import NotifBell from "@/components/NotifBell";
+import ThemeToggle from "@/components/ThemeToggle";
 import uz from "@/i18n/uz.json";
 
 // `roles: null` = everyone. Money pages follow the backend rule: the student
@@ -44,14 +45,14 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   if (loading || !user) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">{uz.common.loading}</p>
+        <p className="text-ink-faint">{uz.common.loading}</p>
       </main>
     );
   }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <header className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-3 dark:border-gray-700">
+      <header className="flex shrink-0 items-center justify-between border-b border-line px-6 py-3">
         <div className="flex items-center gap-6">
           <span className="font-bold">{uz.home.title}</span>
           <nav className="flex items-center gap-1">
@@ -64,8 +65,8 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                 className={
                   "rounded-md px-3 py-1.5 text-sm " +
                   (pathname === item.href
-                    ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                    : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800")
+                    ? "bg-raised font-medium text-ink"
+                    : "text-ink-soft hover:bg-raised")
                 }
               >
                 {item.label}
@@ -74,10 +75,11 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           <NotifBell role={user.role} />
           <span className="text-sm">
             {user.full_name}
-            <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            <span className="ml-2 rounded-full bg-raised px-2 py-0.5 text-xs text-ink-soft">
               {uz.roles[user.role]}
             </span>
           </span>
@@ -87,7 +89,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
               logout();
               router.replace("/login");
             }}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            className="rounded-md border border-line-strong px-3 py-1.5 text-sm hover:bg-raised"
           >
             {uz.header.logout}
           </button>

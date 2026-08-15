@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-1 items-center justify-center p-8">
-      <p className="text-sm text-gray-500">{uz.common.loading}</p>
+      <p className="text-sm text-ink-faint">{uz.common.loading}</p>
     </main>
   );
 }

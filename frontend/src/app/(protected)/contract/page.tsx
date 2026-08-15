@@ -43,15 +43,15 @@ export default function ContractPage() {
         <h1 className="text-lg font-semibold">{uz.payments.contractTitle}</h1>
 
         {!contract && !error && (
-          <p className="text-sm text-gray-500">{uz.common.loading}</p>
+          <p className="text-sm text-ink-faint">{uz.common.loading}</p>
         )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-bad">{error}</p>}
 
         {contract && (
           <>
             <ContractCard contract={contract} />
 
-            <section className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+            <section className="rounded-xl border border-line p-4">
               <h2 className="mb-2 text-sm font-semibold">
                 {uz.payments.historyTitle}
               </h2>

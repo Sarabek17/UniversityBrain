@@ -54,15 +54,15 @@ export const paymentStatusLabel = (status: PaymentStatus): string =>
 /** Traffic light for a contract state: green paid, amber partial, red debtor. */
 export const paymentStateClass = (state: PaymentState): string =>
   ({
-    paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-    partial: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-    debtor: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
-  })[state] ?? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+    paid: "bg-ok-soft text-ok",
+    partial: "bg-warn-soft text-warn",
+    debtor: "bg-bad-soft text-bad",
+  })[state] ?? "bg-raised text-ink-soft";
 
 // --- presence / attendance (S9) ---------------------------------------------
 
 const NEUTRAL_CHIP =
-  "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+  "bg-raised text-ink-soft";
 
 /** `"2026-08-14T10:02:00"` -> `"10:02"`. */
 export function formatTime(iso: string | null): string {
@@ -79,9 +79,9 @@ export const presenceStateLabel = (state: PresenceState): string =>
 /** Green inside, amber left the building, red never came today. */
 export const presenceStateClass = (state: PresenceState): string =>
   ({
-    inside: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-    left: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-    not_arrived: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+    inside: "bg-ok-soft text-ok",
+    left: "bg-warn-soft text-warn",
+    not_arrived: "bg-bad-soft text-bad",
   })[state] ?? NEUTRAL_CHIP;
 
 export const attendanceStatusLabel = (status: AttendanceStatus): string =>
@@ -92,9 +92,9 @@ export const attendanceStatusClass = (status: AttendanceStatus | null): string =
     ? NEUTRAL_CHIP
     : ({
         present:
-          "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-        late: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-        absent: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+          "bg-ok-soft text-ok",
+        late: "bg-warn-soft text-warn",
+        absent: "bg-bad-soft text-bad",
       })[status] ?? NEUTRAL_CHIP;
 
 export const sessionStatusLabel = (status: ClassSessionStatus): string =>
@@ -109,11 +109,11 @@ export const classStateLabel = (state: ClassState): string =>
  * orange late, grey not started / cancelled. */
 export const classStateClass = (state: ClassState): string =>
   ({
-    held: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-    at_risk: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+    held: "bg-ok-soft text-ok",
+    at_risk: "bg-bad-soft text-bad",
     needs_clarification:
-      "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-    late: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
+      "bg-warn-soft text-warn",
+    late: "bg-warn-soft text-warn",
     upcoming: NEUTRAL_CHIP,
     cancelled: NEUTRAL_CHIP,
   })[state] ?? NEUTRAL_CHIP;
@@ -130,21 +130,21 @@ export const flowStatusLabel = (status: FlowStatus): string =>
  * green approved, red rejected. */
 export const flowStatusClass = (status: FlowStatus): string =>
   ({
-    sent: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-    seen: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
-    in_progress: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+    sent: "bg-raised text-ink-soft",
+    seen: "bg-accent-soft text-accent-ink",
+    in_progress: "bg-warn-soft text-warn",
     approved:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-    rejected: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+      "bg-ok-soft text-ok",
+    rejected: "bg-bad-soft text-bad",
   })[status] ?? NEUTRAL_CHIP;
 
 /** "3 kun qoldi" / "muddat o'tgan" — red once the deadline is behind us. */
 export const dueClass = (days: number | null, overdue: boolean): string =>
   overdue
-    ? "text-red-700 dark:text-red-300"
+    ? "text-bad"
     : days !== null && days <= 3
-      ? "text-amber-700 dark:text-amber-300"
-      : "text-gray-600 dark:text-gray-300";
+      ? "text-warn"
+      : "text-ink-soft";
 
 // --- notifications (S12) ----------------------------------------------------
 
@@ -179,24 +179,24 @@ export function notificationHref(
 /** Left border of a row: red for money/absence, amber for deadlines. */
 export const notificationAccentClass = (type: string): string =>
   ({
-    payment_debt: "border-l-red-500",
-    teacher_absence: "border-l-red-500",
-    class_absent: "border-l-red-500",
-    flow_due: "border-l-amber-500",
-    payment_uploaded: "border-l-amber-500",
-    payment_confirmed: "border-l-emerald-500",
-    flow_status: "border-l-sky-500",
-    flow_incoming: "border-l-sky-500",
-    new_assignment: "border-l-blue-500",
-    new_order: "border-l-blue-500",
-  })[type] ?? "border-l-gray-300 dark:border-l-gray-600";
+    payment_debt: "border-l-bad",
+    teacher_absence: "border-l-bad",
+    class_absent: "border-l-bad",
+    flow_due: "border-l-warn",
+    payment_uploaded: "border-l-warn",
+    payment_confirmed: "border-l-ok",
+    flow_status: "border-l-accent",
+    flow_incoming: "border-l-accent",
+    new_assignment: "border-l-accent",
+    new_order: "border-l-accent",
+  })[type] ?? "border-l-line-strong";
 
 /** Percentage colouring for the monthly report (same threshold as students). */
 export const percentClass = (percent: number | null): string =>
   percent === null
-    ? "text-gray-500 dark:text-gray-400"
+    ? "text-ink-faint"
     : percent >= 90
-      ? "text-emerald-700 dark:text-emerald-300"
+      ? "text-ok"
       : percent >= 75
-        ? "text-amber-700 dark:text-amber-300"
-        : "text-red-700 dark:text-red-300";
+        ? "text-warn"
+        : "text-bad";

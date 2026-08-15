@@ -27,11 +27,11 @@ export default function DocumentList({
       </h2>
       <div className="flex-1 overflow-y-auto px-2 pb-3">
         {loading && (
-          <p className="px-1 text-xs text-gray-500">{uz.common.loading}</p>
+          <p className="px-1 text-xs text-ink-faint">{uz.common.loading}</p>
         )}
-        {error && <p className="px-1 text-xs text-red-600">{error}</p>}
+        {error && <p className="px-1 text-xs text-bad">{error}</p>}
         {!loading && !error && documents.length === 0 && (
-          <p className="px-1 text-xs text-gray-500">{uz.documents.empty}</p>
+          <p className="px-1 text-xs text-ink-faint">{uz.documents.empty}</p>
         )}
         <ul className="flex flex-col gap-1">
           {documents.map((document) => (
@@ -42,14 +42,14 @@ export default function DocumentList({
                 className={
                   "w-full rounded-md px-2 py-2 text-left " +
                   (document.id === activeId
-                    ? "bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800")
+                    ? "bg-raised text-ink"
+                    : "hover:bg-raised")
                 }
               >
                 <span className="block text-xs font-medium">
                   {document.title}
                 </span>
-                <span className="mt-0.5 block text-[10px] text-gray-500 dark:text-gray-400">
+                <span className="mt-0.5 block text-[10px] text-ink-faint">
                   {docTypeLabel(document.doc_type)} ·{" "}
                   {languageLabel(document.language)} ·{" "}
                   {accessLabel(document.access_level)}

@@ -39,7 +39,9 @@
     "loading": "Yuklanmoqda...",
     "close": "Yopish",
     "retry": "Qayta urinish",
-    "error": "Xatolik yuz berdi"
+    "error": "Xatolik yuz berdi",
+    "themeLight": "Yorug' rejim",
+    "themeDark": "Tungi rejim"
   },
   "chat": {
     "conversations": "Suhbatlar",

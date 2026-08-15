@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
+/* Dark mode is class-based (`.dark` on <html>, set by ThemeToggle +
+   the inline script in layout.tsx), not the OS media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ */
+/* Palette 4: "Claude" — claude.ai ranglari                           */
+/* Light: iliq ivory fon + terrakota aksent; Dark: #262624 iliq       */
+/* grafit (Claude dark) + yorqinroq terrakota.                        */
+/* (1: slate-blue, 2: zinc-indigo, 3: stone-teal — scratchpad da)     */
+/* ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* neutrals — claude.ai light (jonli o'lchangan cds tokenlar):
+     bg-000 #ffffff, bg-100 #f9f9f7, bg-200 #f3f3f0 (sidebar),
+     bg-300 #f0efec, text-100 #131313, text-200 #383835,
+     text-400 #7b7974, border #1e1e1d (past alpha bilan) */
+  --canvas: #f9f9f7; /* page background (bg-100) */
+  --surface: #ffffff; /* cards, panels (bg-000) */
+  --raised: #f0efec; /* inputs, hovers, selected items (bg-300) */
+  --sidebar: #f3f3f0; /* left columns (bg-200) */
+  --line: rgba(30, 30, 29, 0.1); /* border-300/10 */
+  --line-strong: rgba(30, 30, 29, 0.22);
+  --ink: #131313; /* text-100 */
+  --ink-soft: #383835; /* text-200 */
+  --ink-faint: #7b7974; /* text-400 */
+
+  /* accent — Claude terracotta */
+  --accent: #c6613f;
+  --accent-hover: #a8502f;
+  --accent-fg: #ffffff; /* text on solid accent */
+  --accent-ink: #b4522e; /* accent-colored text on neutral/soft bg */
+  --accent-soft: #f6eae2;
+  --accent-line: #e8c8b5;
+
+  /* semantic — statuses only (paid/held = ok, partial/unclear = warn,
+     debtor/absent/risk = bad) */
+  --ok: #15803d;
+  --ok-soft: #dcfce7;
+  --ok-line: #b5eac6;
+  --warn: #a16207;
+  --warn-soft: #fef3c7;
+  --warn-line: #fde68a;
+  --bad: #d03b3b;
+  --bad-soft: #fee2e2;
+  --bad-line: #fecaca;
+
+  /* solid action buttons (approve/reject/reset) — same in both themes */
+  --ok-solid: #16a34a;
+  --ok-solid-hover: #15803d;
+  --warn-solid: #d97706;
+  --warn-solid-hover: #b45309;
+  --bad-solid: #dc2626;
+  --bad-solid-hover: #b91c1c;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* claude.ai dark (jonli o'lchangan cds tokenlar):
+     bg-000 #20201f (input/kartalar), bg-100 #151515 (asosiy fon),
+     bg-200 #111111 (sidebar), text-100 #f9f9f7, text-200 #c3c2b7,
+     text-400 #97958d, border #e1e0d9 (past alpha bilan),
+     terrakota rgb(217,119,87) = #d97757 */
+  --canvas: #151515; /* bg-100 */
+  --surface: #20201f; /* bg-000 */
+  --raised: #252523; /* hover/selected — claude sidebar hover toni */
+  --sidebar: #111111; /* bg-200 */
+  --line: rgba(225, 224, 217, 0.1); /* border-300/10 */
+  --line-strong: rgba(225, 224, 217, 0.22);
+  --ink: #f9f9f7; /* text-100 */
+  --ink-soft: #c3c2b7; /* text-200 */
+  --ink-faint: #97958d; /* text-400 */
+
+  --accent: #c6613f; /* send/CTA tugmasi (Claude send button) */
+  --accent-hover: #b0532f;
+  --accent-fg: #ffffff;
+  --accent-ink: #d97757; /* ikonka va havolalar — terrakota */
+  --accent-soft: rgba(217, 119, 87, 0.12);
+  --accent-line: rgba(217, 119, 87, 0.35);
+
+  --ok: #4ade80;
+  --ok-soft: rgba(34, 197, 94, 0.14);
+  --ok-line: rgba(34, 197, 94, 0.38);
+  --warn: #facc15;
+  --warn-soft: rgba(234, 179, 8, 0.13);
+  --warn-line: rgba(234, 179, 8, 0.38);
+  --bad: #e66767;
+  --bad-soft: rgba(239, 68, 68, 0.14);
+  --bad-line: rgba(239, 68, 68, 0.38);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sidebar: var(--sidebar);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-line: var(--ok-line);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-bad-line: var(--bad-line);
+  --color-ok-solid: var(--ok-solid);
+  --color-ok-solid-hover: var(--ok-solid-hover);
+  --color-warn-solid: var(--warn-solid);
+  --color-warn-solid-hover: var(--warn-solid-hover);
+  --color-bad-solid: var(--bad-solid);
+  --color-bad-solid-hover: var(--bad-solid-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* claude.ai uslubi: inputlar asosiy fondan ajralib turadi (bg-000),
+   fokusda brauzerning ko'k halqasi o'rniga nozik chegara. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea,
+select {
+  background-color: var(--surface);
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--line-strong);
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 1px;
 }

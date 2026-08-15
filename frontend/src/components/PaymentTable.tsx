@@ -9,10 +9,10 @@ import { formatAmount, formatDate, paymentStatusLabel } from "@/lib/labels";
 import uz from "@/i18n/uz.json";
 
 const STATUS_CLASS: Record<string, string> = {
-  automatic: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  uploaded: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+  automatic: "bg-raised text-ink-soft",
+  uploaded: "bg-warn-soft text-warn",
   confirmed:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+    "bg-ok-soft text-ok",
 };
 
 export default function PaymentTable({
@@ -28,7 +28,7 @@ export default function PaymentTable({
 }) {
   if (payments.length === 0) {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-ink-faint">
         {uz.payments.empty}
       </p>
     );
@@ -38,7 +38,7 @@ export default function PaymentTable({
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-faint">
             <th className="py-2 pr-3 font-medium">{uz.payments.date}</th>
             <th className="py-2 pr-3 font-medium">{uz.payments.amount}</th>
             <th className="py-2 pr-3 font-medium">
@@ -48,7 +48,7 @@ export default function PaymentTable({
             <th className="py-2 font-medium">{uz.payments.actions}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+        <tbody className="divide-y divide-line">
           {payments.map((row) => (
             <tr key={row.id}>
               <td className="py-2 pr-3 whitespace-nowrap">
@@ -57,7 +57,7 @@ export default function PaymentTable({
               <td className="py-2 pr-3 whitespace-nowrap font-medium">
                 {formatAmount(row.amount)}
               </td>
-              <td className="py-2 pr-3 whitespace-nowrap text-gray-600 dark:text-gray-300">
+              <td className="py-2 pr-3 whitespace-nowrap text-ink-soft">
                 {row.receipt_number ?? "—"}
               </td>
               <td className="py-2 pr-3">
@@ -75,7 +75,7 @@ export default function PaymentTable({
                   <button
                     type="button"
                     onClick={() => onOpenReceipt(row.id)}
-                    className="rounded-md border border-blue-300 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
+                    className="rounded-md border border-line-strong px-2 py-1 text-xs text-ink-soft hover:bg-raised"
                   >
                     {uz.payments.openReceipt}
                   </button>
@@ -84,7 +84,7 @@ export default function PaymentTable({
                       type="button"
                       onClick={() => onConfirm(row.id)}
                       disabled={confirmingId === row.id}
-                      className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900"
+                      className="rounded-md border border-ok-line bg-ok-soft px-2 py-1 text-xs font-medium text-ok hover:bg-ok-soft disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {confirmingId === row.id
                         ? uz.payments.confirming

@@ -174,13 +174,13 @@ function Workspace({ role }: { role: UserRole }) {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <section className="flex min-h-0 w-96 shrink-0 flex-col overflow-y-auto border-r border-gray-200 px-4 py-5 dark:border-gray-700">
+      <section className="flex min-h-0 w-96 shrink-0 flex-col overflow-y-auto border-r border-line bg-sidebar px-4 py-5">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-lg font-semibold">{titleFor(role)}</h1>
           <button
             type="button"
             onClick={startCompose}
-            className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg hover:bg-accent-hover"
           >
             {role === "student" ? uz.docflow.newStudent : uz.docflow.new}
           </button>
@@ -196,8 +196,8 @@ function Workspace({ role }: { role: UserRole }) {
                 className={
                   "rounded-md px-3 py-1.5 text-xs " +
                   (box === value
-                    ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                    : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800")
+                    ? "bg-raised font-medium text-ink"
+                    : "text-ink-soft hover:bg-raised")
                 }
               >
                 {value === "inbox" ? uz.docflow.inbox : uz.docflow.outbox}
@@ -209,32 +209,32 @@ function Workspace({ role }: { role: UserRole }) {
         {listing && (
           <>
             <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <span className="rounded-full bg-raised px-2.5 py-1 text-ink-soft">
                 {uz.docflow.open}: {listing.open_count}
               </span>
               {box === "inbox" && (
-                <span className="rounded-full bg-sky-100 px-2.5 py-1 text-sky-800 dark:bg-sky-950 dark:text-sky-200">
+                <span className="rounded-full bg-accent-soft px-2.5 py-1 text-accent-ink">
                   {uz.docflow.fresh}: {listing.new_count}
                 </span>
               )}
               {listing.due_soon_count > 0 && (
-                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <span className="rounded-full bg-warn-soft px-2.5 py-1 text-warn">
                   {uz.docflow.dueSoon}: {listing.due_soon_count}
                 </span>
               )}
               {listing.overdue_count > 0 && (
-                <span className="rounded-full bg-red-100 px-2.5 py-1 text-red-800 dark:bg-red-950 dark:text-red-200">
+                <span className="rounded-full bg-bad-soft px-2.5 py-1 text-bad">
                   {uz.docflow.overdue}: {listing.overdue_count}
                 </span>
               )}
             </div>
 
-            <label className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+            <label className="mt-3 flex items-center gap-2 text-xs text-ink-soft">
               {uz.docflow.sortBy}
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as FlowSort)}
-                className="rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+                className="rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -247,9 +247,9 @@ function Workspace({ role }: { role: UserRole }) {
         )}
 
         {!listing && !listError && (
-          <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+          <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
         )}
-        {listError && <p className="mt-3 text-sm text-red-600">{listError}</p>}
+        {listError && <p className="mt-3 text-sm text-bad">{listError}</p>}
 
         {listing && (
           <FlowList
@@ -274,7 +274,7 @@ function Workspace({ role }: { role: UserRole }) {
         ) : shownDetail ? (
           <>
             {sent && (
-              <p className="mb-2 rounded-md bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+              <p className="mb-2 rounded-md bg-ok-soft px-3 py-1.5 text-xs text-ok">
                 {uz.docflow.sendSuccess}
               </p>
             )}
@@ -293,9 +293,9 @@ function Workspace({ role }: { role: UserRole }) {
         ) : (
           <div>
             {detailError && (
-              <p className="mb-2 text-sm text-red-600">{detailError}</p>
+              <p className="mb-2 text-sm text-bad">{detailError}</p>
             )}
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-ink-faint">
               {uz.docflow.selectHint}
             </p>
           </div>

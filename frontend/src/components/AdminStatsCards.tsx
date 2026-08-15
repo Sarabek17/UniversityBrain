@@ -20,11 +20,11 @@ function Card({
   children?: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-gray-200 px-3 py-2.5 dark:border-gray-700">
-      <h3 className="text-xs text-gray-500 dark:text-gray-400">{title}</h3>
+    <section className="rounded-lg border border-line px-3 py-2.5">
+      <h3 className="text-xs text-ink-faint">{title}</h3>
       <p className="mt-0.5 text-xl font-semibold">{value}</p>
       {hint && (
-        <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+        <p className="mt-0.5 text-[11px] text-ink-faint">
           {hint}
         </p>
       )}
@@ -44,12 +44,12 @@ function Line({
 }) {
   const color =
     tone === "danger"
-      ? "text-red-700 dark:text-red-300"
+      ? "text-bad"
       : tone === "warn"
-        ? "text-amber-700 dark:text-amber-300"
+        ? "text-warn"
         : tone === "ok"
-          ? "text-emerald-700 dark:text-emerald-300"
-          : "text-gray-600 dark:text-gray-300";
+          ? "text-ok"
+          : "text-ink-soft";
   return (
     <p className={"flex justify-between gap-2 " + color}>
       <span>{label}</span>

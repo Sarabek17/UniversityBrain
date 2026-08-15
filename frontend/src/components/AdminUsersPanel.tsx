@@ -121,12 +121,12 @@ export default function AdminUsersPanel({
   ].sort((a, b) => a - b);
 
   return (
-    <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <section className="rounded-lg border border-line p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">
           {uz.admin.usersTitle}
           {rows && (
-            <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+            <span className="ml-2 text-xs font-normal text-ink-faint">
               {rows.length} {uz.admin.usersCount}
             </span>
           )}
@@ -136,14 +136,14 @@ export default function AdminUsersPanel({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={uz.admin.usersSearch}
-            className="w-52 rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+            className="w-52 rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
           />
           <select
             value={roleFilter}
             onChange={(event) =>
               setRoleFilter(event.target.value as UserRole | "")
             }
-            className="rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+            className="rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
           >
             <option value="">{uz.admin.usersAll}</option>
             {ROLES.map((role) => (
@@ -156,15 +156,15 @@ export default function AdminUsersPanel({
       </div>
 
       {notice && (
-        <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+        <p className="mt-2 text-xs text-ok">
           {notice}
         </p>
       )}
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-bad">{error}</p>}
 
-      <div className="mt-3 max-h-80 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700">
+      <div className="mt-3 max-h-80 overflow-y-auto rounded-md border border-line">
         <table className="w-full text-left text-xs">
-          <thead className="sticky top-0 bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+          <thead className="sticky top-0 bg-raised text-ink-faint">
             <tr>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colName}</th>
               <th className="px-2 py-1.5 font-medium">{uz.admin.colUsername}</th>
@@ -177,19 +177,19 @@ export default function AdminUsersPanel({
             {rows?.map((row) => (
               <tr
                 key={row.id}
-                className="border-t border-gray-100 dark:border-gray-800"
+                className="border-t border-line"
               >
                 <td className="px-2 py-1.5">{row.full_name}</td>
-                <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
+                <td className="px-2 py-1.5 text-ink-faint">
                   {row.username}
                 </td>
-                <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
+                <td className="px-2 py-1.5 text-ink-faint">
                   {row.group_name ??
                     (row.faculty_id
                       ? `${uz.admin.facultyShort} ${row.faculty_id}`
                       : "—")}
                 </td>
-                <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">
+                <td className="px-2 py-1.5 text-ink-faint">
                   {formatDate(row.created_at)}
                 </td>
                 <td className="px-2 py-1.5">
@@ -199,7 +199,7 @@ export default function AdminUsersPanel({
                     onChange={(event) =>
                       changeRole(row, event.target.value as UserRole)
                     }
-                    className="rounded-md border border-gray-300 bg-transparent px-1.5 py-0.5 text-xs dark:border-gray-600"
+                    className="rounded-md border border-line-strong bg-transparent px-1.5 py-0.5 text-xs"
                   >
                     {ROLES.map((role) => (
                       <option key={role} value={role}>
@@ -214,7 +214,7 @@ export default function AdminUsersPanel({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-2 py-3 text-center text-gray-500 dark:text-gray-400"
+                  className="px-2 py-3 text-center text-ink-faint"
                 >
                   {uz.admin.usersEmpty}
                 </td>
@@ -223,17 +223,17 @@ export default function AdminUsersPanel({
           </tbody>
         </table>
         {!rows && !error && (
-          <p className="px-2 py-3 text-xs text-gray-500">{uz.common.loading}</p>
+          <p className="px-2 py-3 text-xs text-ink-faint">{uz.common.loading}</p>
         )}
       </div>
 
-      <form onSubmit={submitCreate} className="mt-4 border-t pt-3 dark:border-gray-700">
+      <form onSubmit={submitCreate} className="mt-4 border-t pt-3">
         <h3 className="text-xs font-semibold">{uz.admin.createTitle}</h3>
-        <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+        <p className="mt-0.5 text-[11px] text-ink-faint">
           {uz.admin.createHint}
         </p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.createUsername}
             <input
               required
@@ -241,10 +241,10 @@ export default function AdminUsersPanel({
               onChange={(event) =>
                 setForm({ ...form, username: event.target.value })
               }
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             />
           </label>
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.createFullName}
             <input
               required
@@ -252,17 +252,17 @@ export default function AdminUsersPanel({
               onChange={(event) =>
                 setForm({ ...form, full_name: event.target.value })
               }
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             />
           </label>
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.createRole}
             <select
               value={form.role}
               onChange={(event) =>
                 setForm({ ...form, role: event.target.value as UserRole })
               }
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             >
               {ROLES.map((role) => (
                 <option key={role} value={role}>
@@ -271,7 +271,7 @@ export default function AdminUsersPanel({
               ))}
             </select>
           </label>
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.createPassword}
             <input
               required
@@ -280,17 +280,17 @@ export default function AdminUsersPanel({
               onChange={(event) =>
                 setForm({ ...form, password: event.target.value })
               }
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             />
           </label>
-          <label className="text-[11px] text-gray-600 dark:text-gray-300">
+          <label className="text-[11px] text-ink-soft">
             {uz.admin.createGroup}
             <select
               value={form.group_id}
               onChange={(event) =>
                 setForm({ ...form, group_id: event.target.value })
               }
-              className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             >
               <option value="">{uz.admin.createGroupNone}</option>
               {groups.map((group) => (
@@ -301,14 +301,14 @@ export default function AdminUsersPanel({
             </select>
           </label>
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-gray-600 dark:text-gray-300">
+            <label className="text-[11px] text-ink-soft">
               {uz.admin.createFaculty}
               <select
                 value={form.faculty_id}
                 onChange={(event) =>
                   setForm({ ...form, faculty_id: event.target.value })
                 }
-                className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+                className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
               >
                 <option value="">—</option>
                 {faculties.map((id) => (
@@ -318,14 +318,14 @@ export default function AdminUsersPanel({
                 ))}
               </select>
             </label>
-            <label className="text-[11px] text-gray-600 dark:text-gray-300">
+            <label className="text-[11px] text-ink-soft">
               {uz.admin.createLanguage}
               <select
                 value={form.language}
                 onChange={(event) =>
                   setForm({ ...form, language: event.target.value })
                 }
-                className="mt-0.5 w-full rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+                className="mt-0.5 w-full rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
               >
                 {LANGUAGES.map((code) => (
                   <option key={code} value={code}>
@@ -337,12 +337,12 @@ export default function AdminUsersPanel({
           </div>
         </div>
         {createError && (
-          <p className="mt-2 text-xs text-red-600">{createError}</p>
+          <p className="mt-2 text-xs text-bad">{createError}</p>
         )}
         <button
           type="submit"
           disabled={creating}
-          className="mt-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg hover:bg-accent-hover disabled:bg-raised disabled:text-ink-faint"
         >
           {creating ? uz.admin.createLoading : uz.admin.createSubmit}
         </button>

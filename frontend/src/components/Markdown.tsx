@@ -30,7 +30,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
         return (
           <code
             key={key}
-            className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.85em] dark:bg-gray-800"
+            className="rounded bg-raised px-1 py-0.5 font-mono text-[0.85em]"
           >
             {part.slice(1, -1)}
           </code>
@@ -80,7 +80,7 @@ function renderBlocks(source: string, breaks: boolean): ReactNode[] {
       out.push(
         <pre
           key={`b${key++}`}
-          className="my-3 overflow-x-auto rounded-md bg-gray-100 p-3 font-mono text-xs dark:bg-gray-800"
+          className="my-3 overflow-x-auto rounded-md bg-raised p-3 font-mono text-xs"
         >
           {body.join("\n")}
         </pre>,
@@ -108,7 +108,7 @@ function renderBlocks(source: string, breaks: boolean): ReactNode[] {
       out.push(
         <hr
           key={`b${key++}`}
-          className="my-4 border-gray-200 dark:border-gray-700"
+          className="my-4 border-line"
         />,
       );
       i += 1;
@@ -132,11 +132,11 @@ function renderBlocks(source: string, breaks: boolean): ReactNode[] {
         <div key={`b${key++}`} className="my-3 overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-800">
+              <tr className="bg-raised">
                 {header.map((cell, c) => (
                   <th
                     key={c}
-                    className="border border-gray-200 px-2 py-1 text-left font-semibold dark:border-gray-700"
+                    className="border border-line px-2 py-1 text-left font-semibold"
                   >
                     {renderInline(cell, `th${key}-${c}`)}
                   </th>
@@ -149,7 +149,7 @@ function renderBlocks(source: string, breaks: boolean): ReactNode[] {
                   {row.map((cell, c) => (
                     <td
                       key={c}
-                      className="border border-gray-200 px-2 py-1 align-top dark:border-gray-700"
+                      className="border border-line px-2 py-1 align-top"
                     >
                       {renderInline(cell, `td${key}-${r}-${c}`)}
                     </td>

@@ -155,23 +155,23 @@ export default function DocumentPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-start justify-between gap-2 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+      <header className="flex items-start justify-between gap-2 border-b border-line px-4 py-3">
         <div className="min-w-0">
           <h2 className="truncate text-sm font-semibold">
             {document?.title ?? uz.documents.title}
           </h2>
           {document && (
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <span className="rounded-full bg-raised px-2 py-0.5 text-ink-soft">
                 {docTypeLabel(document.doc_type)}
               </span>
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <span className="rounded-full bg-raised px-2 py-0.5 text-ink-soft">
                 {languageLabel(document.language)}
               </span>
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+              <span className="rounded-full bg-warn-soft px-2 py-0.5 text-warn">
                 {accessLabel(document.access_level)}
               </span>
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-ink-faint">
                 {formatDate(document.uploaded_at)}
               </span>
             </div>
@@ -183,7 +183,7 @@ export default function DocumentPanel({
               type="button"
               onClick={handleSummarize}
               disabled={summarizing}
-              className="rounded-md border border-blue-300 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200 dark:hover:bg-blue-900"
+              className="rounded-md border border-line-strong px-2 py-1 text-xs font-medium text-ink-soft hover:bg-raised disabled:cursor-not-allowed disabled:opacity-60"
             >
               {summarizing ? uz.common.loading : uz.documents.summary}
             </button>
@@ -194,7 +194,7 @@ export default function DocumentPanel({
                 value={targetLanguage}
                 onChange={(event) => setTargetLanguage(event.target.value)}
                 aria-label={uz.documents.translateLanguage}
-                className="rounded-md border border-gray-300 bg-transparent px-1.5 py-1 text-xs dark:border-gray-600"
+                className="rounded-md border border-line-strong bg-transparent px-1.5 py-1 text-xs"
               >
                 {TRANSLATION_LANGUAGES.map((code) => (
                   <option key={code} value={code}>
@@ -206,7 +206,7 @@ export default function DocumentPanel({
                 type="button"
                 onClick={handleTranslate}
                 disabled={translating}
-                className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900"
+                className="rounded-md border border-ok-line bg-ok-soft px-2 py-1 text-xs font-medium text-ok hover:bg-ok-soft disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {translating ? uz.common.loading : uz.documents.translate}
               </button>
@@ -216,7 +216,7 @@ export default function DocumentPanel({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+              className="rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-raised"
             >
               {uz.common.close}
             </button>
@@ -226,24 +226,24 @@ export default function DocumentPanel({
 
       <div className="flex-1 overflow-y-auto px-4 py-3 text-sm">
         {documentId === null && (
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-ink-faint">
             {uz.documents.selectHint}
           </p>
         )}
-        {loading && <p className="text-gray-500">{uz.common.loading}</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {loading && <p className="text-ink-faint">{uz.common.loading}</p>}
+        {error && <p className="text-bad">{error}</p>}
 
         {showSummaryBox && (
-          <section className="mb-4 rounded-lg border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/40">
+          <section className="mb-4 rounded-lg border border-accent-line bg-accent-soft p-3">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-blue-800 dark:text-blue-200">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-accent-ink">
                 {uz.documents.summaryTitle}
               </h3>
               {!summarizing && (
                 <button
                   type="button"
                   onClick={handleCloseSummary}
-                  className="shrink-0 rounded-md border border-blue-200 px-2 py-0.5 text-[11px] text-blue-800 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-200 dark:hover:bg-blue-900"
+                  className="shrink-0 rounded-md border border-line-strong px-2 py-0.5 text-[11px] text-ink-soft hover:bg-raised"
                 >
                   {uz.common.close}
                 </button>
@@ -251,11 +251,11 @@ export default function DocumentPanel({
             </div>
 
             {summarizing && (
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
+              <p className="mt-2 text-ink-soft">
                 {uz.documents.summaryLoading}
               </p>
             )}
-            {summaryError && <p className="mt-2 text-red-600">{summaryError}</p>}
+            {summaryError && <p className="mt-2 text-bad">{summaryError}</p>}
 
             {activeSummary && !summarizing && (
               <>
@@ -263,19 +263,19 @@ export default function DocumentPanel({
                   <Markdown text={activeSummary.summary} />
                 </div>
                 {activeSummary.parts > 1 && (
-                  <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                  <p className="mt-2 text-[11px] text-ink-faint">
                     {uz.documents.summaryParts} ({activeSummary.parts})
                   </p>
                 )}
                 {activeSummary.truncated && (
-                  <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+                  <p className="mt-1 text-[11px] text-warn">
                     {uz.documents.summaryTruncated}
                   </p>
                 )}
-                <p className="mt-2 text-[11px] text-gray-600 dark:text-gray-300">
+                <p className="mt-2 text-[11px] text-ink-soft">
                   {uz.documents.summarySource}: {activeSummary.source.label}
                 </p>
-                <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-[11px] italic text-ink-faint">
                   {activeSummary.disclaimer}
                 </p>
               </>
@@ -284,16 +284,16 @@ export default function DocumentPanel({
         )}
 
         {showTranslationBox && (
-          <section className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+          <section className="mb-3 rounded-lg border border-ok-line bg-ok-soft p-3">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-ok">
                 {uz.documents.translateTitle}
               </h3>
               {!translating && (
                 <button
                   type="button"
                   onClick={handleCloseTranslation}
-                  className="shrink-0 rounded-md border border-emerald-200 px-2 py-0.5 text-[11px] text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:text-emerald-200 dark:hover:bg-emerald-900"
+                  className="shrink-0 rounded-md border border-ok-line px-2 py-0.5 text-[11px] text-ok hover:bg-ok-soft"
                 >
                   {uz.common.close}
                 </button>
@@ -301,17 +301,17 @@ export default function DocumentPanel({
             </div>
 
             {translating && (
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
+              <p className="mt-2 text-ink-soft">
                 {uz.documents.translateLoading}
               </p>
             )}
             {translationError && (
-              <p className="mt-2 text-red-600">{translationError}</p>
+              <p className="mt-2 text-bad">{translationError}</p>
             )}
 
             {activeTranslation && !translating && (
               <>
-                <p className="mt-2 text-[11px] text-gray-600 dark:text-gray-300">
+                <p className="mt-2 text-[11px] text-ink-soft">
                   {languageLabel(activeTranslation.source_language)} →{" "}
                   {languageLabel(activeTranslation.target_language)} ·{" "}
                   {activeTranslation.paragraph_count}{" "}
@@ -320,17 +320,17 @@ export default function DocumentPanel({
                     ? ` · ${uz.documents.translateCached}`
                     : ""}
                 </p>
-                <p className="mt-1 text-[11px] text-gray-600 dark:text-gray-300">
+                <p className="mt-1 text-[11px] text-ink-soft">
                   {activeTranslation.same_language
                     ? uz.documents.translateSameLanguage
                     : uz.documents.translateNote}
                 </p>
                 {activeTranslation.truncated && (
-                  <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+                  <p className="mt-1 text-[11px] text-warn">
                     {uz.documents.translateTruncated}
                   </p>
                 )}
-                <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-[11px] italic text-ink-faint">
                   {activeTranslation.disclaimer}
                 </p>
               </>
@@ -342,7 +342,7 @@ export default function DocumentPanel({
           // Side-by-side. One scroll container, one row per paragraph: the two
           // columns stay aligned by construction, no scroll syncing needed.
           <div>
-            <div className="bg-background sticky top-0 z-10 grid grid-cols-1 gap-x-4 border-b border-gray-200 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:grid-cols-2 dark:border-gray-700 dark:text-gray-400">
+            <div className="bg-surface sticky top-0 z-10 grid grid-cols-1 gap-x-4 border-b border-line pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-faint sm:grid-cols-2">
               <span>
                 {uz.documents.translateOriginal} (
                 {languageLabel(activeTranslation.source_language)})
@@ -352,7 +352,7 @@ export default function DocumentPanel({
                 {languageLabel(activeTranslation.target_language)})
               </span>
             </div>
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y divide-line">
               {activeTranslation.paragraphs.map((pair) => (
                 <div
                   key={pair.index}
@@ -361,7 +361,7 @@ export default function DocumentPanel({
                   <div className="min-w-0">
                     <Markdown text={pair.original} />
                   </div>
-                  <div className="min-w-0 border-l-2 border-emerald-200 pl-2 sm:border-l-0 sm:pl-0 dark:border-emerald-900">
+                  <div className="min-w-0 border-l-2 border-ok-line pl-2 sm:border-l-0 sm:pl-0">
                     <Markdown text={pair.translated} />
                   </div>
                 </div>

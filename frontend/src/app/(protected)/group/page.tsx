@@ -87,7 +87,7 @@ export default function GroupPage() {
           <div>
             <h1 className="text-lg font-semibold">{uz.payments.groupTitle}</h1>
             {summary && (
-              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-0.5 text-xs text-ink-faint">
                 {summary.group_names.join(", ")} · {summary.rows.length}{" "}
                 {uz.payments.student.toLowerCase()}
               </p>
@@ -96,16 +96,16 @@ export default function GroupPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/attendance"
-              className="text-xs text-blue-700 hover:underline dark:text-blue-300"
+              className="text-xs text-accent-ink hover:underline"
             >
               {uz.attendance.titleTutor}
             </Link>
-            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+            <label className="flex items-center gap-2 text-xs text-ink-soft">
               {uz.payments.sortBy}
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as GroupSort)}
-                className="rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+                className="rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -118,28 +118,28 @@ export default function GroupPage() {
         </div>
 
         {!summary && !error && (
-          <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+          <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
         )}
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
         {summary && (
           <>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+              <span className="rounded-full bg-ok-soft px-2.5 py-1 text-ok">
                 {uz.payments.states.paid}: {summary.paid_count}
               </span>
-              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              <span className="rounded-full bg-warn-soft px-2.5 py-1 text-warn">
                 {uz.payments.states.partial}: {summary.partial_count}
               </span>
-              <span className="rounded-full bg-red-100 px-2.5 py-1 text-red-800 dark:bg-red-950 dark:text-red-200">
+              <span className="rounded-full bg-bad-soft px-2.5 py-1 text-bad">
                 {uz.payments.states.debtor}: {summary.debtor_count}
               </span>
               {summary.pending_count > 0 && (
-                <span className="rounded-full border border-amber-300 px-2.5 py-1 text-amber-800 dark:border-amber-800 dark:text-amber-200">
+                <span className="rounded-full border border-warn-line px-2.5 py-1 text-warn">
                   {summary.pending_count} {uz.payments.groupPending}
                 </span>
               )}
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <span className="rounded-full bg-raised px-2.5 py-1 text-ink-soft">
                 {uz.payments.groupDebtTotal}:{" "}
                 {formatAmount(summary.remaining_amount)}
               </span>
@@ -153,22 +153,22 @@ export default function GroupPage() {
               />
             </div>
 
-            <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+            <p className="mt-3 text-[11px] text-ink-soft">
               {uz.payments.source}: {summary.source.label}
             </p>
-            <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-[11px] italic text-ink-faint">
               {summary.disclaimer}
             </p>
           </>
         )}
       </section>
 
-      <aside className="hidden w-96 shrink-0 flex-col overflow-y-auto border-l border-gray-200 px-4 py-5 lg:flex dark:border-gray-700">
+      <aside className="hidden w-96 shrink-0 flex-col overflow-y-auto border-l border-line px-4 py-5 lg:flex">
         {loadingStudentId !== null && (
-          <p className="text-sm text-gray-500">{uz.common.loading}</p>
+          <p className="text-sm text-ink-faint">{uz.common.loading}</p>
         )}
         {selectedError && (
-          <p className="mb-2 text-sm text-red-600">{selectedError}</p>
+          <p className="mb-2 text-sm text-bad">{selectedError}</p>
         )}
         {selected ? (
           <>
@@ -187,7 +187,7 @@ export default function GroupPage() {
           </>
         ) : (
           loadingStudentId === null && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-ink-faint">
               {uz.payments.selectStudentHint}
             </p>
           )

@@ -101,29 +101,29 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
       <h2 className="text-sm font-semibold">{uz.dashboard.title}</h2>
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-xs text-ink-faint">
         {uz.roles[role]}
       </p>
 
       {showPayments && (
-        <section className="mt-3 rounded-lg border border-gray-200 px-3 py-3 dark:border-gray-700">
+        <section className="mt-3 rounded-lg border border-line px-3 py-3">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
               {uz.dashboard.paymentsTitle}
             </h3>
             <Link
               href="/group"
-              className="text-[11px] text-blue-700 hover:underline dark:text-blue-300"
+              className="text-[11px] text-accent-ink hover:underline"
             >
               {uz.dashboard.openGroup}
             </Link>
           </div>
 
           {!summary && !failed && (
-            <p className="mt-2 text-xs text-gray-500">{uz.common.loading}</p>
+            <p className="mt-2 text-xs text-ink-faint">{uz.common.loading}</p>
           )}
           {failed && (
-            <p className="mt-2 text-xs text-red-600">{uz.payments.loadError}</p>
+            <p className="mt-2 text-xs text-bad">{uz.payments.loadError}</p>
           )}
 
           {summary && (
@@ -150,7 +150,7 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
                 </span>
               </div>
               {summary.pending_count > 0 && (
-                <p className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <p className="mt-2 rounded-md bg-warn-soft px-2 py-1 text-[11px] text-warn">
                   {summary.pending_count} {uz.payments.groupPending}
                 </p>
               )}
@@ -161,13 +161,13 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
                     className="flex items-center justify-between gap-2 text-[11px]"
                   >
                     <span className="truncate">{row.full_name}</span>
-                    <span className="shrink-0 text-red-700 dark:text-red-300">
+                    <span className="shrink-0 text-bad">
                       {formatAmount(row.remaining_amount)}
                     </span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-[11px] text-ink-faint">
                 {uz.payments.groupDebtTotal}:{" "}
                 {formatAmount(summary.remaining_amount)}
               </p>
@@ -177,29 +177,29 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
       )}
 
       {showClasses && (
-        <section className="mt-3 rounded-lg border border-gray-200 px-3 py-3 dark:border-gray-700">
+        <section className="mt-3 rounded-lg border border-line px-3 py-3">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
               {uz.dashboard.attendanceTitle}
             </h3>
             <Link
               href="/attendance"
-              className="text-[11px] text-blue-700 hover:underline dark:text-blue-300"
+              className="text-[11px] text-accent-ink hover:underline"
             >
               {uz.dashboard.openAttendance}
             </Link>
           </div>
 
           {!day && !failed && (
-            <p className="mt-2 text-xs text-gray-500">{uz.common.loading}</p>
+            <p className="mt-2 text-xs text-ink-faint">{uz.common.loading}</p>
           )}
           {failed && !day && (
-            <p className="mt-2 text-xs text-red-600">
+            <p className="mt-2 text-xs text-bad">
               {uz.attendance.loadError}
             </p>
           )}
           {day && day.classes.length === 0 && (
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-ink-faint">
               {uz.attendance.noClasses}
             </p>
           )}
@@ -214,14 +214,14 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
                     className={
                       "shrink-0 rounded-full px-1.5 py-0.5 " +
                       (row.marked_count > 0
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300")
+                        ? "bg-ok-soft text-ok"
+                        : "bg-raised text-ink-soft")
                     }
                   >
                     {row.marked_count}/{row.student_count}
                   </span>
                 </span>
-                <span className="text-gray-500 dark:text-gray-400">
+                <span className="text-ink-faint">
                   {row.group_name} · {row.room}-{uz.attendance.room} (
                   {uz.attendance.scheduleNote})
                   {row.is_current ? ` · ${uz.attendance.now}` : ""}
@@ -233,24 +233,24 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
       )}
 
       {showTeacherRisk && (
-        <section className="mt-3 rounded-lg border border-gray-200 px-3 py-3 dark:border-gray-700">
+        <section className="mt-3 rounded-lg border border-line px-3 py-3">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
               {uz.attendance.titleStaff}
             </h3>
             <Link
               href="/attendance"
-              className="text-[11px] text-blue-700 hover:underline dark:text-blue-300"
+              className="text-[11px] text-accent-ink hover:underline"
             >
               {uz.dashboard.openAttendance}
             </Link>
           </div>
 
           {!teachers && !failed && (
-            <p className="mt-2 text-xs text-gray-500">{uz.common.loading}</p>
+            <p className="mt-2 text-xs text-ink-faint">{uz.common.loading}</p>
           )}
           {failed && !teachers && (
-            <p className="mt-2 text-xs text-red-600">
+            <p className="mt-2 text-xs text-bad">
               {uz.attendance.loadError}
             </p>
           )}
@@ -280,7 +280,7 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
                   .map((row) => (
                     <li key={row.teacher_id} className="text-[11px]">
                       <span className="font-medium">{row.full_name}</span>
-                      <span className="text-gray-500 dark:text-gray-400">
+                      <span className="text-ink-faint">
                         {row.classes
                           .filter(
                             (cls) =>
@@ -296,7 +296,7 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
                     </li>
                   ))}
               </ul>
-              <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-[11px] text-ink-faint">
                 {uz.attendance.notArrived}: {teachers.absent_count} ·{" "}
                 {uz.attendance.unclear}: {teachers.unclear_count} ·{" "}
                 {uz.attendance.heldClasses}: {teachers.held_count}/
@@ -308,12 +308,12 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
       )}
 
       <div className="mt-3 flex flex-col gap-2">
-        <div className="rounded-lg border border-dashed border-gray-300 px-3 py-4 text-xs text-gray-600 dark:border-gray-600 dark:text-gray-300">
+        <div className="rounded-lg border border-dashed border-line-strong px-3 py-4 text-xs text-ink-soft">
           {item}
         </div>
       </div>
 
-      <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="mt-4 text-[11px] text-ink-faint">
         {uz.documents.panelHint}
       </p>
     </div>

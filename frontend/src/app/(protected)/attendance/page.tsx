@@ -111,19 +111,19 @@ function TeacherView() {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <section className="flex min-h-0 w-80 shrink-0 flex-col overflow-y-auto border-r border-gray-200 px-4 py-5 dark:border-gray-700">
+      <section className="flex min-h-0 w-80 shrink-0 flex-col overflow-y-auto border-r border-line bg-sidebar px-4 py-5">
         <h1 className="text-lg font-semibold">{uz.attendance.titleTeacher}</h1>
-        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-0.5 text-xs text-ink-faint">
           {uz.attendance.myClasses}
           {day ? ` · ${formatDate(day.date)}` : ""}
         </p>
 
         {!day && !error && (
-          <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+          <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
         )}
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-bad">{error}</p>}
         {day && day.classes.length === 0 && (
-          <p className="mt-3 text-sm text-gray-500">{uz.attendance.noClasses}</p>
+          <p className="mt-3 text-sm text-ink-faint">{uz.attendance.noClasses}</p>
         )}
 
         <ul className="mt-3 flex flex-col gap-2">
@@ -135,23 +135,23 @@ function TeacherView() {
                 className={
                   "w-full rounded-lg border px-3 py-2 text-left text-sm " +
                   (roster?.schedule_id === item.schedule_id
-                    ? "border-blue-400 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/40"
-                    : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800")
+                    ? "border-line-strong bg-raised"
+                    : "border-line hover:bg-raised")
                 }
               >
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="font-medium">{item.subject}</span>
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                  <span className="text-[11px] text-ink-faint">
                     {formatTime(item.starts_at)}–{formatTime(item.ends_at)}
                   </span>
                 </span>
-                <span className="mt-0.5 block text-[11px] text-gray-600 dark:text-gray-300">
+                <span className="mt-0.5 block text-[11px] text-ink-soft">
                   {item.group_name} · {item.room}-{uz.attendance.room}{" "}
                   <span className="italic">({uz.attendance.scheduleNote})</span>
                 </span>
                 <span className="mt-1 flex flex-wrap items-center gap-1.5">
                   {item.is_current && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] text-accent-ink">
                       {uz.attendance.now}
                     </span>
                   )}
@@ -159,15 +159,15 @@ function TeacherView() {
                     className={
                       "rounded-full px-2 py-0.5 text-[10px] " +
                       (item.marked_count > 0
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300")
+                        ? "bg-ok-soft text-ok"
+                        : "bg-raised text-ink-soft")
                     }
                   >
                     {item.marked_count}/{item.student_count}{" "}
                     {uz.attendance.marked}
                   </span>
                   {item.session_label && (
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                    <span className="text-[10px] text-ink-faint">
                       {item.session_label}
                     </span>
                   )}
@@ -180,7 +180,7 @@ function TeacherView() {
 
       <section className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
         {rosterError && !roster && (
-          <p className="text-sm text-red-600">{rosterError}</p>
+          <p className="text-sm text-bad">{rosterError}</p>
         )}
         {roster ? (
           <AttendanceMarker
@@ -192,7 +192,7 @@ function TeacherView() {
           />
         ) : (
           !rosterError && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-ink-faint">
               {uz.attendance.selectClass}
             </p>
           )
@@ -217,7 +217,7 @@ function StaffView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <nav className="flex shrink-0 gap-1 border-b border-gray-200 px-4 pt-4 dark:border-gray-700">
+      <nav className="flex shrink-0 gap-1 border-b border-line px-4 pt-4">
         {STAFF_TABS.map((item) => (
           <button
             key={item.value}
@@ -226,8 +226,8 @@ function StaffView() {
             className={
               "rounded-t-md px-3 py-1.5 text-sm " +
               (tab === item.value
-                ? "border-b-2 border-blue-600 font-medium text-blue-700 dark:text-blue-300"
-                : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800")
+                ? "border-b-2 border-ink font-medium text-ink"
+                : "text-ink-soft hover:bg-raised")
             }
           >
             {item.label}
@@ -286,7 +286,7 @@ function TeacherMonitorView() {
         <div>
           <h1 className="text-lg font-semibold">{uz.attendance.titleStaff}</h1>
           {overview && (
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-0.5 text-xs text-ink-faint">
               {overview.teacher_count} {uz.attendance.teachers} ·{" "}
               {formatDate(overview.date)} · {formatTime(overview.at)}{" "}
               {uz.attendance.asOf}
@@ -299,16 +299,16 @@ function TeacherMonitorView() {
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-md border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+          className="rounded-md border border-line-strong px-3 py-1 text-xs hover:bg-raised"
         >
           {uz.attendance.refresh}
         </button>
       </div>
 
       {!overview && !error && (
-        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+        <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
       )}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
       {overview && (
         <>
@@ -354,7 +354,7 @@ function TeacherMonitorView() {
           </div>
 
           {overview.rows.length === 0 && (
-            <p className="mt-3 text-sm text-gray-500">
+            <p className="mt-3 text-sm text-ink-faint">
               {uz.attendance.noTeachers}
             </p>
           )}
@@ -369,8 +369,8 @@ function TeacherMonitorView() {
                   // classes today and the turnstile never saw them.
                   (row.at_risk_count > 0 ||
                   (row.state === "not_arrived" && row.class_count > 0)
-                    ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30"
-                    : "border-gray-200 dark:border-gray-700")
+                    ? "border-bad-line bg-bad-soft"
+                    : "border-line")
                 }
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -396,11 +396,11 @@ function TeacherMonitorView() {
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                <p className="mt-1 text-xs text-ink-soft">
                   {row.summary}
                 </p>
                 {row.classes.length === 0 ? (
-                  <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-[11px] text-ink-faint">
                     {uz.attendance.noTeacherClasses}
                   </p>
                 ) : (
@@ -414,13 +414,13 @@ function TeacherMonitorView() {
             ))}
           </ul>
 
-          <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+          <p className="mt-3 text-[11px] text-ink-soft">
             {uz.attendance.source}: {overview.source.label}
           </p>
-          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[11px] italic text-ink-faint">
             {overview.schedule_note}
           </p>
-          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[11px] italic text-ink-faint">
             {overview.disclaimer}
           </p>
         </>
@@ -453,7 +453,7 @@ function TeacherMonthlyView() {
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
       <h1 className="text-lg font-semibold">{uz.attendance.monthlyTitle}</h1>
       {summary && (
-        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-0.5 text-xs text-ink-faint">
           {uz.attendance.monthlyPeriod}: {formatDate(summary.date_from)} –{" "}
           {formatDate(summary.date_to)} · {uz.attendance.monthlyTotal}:{" "}
           {summary.total}
@@ -462,13 +462,13 @@ function TeacherMonthlyView() {
       )}
 
       {!summary && !error && (
-        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+        <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
       )}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
       {summary &&
         (summary.rows.length === 0 || summary.total === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-ink-faint">
             {uz.attendance.monthlyEmpty}
           </p>
         ) : (
@@ -476,7 +476,7 @@ function TeacherMonthlyView() {
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                  <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-faint">
                     <th className="py-2 pr-3 font-medium">
                       {uz.attendance.teacher}
                     </th>
@@ -495,7 +495,7 @@ function TeacherMonthlyView() {
                     <th className="py-2 font-medium">{uz.attendance.unclear}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody className="divide-y divide-line">
                   {summary.rows.map((row) => (
                     <tr key={row.teacher_id}>
                       <td className="py-1.5 pr-3">{row.full_name}</td>
@@ -519,10 +519,10 @@ function TeacherMonthlyView() {
               </table>
             </div>
 
-            <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+            <p className="mt-3 text-[11px] text-ink-soft">
               {uz.attendance.source}: {summary.source.label}
             </p>
-            <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-[11px] italic text-ink-faint">
               {summary.disclaimer}
             </p>
           </>
@@ -562,7 +562,7 @@ function TutorView() {
         <div>
           <h1 className="text-lg font-semibold">{uz.attendance.titleTutor}</h1>
           {summary && (
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-0.5 text-xs text-ink-faint">
               {summary.group_names.join(", ")} · {summary.rows.length}{" "}
               {uz.attendance.students} · {formatTime(summary.at)}{" "}
               {uz.attendance.asOf}
@@ -573,14 +573,14 @@ function TutorView() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+          <label className="flex items-center gap-2 text-xs text-ink-soft">
             {uz.payments.sortBy}
             <select
               value={sort}
               onChange={(event) =>
                 setSort(event.target.value as PresenceSort)
               }
-              className="rounded-md border border-gray-300 bg-transparent px-2 py-1 text-xs dark:border-gray-600"
+              className="rounded-md border border-line-strong bg-transparent px-2 py-1 text-xs"
             >
               {PRESENCE_SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -592,7 +592,7 @@ function TutorView() {
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded-md border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            className="rounded-md border border-line-strong px-3 py-1 text-xs hover:bg-raised"
           >
             {uz.attendance.refresh}
           </button>
@@ -600,9 +600,9 @@ function TutorView() {
       </div>
 
       {!summary && !error && (
-        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+        <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
       )}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
       {summary && (
         <>
@@ -627,12 +627,12 @@ function TutorView() {
               {uz.attendance.notArrived}: {summary.absent_count}
             </span>
             {summary.current_pair !== null && (
-              <span className="rounded-full border border-blue-300 px-2.5 py-1 text-blue-800 dark:border-blue-800 dark:text-blue-200">
+              <span className="rounded-full bg-raised px-2.5 py-1 text-ink-soft">
                 {uz.attendance.inClass}: {summary.in_class_count}
               </span>
             )}
             {summary.attendance_percent !== null && (
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <span className="rounded-full bg-raised px-2.5 py-1 text-ink-soft">
                 {uz.attendance.dayAttendance}: {summary.attendance_percent}%
               </span>
             )}
@@ -642,13 +642,13 @@ function TutorView() {
             <PresenceList rows={rows} />
           </div>
 
-          <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+          <p className="mt-3 text-[11px] text-ink-soft">
             {uz.attendance.source}: {summary.source.label}
           </p>
-          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[11px] italic text-ink-faint">
             {summary.schedule_note}
           </p>
-          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[11px] italic text-ink-faint">
             {summary.disclaimer}
           </p>
         </>
@@ -684,12 +684,12 @@ function StudentView() {
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
       <h1 className="text-lg font-semibold">{uz.attendance.titleStudent}</h1>
       {!presence && !error && (
-        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+        <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
       )}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
       {presence && (
-        <section className="mt-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+        <section className="mt-3 rounded-lg border border-line px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-semibold">
               {uz.attendance.presenceTitle}
@@ -702,13 +702,13 @@ function StudentView() {
             >
               {presenceStateLabel(presence.state)}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-ink-faint">
               {formatTime(presence.at)} {uz.attendance.asOf}
             </span>
           </div>
           <p className="mt-2 text-sm">{presence.summary}</p>
           {presence.current_class && (
-            <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+            <p className="mt-1 text-xs text-ink-soft">
               {uz.attendance.currentClass} ({uz.attendance.scheduleNote}):{" "}
               {presence.current_class.subject} · {presence.current_class.room}-
               {uz.attendance.room} ·{" "}
@@ -728,13 +728,13 @@ function StudentView() {
             {presence.sources.map((source, index) => (
               <li
                 key={`${source.type}-${index}`}
-                className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                className="rounded-full bg-raised px-2 py-0.5 text-[11px] text-ink-soft"
               >
                 {source.label}
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[11px] italic text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-[11px] italic text-ink-faint">
             {presence.schedule_note}
           </p>
         </section>
@@ -744,12 +744,12 @@ function StudentView() {
         <section className="mt-4">
           <h2 className="text-sm font-semibold">
             {uz.attendance.historyTitle}{" "}
-            <span className="font-normal text-gray-500 dark:text-gray-400">
+            <span className="font-normal text-ink-faint">
               ({formatDate(summary.date_from)} – {formatDate(summary.date_to)})
             </span>
           </h2>
           {summary.total === 0 ? (
-            <p className="mt-2 text-sm text-gray-500">{uz.attendance.empty}</p>
+            <p className="mt-2 text-sm text-ink-faint">{uz.attendance.empty}</p>
           ) : (
             <>
               <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -774,12 +774,12 @@ function StudentView() {
                 >
                   {uz.attendance.statuses.absent}: {summary.absent}
                 </span>
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                <span className="rounded-full bg-raised px-2.5 py-1 text-ink-soft">
                   {summary.percent}% ({summary.total})
                 </span>
               </div>
 
-              <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">
                 {uz.attendance.bySubject}
               </h3>
               <ul className="mt-1 flex flex-col gap-1">
@@ -792,8 +792,8 @@ function StudentView() {
                     <span
                       className={
                         row.percent >= 75
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : "text-red-700 dark:text-red-300"
+                          ? "text-ok"
+                          : "text-bad"
                       }
                     >
                       {row.attended}/{row.total} ({row.percent}%)
@@ -802,13 +802,13 @@ function StudentView() {
                 ))}
               </ul>
 
-              <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">
                 {uz.attendance.recent}
               </h3>
               <div className="mt-1 overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                    <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-faint">
                       <th className="py-2 pr-3 font-medium">
                         {uz.attendance.date}
                       </th>
@@ -823,7 +823,7 @@ function StudentView() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  <tbody className="divide-y divide-line">
                     {summary.recent.map((row, index) => (
                       <tr key={`${row.date}-${row.pair_number}-${index}`}>
                         <td className="py-1.5 pr-3 whitespace-nowrap">
@@ -831,7 +831,7 @@ function StudentView() {
                           {uz.attendance.pair}
                         </td>
                         <td className="py-1.5 pr-3">{row.subject}</td>
-                        <td className="py-1.5 pr-3 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                        <td className="py-1.5 pr-3 whitespace-nowrap text-ink-soft">
                           {row.room}
                         </td>
                         <td className="py-1.5 whitespace-nowrap">
@@ -850,10 +850,10 @@ function StudentView() {
                 </table>
               </div>
 
-              <p className="mt-3 text-[11px] text-gray-600 dark:text-gray-300">
+              <p className="mt-3 text-[11px] text-ink-soft">
                 {uz.attendance.source}: {summary.source.label}
               </p>
-              <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-[11px] italic text-ink-faint">
                 {summary.disclaimer}
               </p>
             </>

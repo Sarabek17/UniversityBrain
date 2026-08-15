@@ -55,7 +55,7 @@ export default function GroupPaymentTable({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+      <p className="px-4 py-3 text-sm text-ink-faint">
         {uz.payments.groupEmpty}
       </p>
     );
@@ -65,7 +65,7 @@ export default function GroupPaymentTable({
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-faint">
             <th className="py-2 pr-3 font-medium">{uz.payments.student}</th>
             <th className="py-2 pr-3 font-medium">{uz.payments.group}</th>
             <th className="py-2 pr-3 font-medium">{uz.payments.status}</th>
@@ -74,13 +74,13 @@ export default function GroupPaymentTable({
             <th className="py-2 font-medium">{uz.payments.date}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+        <tbody className="divide-y divide-line">
           {rows.map((row) => (
             <tr
               key={row.student_id}
               className={
                 row.student_id === activeStudentId
-                  ? "bg-blue-50 dark:bg-blue-950/40"
+                  ? "bg-raised"
                   : ""
               }
             >
@@ -88,17 +88,17 @@ export default function GroupPaymentTable({
                 <button
                   type="button"
                   onClick={() => onSelect(row.student_id)}
-                  className="text-left font-medium text-blue-700 hover:underline dark:text-blue-300"
+                  className="text-left font-medium text-accent-ink hover:underline"
                 >
                   {row.full_name}
                 </button>
                 {row.pending_count > 0 && (
-                  <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                  <span className="ml-2 rounded-full bg-warn-soft px-1.5 py-0.5 text-[10px] text-warn">
                     {row.pending_count} · {uz.payments.pending}
                   </span>
                 )}
               </td>
-              <td className="py-1.5 pr-3 whitespace-nowrap text-gray-600 dark:text-gray-300">
+              <td className="py-1.5 pr-3 whitespace-nowrap text-ink-soft">
                 {row.group_name ?? "—"}
               </td>
               <td className="py-1.5 pr-3">
@@ -113,7 +113,7 @@ export default function GroupPaymentTable({
               </td>
               <td className="py-1.5 pr-3 whitespace-nowrap">
                 {formatAmount(row.paid_amount)}{" "}
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                <span className="text-[11px] text-ink-faint">
                   ({row.paid_percent}%)
                 </span>
               </td>
@@ -121,13 +121,13 @@ export default function GroupPaymentTable({
                 className={
                   "py-1.5 pr-3 font-medium whitespace-nowrap " +
                   (row.remaining_amount > 0
-                    ? "text-red-700 dark:text-red-300"
-                    : "text-emerald-700 dark:text-emerald-300")
+                    ? "text-bad"
+                    : "text-ok")
                 }
               >
                 {formatAmount(row.remaining_amount)}
               </td>
-              <td className="py-1.5 whitespace-nowrap text-gray-600 dark:text-gray-300">
+              <td className="py-1.5 whitespace-nowrap text-ink-soft">
                 {row.last_payment_at ? formatDate(row.last_payment_at) : "—"}
               </td>
             </tr>

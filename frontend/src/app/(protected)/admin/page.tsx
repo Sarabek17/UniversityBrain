@@ -38,7 +38,7 @@ export default function AdminPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-lg font-semibold">{uz.admin.title}</h1>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 text-xs text-ink-faint">
             {uz.admin.subtitle}
             {stats && ` · ${formatDateTime(stats.generated_at)}`}
           </p>
@@ -46,26 +46,26 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => void loadStats()}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+          className="rounded-md border border-line-strong px-3 py-1.5 text-xs hover:bg-raised"
         >
           {uz.admin.refresh}
         </button>
       </div>
 
       {!stats && !error && (
-        <p className="mt-3 text-sm text-gray-500">{uz.common.loading}</p>
+        <p className="mt-3 text-sm text-ink-faint">{uz.common.loading}</p>
       )}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-bad">{error}</p>}
 
       {stats && (
         <>
           <div className="mt-3">
             <AdminStatsCards stats={stats} />
           </div>
-          <p className="mt-2 text-[11px] text-gray-600 dark:text-gray-300">
+          <p className="mt-2 text-[11px] text-ink-soft">
             {uz.admin.statsSource}: {stats.source.label}
           </p>
-          <p className="mt-1 text-[11px] italic text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[11px] italic text-ink-faint">
             {stats.disclaimer}
           </p>
         </>
