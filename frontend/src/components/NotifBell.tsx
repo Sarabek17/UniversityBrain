@@ -139,7 +139,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-[26rem] max-w-[90vw] rounded-lg border border-line bg-surface shadow-lg">
+        <div className="fixed inset-x-2 top-24 z-30 rounded-lg border border-line bg-surface shadow-lg md:absolute md:inset-x-auto md:right-0 md:top-auto md:mt-2 md:w-[26rem] md:max-w-[90vw]">
           <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2">
             <div className="min-w-0">
               <p className="text-sm font-medium">{uz.notifications.title}</p>
