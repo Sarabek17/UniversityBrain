@@ -1,9 +1,9 @@
-# UniversityBrain — pitch-deck spetsifikatsiyasi
+# UniversityBrain — pitch-deck spetsifikatsiyasi (6 slayd)
 
-> Bu hujjat dizayner (Claude Design) uchun: 12 slaydlik investor-pitch'ning
+> Bu hujjat dizayner (Claude Design) uchun: 6 slaydlik investor-pitch'ning
 > to'liq mazmuni. Har slaydda nima yozilishi, qaysi raqam ko'rsatilishi va
-> vizual qanday bo'lishi aniq belgilangan. Matnni o'zgartirmasdan ko'chirish
-> mumkin — u "bir satr" qoidasiga moslab yozilgan.
+> vizual qanday bo'lishi aniq belgilangan. Matn "bir satr" qoidasiga moslab
+> yozilgan — o'zgartirmasdan ko'chirish mumkin.
 
 ---
 
@@ -32,7 +32,7 @@ ko'radi. Bu g'oya emas — **ishlab turgan mahsulot**: 281 avtomatik test,
    ekanimiz tushunilishi kerak.
 5. **Auditoriya — hakam va investor**, dasturchi emas. Texnik bilimi yo'q
    odam ham har slaydni tushunishi shart.
-6. Har slayd **20–25 soniya** gapirishga mo'ljallangan (jami ~5 daqiqa).
+6. Har slayd **30–40 soniya** gapirishga mo'ljallangan (jami ~4 daqiqa).
 
 ---
 
@@ -48,8 +48,7 @@ ko'radi. Bu g'oya emas — **ishlab turgan mahsulot**: 281 avtomatik test,
 - **Footer (har slayd pastida):** chapda bitta xulosa-satr (quyida har slayd
   uchun berilgan), o'ngda `UNIVERSITYBRAIN · NEXUS30`.
 - **Interaktivlik** (format qo'llasa): raqamlar count-up bilan chiqadi,
-  muammo→yechim kartochkalari flip bo'ladi, demo slaydda chat yozilib boradi,
-  before/after taymlayn chapdan o'ngga jonlanadi.
+  muammo→yechim strelkalari jonlanadi, demo slaydda chat yozilib boradi.
 - **Logo g'oyasi:** miya konturi + bitiruv qalpog'i, neyron nuqta-chiziqlar.
 - **Skrinshotlar:** `taqdimot/screenshots/` papkasida 5 ta jonli ekran bor —
   brauzer ramkasiga solib ishlatilsin.
@@ -98,7 +97,7 @@ bitta raqam.
 
 **Footer-satr:** To'rt muammo — bitta ildiz: bilim bor, unga tez yo'l yo'q.
 
-**Speaker (25 s):** "Talaba nizomdan bitta bandni izlab yarim soat yo'qotadi.
+**Speaker (30 s):** "Talaba nizomdan bitta bandni izlab yarim soat yo'qotadi.
 Adabiyotning 95 foizi ingliz tilida. Tushunmagan bo'lsa — bitta o'qituvchiga
 31 talaba, navbat. Universitet haqida so'rasa — mas'ul xodim yo'q, ertaga
 keling. Bularning hammasi bitta kasallik: bilim bor, yo'l yo'q."
@@ -107,8 +106,8 @@ keling. Bularning hammasi bitta kasallik: bilim bor, yo'l yo'q."
 
 ## Slayd 3 — `02 YECHIM` · UniversityBrain
 
-**Vazifa:** 2-slayddagi har muammoga ko'zga ko'rinadigan javob. Ko'zgu
-prinsipi — muammo chapda xira, yechim o'ngda yorqin.
+**Vazifa:** har muammoga ko'zga ko'rinadigan javob + qanday ishlashi bitta
+zanjirda. Ko'zgu prinsipi — muammo chapda xira, yechim o'ngda yorqin.
 
 **Sarlavha:** Universitet bilgan hamma narsa — **bitta suhbatda**.
 
@@ -121,74 +120,31 @@ prinsipi — muammo chapda xira, yechim o'ngda yorqin.
 | O'qituvchiga navbat | → | AI **24/7** birinchi javob beradi |
 | "Kimdan so'rayman?" | → | So'rash shart emas — **o'zi topib beradi** |
 
-**Vizual:** 4 qator, chap tomonda kulrang "bugun", o'ngda yashil/indigo
-kartochka. Strelkalar animatsiya bilan. Yechim tomonidagi raqamlar yashil.
-
-**Footer-satr:** Har muammoga — o'lchanadigan javob.
-
-**Speaker (20 s):** "Yechim — har muammoga to'g'ridan-to'g'ri. 30 daqiqalik
-izlanish 25 soniyaga tushadi. Inglizcha manba yonma-yon tarjima bilan ochiladi.
-Navbat yo'q — AI kechasi ham javob beradi. Va endi 'kimdan so'rayman' degan
-savolning o'zi qolmaydi."
-
----
-
-## Slayd 4 — `03 MAHSULOT` · Javob o'ylab topilmaydi
-
-**Vazifa:** ishonch mexanizmini ko'rsatish. AI'ga ishonmaydiganlar uchun slayd.
-
-**Sarlavha:** Javob **o'ylab topilmaydi** — universitetdan **olinadi**.
-
-**Zanjir (gorizontal, 4 qadam):**
+**Pastda zanjir (bitta qator, 4 qadam):**
 
 `Savol` → `Kerakli vositani tanlaydi` → `Universitet ma'lumotidan oladi` → `Javob + manba`
 
-**3 ta qisqa satr (zanjir ostida):**
+Zanjir ostida bitta satr: *Cheklov ekranda emas — serverda. 5 rol, har biri
+faqat o'z ma'lumotini ko'radi.*
 
-- Har javobda manba: *hujjat + bo'lim* yoki *"turniket logi, 10:02"*
-- 5 rol — har biri **faqat o'z ma'lumotini** ko'radi
-- Cheklov ekranda emas — **serverda**
+**Vizual:** 4 qator ko'zgu-juftlik (chap kulrang, o'ng indigo/yashil),
+pastda gorizontal zanjir qadam-baqadam yonib chiqadi.
 
-**Vizual:** o'ng tomonda jonli skrinshot (`screenshots/01_chat_talaba.png`) —
-chat oynasi, manba chiplari ko'rinib tursin. Zanjir chapda, qadam-baqadam
-yonib chiqadi.
+**Footer-satr:** Javob o'ylab topilmaydi — universitetdan olinadi.
 
-**Footer-satr:** Ishonch = manba. Har javobda.
-
-**Speaker (25 s):** "Bizning AI ChatGPT'dek 'ehtimol shunday' demaydi. U
-universitetning hujjatlari va tizimlaridan javob oladi va manbasini yozadi:
-qaysi hujjat, qaysi bo'lim, hattoki 'turniket logi, soat 10:02'. Talaba
-dekanatning, dekanat talabaning shaxsiy ma'lumotini ko'ra olmaydi — bu
-cheklov ekranda emas, serverda."
+**Speaker (35 s):** "Yechim — har muammoga to'g'ridan-to'g'ri: 30 daqiqalik
+izlanish 25 soniyaga tushadi, inglizcha manba yonma-yon tarjima bilan
+ochiladi, navbat yo'q — AI kechasi ham javob beradi. Eng muhimi: bizning AI
+'ehtimol shunday' demaydi — javobni universitetning hujjatlari va
+tizimlaridan oladi, manbasini yozadi: qaysi hujjat, qaysi bo'lim, hattoki
+'turniket logi, 10:02'. Va har rol faqat o'z ma'lumotini ko'radi — bu
+cheklov serverda."
 
 ---
 
-## Slayd 5 — `04 NEGA HOZIR` · Payt keldi
+## Slayd 4 — `03 ISBOT` · G'oya emas — ishlayotgan mahsulot
 
-**Vazifa:** "nega bu 3 yil oldin qilinmadi, nega endi?" savoliga javob.
-
-**Sarlavha:** Ikki yil oldin **qimmat** edi. Bugun — **arzon va tayyor**.
-
-**3 katta raqam (yonma-yon):**
-
-| **280×** | **208 OTM** | **1,5 mln** |
-|---|---|---|
-| AI narxi 2 yilda shuncha arzonlashdi (Stanford HAI, 2025) | HEMIS bilan raqamlashgan — ma'lumot allaqachon elektron | talaba — tariximizdagi eng katta avlod (Statistika agentligi) |
-
-**Vizual:** 3 ustun, katta raqamlar indigo, count-up. Boshqa hech narsa.
-
-**Footer-satr:** Texnologiya arzonlashdi + ma'lumot raqamlashdi = ayni payt.
-
-**Speaker (20 s):** "Nega aynan hozir? AI ishlatish narxi ikki yilda 280
-barobar tushdi. O'zbekistonning 208 universiteti HEMIS orqali allaqachon
-raqamlashgan — ma'lumot tayyor turibdi. Va 1,5 million talaba — bu
-tariximizdagi eng katta avlod. Uchchala eshik bir vaqtda ochildi."
-
----
-
-## Slayd 6 — `05 DEMO` · "Arizam qayerda?"
-
-**Vazifa:** bitta jonli hikoya. Eng esda qoladigan slayd.
+**Vazifa:** demo-hikoya + traction bitta ekranda. Eng esda qoladigan slayd.
 
 **Sarlavha:** Bitta savol: **"Arizam qayerda?"**
 
@@ -200,160 +156,70 @@ tariximizdagi eng katta avlod. Uchchala eshik bir vaqtda ochildi."
 **UniversityBrain (indigo, yashil belgi):**
 `Yozdi` → `Javob: holati, kim ko'rgani, manbasi` → **25 soniya**
 
-**Katta taqqos (o'ngda yoki markazda):** **2 kun → 25 soniya**
+**Pastda traction-qator (4 raqam):**
 
-**Vizual:** yuqori taymlayn xira/kulrang, pastkisi yorqin. Agar format
-qo'llasa — pastki taymlaynda chat xabari yozilib chiqadi. 25 soniya —
-jonli demoda o'lchangan haqiqiy vaqt, shuni speaker aytadi.
+| **281** | **10** | **5** | **3 til** |
+|---|---|---|---|
+| avtomatik test | aqlli vosita | rol | hujjat tarjimasi |
 
-**Footer-satr:** 2 kunlik yugurish — 25 soniyalik suhbat bo'ldi.
+**Vizual:** yuqori taymlayn xira, pastkisi yorqin; o'ngda bitta jonli
+skrinshot (`screenshots/01_chat_talaba.png`) brauzer ramkasida. 25 soniya —
+jonli demoda o'lchangan haqiqiy vaqt.
 
-**Speaker (25 s):** "Real ssenariy. Talaba ariza topshirgan, holatini
-bilmoqchi. Bugun bu — dekanatga borish, mas'ulni topa olmaslik, ertaga yana
-kelish. Ikki kun. UniversityBrain'da — bitta xabar: 25 soniyada holati, kim
-ko'rgani va manbasi keladi. Bu raqam taxmin emas — jonli demoda o'lchaganmiz,
-hozir ko'rsatamiz."
+**Footer-satr:** Hammasi ishlab turibdi — hozir jonli ko'rsatamiz.
+
+**Speaker (35 s):** "Real ssenariy: talaba ariza holatini bilmoqchi. Bugun bu
+ikki kunlik yugurish. UniversityBrain'da — bitta xabar, 25 soniyada holati,
+kim ko'rgani va manbasi keladi. Bu taxmin emas, jonli demoda o'lchangan. Va
+bu prezentatsiya emas — ishlab turgan tizim: 281 avtomatik test, 10 vosita,
+5 rol. Hozir jonli ko'rsatamiz."
 
 ---
 
-## Slayd 7 — `06 BOZOR` · TAM / SAM / SOM
+## Slayd 5 — `04 IMKONIYAT` · Nega hozir va qancha turadi
 
-**Vazifa:** bozor bor va o'lchanganini ko'rsatish. 3 raqam, 3 manba.
+**Vazifa:** payt + bozor + model — bitta ekranda, uch blok.
 
-**Sarlavha:** Bozor: dunyoda **milliardlar**, uyda — **ochiq maydon**.
+**Sarlavha:** Ikki yil oldin **qimmat** edi. Bugun — **arzon va tayyor**.
 
-**3 doira (katta → kichik, ichma-ich yoki yonma-yon):**
+**Yuqori qator — nega hozir (2 raqam):**
 
-| TAM | SAM | SOM |
+| **280×** | **208 OTM** |
+|---|---|
+| AI narxi 2 yilda shuncha arzonlashdi (Stanford HAI, 2025) | HEMIS bilan raqamlashgan — ma'lumot tayyor |
+
+**O'rta qator — bozor (3 doira):**
+
+| TAM **$8,3 mlrd** | SAM **$3,1 mln/yil** | SOM **$450 ming/yil** |
 |---|---|---|
-| **$8,3 mlrd** | **$3,1 mln/yil** | **$450 ming/yil** |
-| dunyoda ta'limdagi AI, 2030 (Grand View Research) | O'zbekistondagi 208 OTM × yillik litsenziya | 3 yilda 30 OTM — realistik ulush |
+| dunyoda ta'limdagi AI, 2030 (Grand View Research) | O'zbekiston, 208 OTM | 3 yilda 30 OTM |
 
-**Vizual:** klassik 3 doira, raqamlar indigo. Pastda kichik satr:
-*"Keyingi qadam — Markaziy Osiyo: model tilga emas, tizimga bog'langan."*
+**Pastki qator — model (bitta satr):**
 
-**Footer-satr:** Boshlanish — O'zbekiston. Model — eksportga tayyor.
+**$15 000 / OTM / yil** — har talabaga ~$2 *(narx taxmin, pilotda aniqlanadi)*.
+Talabaga — bepul.
 
-**Speaker (20 s):** "Dunyoda ta'limdagi AI bozori 2030-yilga borib 8,3
-milliard dollar. Bizning maydonimiz — O'zbekistonning 208 universiteti,
-yiliga 3,1 million dollarlik bozor. Uch yilda 30 universitet — 450 ming
-dollar. Va model Markaziy Osiyoga bemalol ko'chadi."
+**Raqobat bir satrda (mayda, pastda):**
+*HEMIS — ma'lumot bor, suhbat yo'q · ChatGPT — universitetni bilmaydi ·
+Biz — ikkalasi birga, manba bilan.*
 
----
+**Vizual:** uch gorizontal blok, raqamlar indigo, count-up. "Taxmin" — kichik
+amber chip bilan halol belgilangan.
 
-## Slayd 8 — `07 BIZNES MODEL` · Oddiy SaaS
+**Footer-satr:** Texnologiya arzonlashdi + ma'lumot raqamlashdi = ayni payt.
 
-**Vazifa:** pul qayerdan kelishini bitta ekranda tushuntirish.
-
-**Sarlavha:** Universitet to'laydi. Talabaga — **bepul**.
-
-**Markazda bitta katta raqam:**
-
-**$15 000 / OTM / yil**
-*(litsenziya $9 000 + joriy qo'llab-quvvatlash $6 000 — narx taxmin,
-pilotda aniqlanadi)*
-
-**2 ta qisqa satr:**
-
-- Bu — har talabaga yiliga **~$2** *(o'rtacha OTM ≈ 7 400 talaba)*
-- O'rnatish oson: mavjud tizimlar ustiga qo'shiladi, almashtirmaydi
-
-**Vizual:** bitta katta narx-kartochka markazda, "taxmin" belgisi halol
-ko'rsatilgan (kichik amber chip). Ortiqcha jadval yo'q.
-
-**Footer-satr:** Universitetga — xizmat, talabaga — bepul.
-
-**Speaker (20 s):** "Model oddiy SaaS: universitet yiliga 15 ming dollar
-to'laydi — bu har talabaga ikki dollar atrofida. Narx hozircha taxmin,
-pilotda aniqlaymiz. Muhimi: biz HEMIS'ni almashtirmaymiz, ustiga
-qo'shilamiz — o'rnatish og'riqsiz."
+**Speaker (35 s):** "Nega hozir? AI narxi ikki yilda 280 barobar tushdi, 208
+universitet HEMIS orqali allaqachon raqamlashgan. Bozor: dunyoda 8,3
+milliard, uyda 208 OTM — yiliga 3,1 million dollar, uch yilda 30 OTM
+realistik. Model oddiy: universitet yiliga 15 ming dollar to'laydi — har
+talabaga ikki dollar, talabaga bepul. HEMIS'da ma'lumot bor, lekin suhbat
+yo'q; ChatGPT gaplashadi, lekin universitetni bilmaydi. Biz — ikkalasi birga."
 
 ---
 
-## Slayd 9 — `08 RAQOBAT` · Bo'shliqni to'ldiramiz
+## Slayd 6 — `05 JAMOA & SO'ROV` · Bizga nima kerak
 
-**Vazifa:** halol taqqoslash jadvali. Raqobatchini yomonlamaslik — farqni
-ko'rsatish.
-
-**Sarlavha:** Har birida **bittasi** bor. Bizda — **hammasi**.
-
-**Jadval (✓ / ✕):**
-
-| Imkoniyat | HEMIS | ChatGPT | Telegram-bot | **UniversityBrain** |
-|---|---|---|---|---|
-| Universitet ma'lumotiga ulangan | ✓ | ✕ | ✕ | **✓** |
-| Savol-javob suhbati | ✕ | ✓ | ✕ | **✓** |
-| Javobda manba ko'rsatadi | ✕ | ✕ | ✕ | **✓** |
-| Rolga qarab cheklaydi | ✓ | ✕ | ✕ | **✓** |
-| O'zbek tilida to'liq | ✓ | qisman | ✓ | **✓** |
-| 24/7 javob beradi | ✕ | ✓ | qisman | **✓** |
-
-**Vizual:** oxirgi ustun indigo fon bilan ajratilgan, ✓ lar yashil.
-Qator nomlari sodda tilda, texnik so'zsiz.
-
-**Footer-satr:** Biz hech kimni almashtirmaymiz — bo'shliqni to'ldiramiz.
-
-**Speaker (20 s):** "HEMIS'da ma'lumot bor, lekin u bilan gaplashib
-bo'lmaydi. ChatGPT gaplashadi, lekin universitetni bilmaydi va manba
-ko'rsatmaydi. Telegram-botlar faqat e'lon tarqatadi. Biz shu uch dunyoni
-birlashtirgan yagona yechimmiz."
-
----
-
-## Slayd 10 — `09 NATIJA` · G'oya emas — mahsulot
-
-**Vazifa:** traction. Hackathon uchun eng kuchli dalil — ishlab turgani.
-
-**Sarlavha:** Bu prezentatsiya emas — **ishlayotgan tizim**.
-
-**5 raqam (bir qatorda):**
-
-| **281** | **10** | **5** | **25 s** | **3 til** |
-|---|---|---|---|---|
-| avtomatik test | aqlli vosita | rol | savoldan javobgacha | hujjat tarjimasi |
-
-**Vizual:** pastda 3 ta kichik skrinshot lenta bo'lib turadi
-(`02_dekanat_oqituvchilar.png`, `04_talaba_arizalar.png`,
-`05_admin_statistika.png`) — brauzer ramkasida. Ustiga bosilganda demo
-ko'rsatiladi degan taassurot.
-
-**Footer-satr:** Hammasi GitHub'da — hozir jonli ko'rsatamiz.
-
-**Speaker (25 s):** "Bu slaydlar ortida ishlab turgan tizim bor: 281
-avtomatik test, 10 vosita, 5 rol — to'lovdan davomatgacha, arizadan
-tarjimagacha. Savoldan javobgacha 25 soniya. Hammasi ochiq kodda, va biz
-buni hozir jonli ko'rsatishga tayyormiz."
-
----
-
-## Slayd 11 — `10 YO'L XARITASI` · Uch qadam
-
-**Vazifa:** kelajak reja aniq va bosqichli ekanini ko'rsatish.
-
-**Sarlavha:** Pilotdan — **milliy miqyosgacha**.
-
-**3 bosqich (gorizontal yo'l):**
-
-| 1 · Pilot | 2 · Integratsiya | 3 · Miqyos |
-|---|---|---|
-| 1 fakultet, 3 oy | HEMIS bilan rasmiy ulanish | 30 OTM / 3 yil |
-| natijani o'lchaymiz: javob vaqti, qamrov | ma'lumot avtomatik yangilanadi | Markaziy Osiyoga chiqish |
-
-**Vizual:** chapdan o'ngga yo'l chizig'i, 3 nuqta, hozirgi holat "Pilotga
-tayyor" belgisi bilan 0-nuqtada.
-
-**Footer-satr:** Har bosqichning o'z o'lchanadigan natijasi bor.
-
-**Speaker (20 s):** "Reja uch qadam: avval bitta fakultetda uch oylik pilot —
-javob vaqti va qamrovni o'lchaymiz. Keyin HEMIS bilan rasmiy integratsiya —
-ma'lumot o'z-o'zidan yangilanadi. Uch yilda — 30 universitet va Markaziy
-Osiyo bozori."
-
----
-
-## Slayd 12 — `11 JAMOA & SO'ROV` · Bizga nima kerak
-
-**Vazifa:** yakun. Kim qilgani va nima so'ralayotgani — bitta ekranda.
+**Vazifa:** yakun. Kim qilgani, keyingi qadam va so'rov — bitta ekranda.
 
 **Chap yarim — Jamoa:**
 
@@ -363,20 +229,24 @@ Osiyo bozori."
 **O'ng yarim — So'rov (Ask):**
 
 - 🏆 NEXUS30 g'olibligi
-- 🎓 Pilot uchun **1 fakultet**
+- 🎓 Pilot uchun **1 fakultet** (3 oy, natija o'lchanadi)
 - ☁️ Yandex Cloud resurslari
 - 🧭 EdTech mentorlik
 
-**Pastda katta yakuniy satr:**
+**Pastda yo'l bitta satrda:**
+`Pilot (1 fakultet)` → `HEMIS integratsiya` → `30 OTM / 3 yil`
+
+**Yakuniy katta satr:**
 **Universitetning miyasi tayyor. Unga birinchi auditoriya kerak.**
 
-**Vizual:** ikki ustun, o'ng tomonda 4 qisqa so'rov-chip. Yakuniy satr
-titul uslubida, logo bilan.
+**Vizual:** ikki ustun, o'ngda 4 so'rov-chip, pastda mini yo'l chizig'i.
+Yakuniy satr titul uslubida, logo bilan.
 
-**Speaker (20 s):** "Men bu tizimni yolg'iz, 15 bosqichda, har qadamini test
-bilan mustahkamlab qurdim. Endi bizga kod emas — birinchi auditoriya kerak:
-bitta pilot fakultet, Yandex resurslari va mentorlik. Universitetning miyasi
-tayyor. Uni ishga tushiraylik."
+**Speaker (30 s):** "Men bu tizimni yolg'iz, 15 bosqichda, har qadamini test
+bilan mustahkamlab qurdim. Yo'l aniq: bitta fakultetda pilot, keyin HEMIS
+bilan integratsiya, uch yilda 30 universitet. Bizga kod emas — birinchi
+auditoriya kerak: pilot fakultet, Yandex resurslari va mentorlik.
+Universitetning miyasi tayyor. Uni ishga tushiraylik."
 
 ---
 
