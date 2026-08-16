@@ -110,8 +110,8 @@ def notifications_for(db_session, user_id, link_id):
 # --- templates --------------------------------------------------------------
 
 
-def test_five_templates_and_the_seeded_four_are_in_the_catalogue():
-    assert len(docflow_service.TEMPLATES) == 5
+def test_six_templates_and_the_seeded_four_are_in_the_catalogue():
+    assert len(docflow_service.TEMPLATES) == 6
     for template_id in (
         "malumotnoma",
         "qayta_topshirish",

@@ -181,6 +181,19 @@ TEMPLATES: tuple[FlowTemplate, ...] = (
         ),
     ),
     FlowTemplate(
+        id="guruh_hisobot",
+        title="Guruh bo'yicha hisobot",
+        description="Tyutorning guruh holati hisoboti — dekanatga.",
+        doc_type=FlowDocumentType.report,
+        roles=(UserRole.tutor,),
+        body_hint=(
+            "Dekanatga [guruh] guruhi tyutoridan.\n\n"
+            "[oy] oyi bo'yicha guruh hisoboti: davomat [foiz]%, kontrakt "
+            "bo'yicha qarzdorlar [son] nafar, e'tibor talab qiladigan "
+            "holatlar: [izoh]."
+        ),
+    ),
+    FlowTemplate(
         id="buyruq_topshiriq",
         title="Buyruq asosidagi topshiriq",
         description="Dekanatdan aniq shaxsga topshiriq — ijro muddati bilan.",
