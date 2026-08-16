@@ -406,7 +406,7 @@ def test_tool_answers_the_deans_question_with_sources(db_session, users):
     assert result.ok is True
     text = result.text
     assert "Tursunov Akmal" in text
-    assert "3-juftlik" in text
+    assert "3-para" in text
     assert "Kompyuter tarmoqlari" in text
     assert "103-lab" in text
     assert "dars xavf ostida" in text

@@ -3,7 +3,7 @@
 Three sources, one conclusion:
 
     turnstile log  -> fact:      "binoda, 10:02 da kirgan"
-    schedule       -> inference: "jadval bo'yicha 3-juftlik, 214-xona"
+    schedule       -> inference: "jadval bo'yicha 3-para, 214-xona"
     attendance     -> fact:      "davomatda belgilangan (kelgan)"
 
 Domain rule 6 is enforced here, not in the UI: the room a person *should* be in
@@ -389,7 +389,7 @@ def pair_bounds(day: date, pair_number: int) -> tuple[datetime, datetime]:
 
 def pair_label(pair_number: int) -> str:
     start, end = PAIR_TIME_LABELS.get(pair_number, ("?", "?"))
-    return f"{pair_number}-juftlik ({start}-{end})"
+    return f"{pair_number}-para ({start}-{end})"
 
 
 def _hhmm(moment: datetime | None) -> str:
@@ -648,7 +648,7 @@ def presence(db: Session, user: User, now: datetime | None = None) -> Presence:
             sources.append(
                 attendance_source(
                     day,
-                    f"{current_class.pair_number}-juftlik: "
+                    f"{current_class.pair_number}-para: "
                     f"{ATTENDANCE_LABELS[attendance_status]}",
                 )
             )
@@ -1836,7 +1836,7 @@ def teacher_day_overview(
 def risk_notification_text(row: TeacherPresenceRow, item: TeacherClassState) -> str:
     """The seed's wording, so demo rows and runtime rows read alike."""
     return (
-        f"Dars xavf ostida: {row.full_name} bugun {item.pair_number}-juftlikdagi "
+        f"Dars xavf ostida: {row.full_name} bugun {item.pair_number}-paradagi "
         f"darsiga ({item.group_name or '?'}, {item.subject}, {item.room}) "
         "hali binoga kirmagan."
     )

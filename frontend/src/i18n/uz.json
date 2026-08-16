@@ -81,7 +81,7 @@
     "samples": [
       "Ma'lumotlar bazasi fanidan topshiriq nima edi?",
       "Bugungi dars jadvalimni ko'rsat",
-      "Juftlik vaqtlari qanday?"
+      "Para vaqtlari qanday?"
     ]
   },
   "documents": {
@@ -182,6 +182,7 @@
     "uploadSubmit": "Yuborish",
     "uploadSubmitting": "Yuborilmoqda...",
     "uploadSuccess": "Chek yuborildi — tyutor tasdig'i kutilmoqda",
+    "uploadPaidNote": "Kontrakt to'liq to'langan — chek yuklash talab qilinmaydi.",
     "uploadError": "Chekni yuborib bo'lmadi",
     "uploadInvalid": "Summani to'g'ri kiriting",
     "confirm": "Tasdiqlash",
@@ -225,7 +226,7 @@
     "myClasses": "Bugungi darslarim",
     "noClasses": "Bugun jadvalda darsingiz yo'q",
     "selectClass": "Dars tanlang — guruh ro'yxati shu yerda ochiladi",
-    "pair": "juftlik",
+    "pair": "para",
     "room": "xona",
     "group": "Guruh",
     "subject": "Fan",

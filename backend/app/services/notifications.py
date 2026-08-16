@@ -392,7 +392,7 @@ def notify_absent(
     hours = PAIR_TIME_LABELS.get(schedule.pair_number)
     when = f"{hours[0]}-{hours[1]}" if hours else ""
     text = (
-        f"{day.strftime('%d.%m.%Y')} kuni {schedule.pair_number}-juftlik"
+        f"{day.strftime('%d.%m.%Y')} kuni {schedule.pair_number}-para"
         + (f" ({when})" if when else "")
         + f" '{schedule.subject}' darsida davomatda 'kelmagan' deb "
         "belgilandingiz."

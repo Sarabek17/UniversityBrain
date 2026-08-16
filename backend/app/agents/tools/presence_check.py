@@ -109,7 +109,7 @@ register(
         description=(
             "Talaba yoki o'qituvchining hozirgi holatini aytadi: turniket logi "
             "bo'yicha binoda/binoda emas (kirgan-chiqqan vaqti bilan), jadval "
-            "bo'yicha qaysi juftlik va qaysi xonada bo'lishi kerakligi hamda "
+            "bo'yicha qaysi para va qaysi xonada bo'lishi kerakligi hamda "
             "davomatda belgilangan-belgilanmagani. 'Aliyev hozir "
             "universitetdami?', 'kim binoda?', 'qaysi xonada?' kabi savollarda "
             "ishlat. Xona — jadvalga asoslangan xulosa, javobda 'jadval "

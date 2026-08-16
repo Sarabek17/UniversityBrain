@@ -61,7 +61,20 @@ export default function ContractPage() {
               />
             </section>
 
-            <ReceiptUploadForm onUploaded={(fresh) => setContract(fresh)} />
+            {/* Fully paid contract: a friendly note instead of an upload form
+                that could only be rejected ("summa qoldiqdan ko'p"). */}
+            {contract.remaining_amount > 0 ? (
+              <ReceiptUploadForm
+                remaining={contract.remaining_amount}
+                onUploaded={(fresh) => setContract(fresh)}
+              />
+            ) : (
+              <section className="rounded-xl border border-ok-line bg-ok-soft px-4 py-3">
+                <p className="text-sm font-medium text-ok">
+                  {uz.payments.uploadPaidNote}
+                </p>
+              </section>
+            )}
           </>
         )}
       </div>

@@ -33,6 +33,14 @@ export default function ChatWindow({
 }) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  // Auto-scroll only while the reader is already at the bottom — scrolling up
+  // to re-read must never be fought by the typewriter ticks.
+  const nearBottom = () => {
+    const el = scrollerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
   const { user } = useAuth();
   // "Aliyev Jasur" -> "Jasur"; falls back to the full name
   const firstName = user?.full_name.split(" ")[1] ?? user?.full_name ?? "";
@@ -64,13 +72,15 @@ export default function ChatWindow({
         if (t.n >= t.content.length) return t;
         return { ...t, n: Math.min(t.content.length, t.n + 5) };
       });
-      bottomRef.current?.scrollIntoView({ block: "end" });
+      if (nearBottom()) bottomRef.current?.scrollIntoView({ block: "end" });
     }, 16);
     return () => window.clearInterval(id);
   }, [typingContent]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (sending || nearBottom()) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   }, [messages, sending]);
 
   function submit(event: FormEvent) {
@@ -85,7 +95,7 @@ export default function ChatWindow({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollerRef} className="flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
           {loading && messages.length === 0 && (
             <p className="text-sm text-ink-faint">{uz.common.loading}</p>

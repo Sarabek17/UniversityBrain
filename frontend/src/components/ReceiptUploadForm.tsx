@@ -6,12 +6,16 @@
 
 import { useState } from "react";
 import { errorDetail, paymentsApi, type ContractSummary } from "@/lib/api";
+import { formatAmount } from "@/lib/labels";
 import uz from "@/i18n/uz.json";
 
 export default function ReceiptUploadForm({
   onUploaded,
+  remaining,
 }: {
   onUploaded: (contract: ContractSummary) => void;
+  /** Contract remainder — shown as a hint so the demo never types too much. */
+  remaining?: number;
 }) {
   const [amount, setAmount] = useState("");
   const [receiptNumber, setReceiptNumber] = useState("");
@@ -52,6 +56,14 @@ export default function ReceiptUploadForm({
       <h3 className="text-sm font-semibold">{uz.payments.uploadTitle}</h3>
       <p className="mt-1 text-xs text-ink-faint">
         {uz.payments.uploadHint}
+        {remaining !== undefined && remaining > 0 && (
+          <>
+            {" "}
+            <span className="font-medium text-ink-soft">
+              {uz.payments.remaining}: {formatAmount(remaining)}
+            </span>
+          </>
+        )}
       </p>
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="flex flex-col text-xs text-ink-soft">

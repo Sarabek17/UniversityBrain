@@ -153,6 +153,10 @@ DOCUMENT_DEFS = [
      m.DocumentType.assignment, "uz", m.AccessLevel.public),
     ("ichki_tartib_nizomi.md", "Universitet ichki tartib-qoidalari nizomi",
      m.DocumentType.regulation, "uz", m.AccessLevel.public),
+    ("stipendiya_nizomi.md", "Stipendiya tayinlash va to'lash tartibi nizomi",
+     m.DocumentType.regulation, "uz", m.AccessLevel.public),
+    ("talaba_faq.md", "Talabalar uchun ko'p so'raladigan savollar (FAQ)",
+     m.DocumentType.other, "uz", m.AccessLevel.public),
     ("buyruq_2026_87_oquv_yili.md", "Buyruq 87-U: 2026-2027 o'quv yiliga tayyorgarlik",
      m.DocumentType.order, "uz", m.AccessLevel.public),
     ("buyruq_2026_91_attestatsiya_maxfiy.md",
@@ -659,7 +663,7 @@ def create_notifications(db, users, groups, flows, risk_row, uploaded_payment, t
            "flow_document", flows["seen"].id)
     for staff_username in ("rashidova", "yusupov"):
         notify(staff_username, "teacher_absence",
-               "Dars xavf ostida: Tursunov Akmal bugun 3-juftlikdagi darsiga "
+               "Dars xavf ostida: Tursunov Akmal bugun 3-paradagi darsiga "
                "(AT-24-02, Kompyuter tarmoqlari, 103-lab) hali binoga kirmagan.",
                "schedule", risk_row.id)
     notify("rashidova", "flow_incoming",

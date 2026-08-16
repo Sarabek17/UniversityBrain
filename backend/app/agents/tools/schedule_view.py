@@ -164,7 +164,7 @@ def handler(db: Session, user: User, args: dict) -> ToolResult:
         for row in day_rows:
             start, end = PAIR_TIMES.get(row.pair_number, ("?", "?"))
             lines.append(
-                f"  {row.pair_number}-juftlik {start}-{end} — {row.subject}, "
+                f"  {row.pair_number}-para {start}-{end} — {row.subject}, "
                 f"{row.room}-xona, {names['groups'].get(row.group_id, '?')}, "
                 f"o'qituvchi: {names['teachers'].get(row.teacher_id, '?')}"
             )
@@ -200,7 +200,7 @@ register(
             "Dars jadvalini o'qiydi. Talabaga — o'z guruhi, o'qituvchiga — o'z "
             "darslari, tyutorga — o'z guruhlari, dekanat/adminga — so'ralgan "
             "guruh yoki o'qituvchi jadvali. 'Bugun qanday darslar bor?', "
-            "'qaysi xonada?', 'nechanchi juftlik?' kabi savollarda ishlat."
+            "'qaysi xonada?', 'nechanchi para?' kabi savollarda ishlat."
         ),
         parameters={
             "type": "object",
