@@ -8,7 +8,7 @@
 //     the left column IS the original, paragraph by paragraph. One scroll
 //     container holds both columns, so the two sides can never drift apart.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ApiError,
   documentsApi,
@@ -24,9 +24,12 @@ import uz from "@/i18n/uz.json";
 export default function DocumentPanel({
   documentId,
   onClose,
+  highlight = null,
 }: {
   documentId: number | null;
   onClose?: () => void;
+  /** Section to flash after opening from a source chip (chat page). */
+  highlight?: { text: string; seq: number } | null;
 }) {
   const [loaded, setLoaded] = useState<DocumentDetail | null>(null);
   const [failed, setFailed] = useState<{ id: number; message: string } | null>(
@@ -75,10 +78,38 @@ export default function DocumentPanel({
     };
   }, [documentId]);
 
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+
   // Derived, so switching documents never needs a setState-in-effect reset.
   const document = loaded !== null && loaded.id === documentId ? loaded : null;
   const error = failed !== null && failed.id === documentId ? failed.message : null;
   const loading = documentId !== null && document === null && error === null;
+
+  // Flash the cited section when opened from a source chip: find the heading
+  // in the rendered markdown, scroll to it and let the CSS animation fade out.
+  const highlightSeq = highlight !== null ? highlight.seq : null;
+  const highlightText = highlight !== null ? highlight.text : null;
+  const docReady = document !== null;
+  useEffect(() => {
+    if (highlightSeq === null || highlightText === null || !docReady) return;
+    const timer = window.setTimeout(() => {
+      const root = bodyRef.current;
+      if (!root) return;
+      const first = highlightText.split("·")[0].trim().toLowerCase();
+      if (!first) return;
+      const nodes = root.querySelectorAll("h1,h2,h3,h4,h5,strong");
+      for (const el of Array.from(nodes)) {
+        const text = el.textContent?.trim().toLowerCase() ?? "";
+        if (text && (text.includes(first) || first.includes(text))) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          el.classList.add("flash-highlight");
+          window.setTimeout(() => el.classList.remove("flash-highlight"), 2600);
+          break;
+        }
+      }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [highlightSeq, highlightText, docReady]);
 
   const activeSummary =
     summary !== null && summary.id === documentId ? summary.data : null;
@@ -224,7 +255,7 @@ export default function DocumentPanel({
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 text-sm">
+      <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-3 text-sm">
         {documentId === null && (
           <p className="text-ink-faint">
             {uz.documents.selectHint}

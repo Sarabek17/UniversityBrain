@@ -36,8 +36,23 @@ export default function DocumentsPage() {
   }, []);
 
   return (
-    <div className="flex min-h-0 flex-1">
-      <aside className="flex w-72 shrink-0 flex-col border-r border-line bg-sidebar">
+    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      {/* mobile: document picker */}
+      <div className="border-b border-line bg-sidebar px-3 py-2 md:hidden">
+        <select
+          value={activeId ?? ""}
+          onChange={(e) => setActiveId(Number(e.target.value))}
+          aria-label={uz.documents.listTitle}
+          className="w-full rounded-md border border-line-strong px-2 py-1.5 text-sm"
+        >
+          {documents.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      <aside className="hidden w-72 shrink-0 flex-col border-r border-line bg-sidebar md:flex">
         <DocumentList
           documents={documents}
           activeId={activeId}

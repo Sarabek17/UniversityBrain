@@ -1,13 +1,13 @@
 {
   "home": {
-    "title": "UniAgent",
+    "title": "UniversityBrain",
     "subtitle": "Universitet uchun rol-asosli AI agentlar ekotizimi",
     "status": "Auth tayyor (S2). Chat va boshqa modullar keyingi sessiyalarda qo'shiladi.",
     "welcome": "Xush kelibsiz"
   },
   "login": {
     "title": "Tizimga kirish",
-    "subtitle": "UniAgent — universitet AI yordamchisi",
+    "subtitle": "UniversityBrain — universitet AI yordamchisi",
     "username": "Login",
     "password": "Parol",
     "submit": "Kirish",
@@ -41,12 +41,16 @@
     "retry": "Qayta urinish",
     "error": "Xatolik yuz berdi",
     "themeLight": "Yorug' rejim",
-    "themeDark": "Tungi rejim"
+    "themeDark": "Tungi rejim",
+    "teacherHelp": "Ustoz yordami",
+    "teacherHelpHint": "Ustozdan yordam kerakmi?",
+    "teacherHelpLink": "Virtaks — ustozning raqamli nusxasi"
   },
   "chat": {
     "conversations": "Suhbatlar",
     "newConversation": "Yangi suhbat",
     "noConversations": "Hozircha suhbat yo'q",
+    "noConversationsHint": "Birinchi savolingizni yozib ko'ring →",
     "untitled": "Nomsiz suhbat",
     "listError": "Suhbatlar ro'yxatini yuklab bo'lmadi",
     "loadError": "Suhbatni yuklab bo'lmadi",
@@ -58,6 +62,19 @@
     "assistant": "Agent",
     "sources": "Manbalar",
     "toolUsed": "Ishlatilgan vosita",
+    "toolNames": {
+      "hujjat_qidir": "Hujjatlardan qidiruv",
+      "hujjat_rezyume": "Hujjat rezyumesi",
+      "tarjima_qil": "Tarjima",
+      "jadval_kor": "Dars jadvali",
+      "tolov_holati": "Kontrakt to'lovi",
+      "mavjudlik_tekshir": "Kampusda mavjudlik",
+      "davomat_kor": "Davomat",
+      "oqituvchi_davomat": "O'qituvchilar davomati",
+      "ariza_holati": "Hujjat aylanmasi",
+      "bildirishnomalar": "Bildirishnomalar"
+    },
+    "greeting": "Assalomu alaykum, {name}!",
     "emptyTitle": "Savolingizni yozing",
     "emptyHint": "Agent hujjatlar bazasi va dars jadvalidan foydalanib javob beradi.",
     "samplesTitle": "Namuna savollar",

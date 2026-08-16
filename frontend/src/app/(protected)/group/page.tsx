@@ -79,9 +79,13 @@ export default function GroupPage() {
   }
 
   const rows = summary ? sortRows(summary.rows, sort) : [];
+  // On small screens the detail aside only appears once a student is picked
+  // (or is loading / errored); on lg+ it is always docked on the right.
+  const asideActive =
+    selected !== null || loadingStudentId !== null || selectedError !== null;
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <section className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -163,7 +167,13 @@ export default function GroupPage() {
         )}
       </section>
 
-      <aside className="hidden w-96 shrink-0 flex-col overflow-y-auto border-l border-line px-4 py-5 lg:flex">
+      <aside
+        className={
+          asideActive
+            ? "flex max-h-[50vh] w-full shrink-0 flex-col overflow-y-auto border-t border-line px-4 py-5 lg:max-h-none lg:w-96 lg:border-l lg:border-t-0"
+            : "hidden w-96 shrink-0 flex-col overflow-y-auto border-l border-line px-4 py-5 lg:flex"
+        }
+      >
         {loadingStudentId !== null && (
           <p className="text-sm text-ink-faint">{uz.common.loading}</p>
         )}

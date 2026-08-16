@@ -173,8 +173,8 @@ function Workspace({ role }: { role: UserRole }) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1">
-      <section className="flex min-h-0 w-96 shrink-0 flex-col overflow-y-auto border-r border-line bg-sidebar px-4 py-5">
+    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      <section className="flex max-h-[45vh] min-h-0 w-full shrink-0 flex-col overflow-y-auto border-b border-line bg-sidebar px-4 py-5 md:max-h-none md:w-96 md:border-b-0 md:border-r">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-lg font-semibold">{titleFor(role)}</h1>
           <button

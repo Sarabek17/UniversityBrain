@@ -8,8 +8,10 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { ViewMessage } from "@/lib/chat";
+import { useAuth } from "@/lib/auth";
 import Markdown from "@/components/Markdown";
 import SourceChips from "@/components/SourceChips";
+import ToolCard from "@/components/ToolCard";
 import uz from "@/i18n/uz.json";
 
 export default function ChatWindow({
@@ -27,10 +29,45 @@ export default function ChatWindow({
   sending: boolean;
   error: string | null;
   onSend: (text: string) => void;
-  onOpenDocument: (documentId: number) => void;
+  onOpenDocument: (documentId: number, heading?: string | null) => void;
 }) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useAuth();
+  // "Aliyev Jasur" -> "Jasur"; falls back to the full name
+  const firstName = user?.full_name.split(" ")[1] ?? user?.full_name ?? "";
+
+  // Typewriter for the freshly received answer. Keyed by CONTENT, not by
+  // message key: the page re-reads the conversation right after the POST and
+  // the keys change while the text stays the same — typing continues smoothly.
+  const [typing, setTyping] = useState<{ content: string; n: number } | null>(
+    null,
+  );
+  const wasSendingRef = useRef(false);
+
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    const justAnswered =
+      wasSendingRef.current && !sending && last?.role === "assistant";
+    wasSendingRef.current = sending;
+    if (!justAnswered || !last) return;
+    const content = last.content;
+    Promise.resolve().then(() => setTyping({ content, n: 0 }));
+  }, [messages, sending]);
+
+  const typingContent = typing !== null ? typing.content : null;
+  useEffect(() => {
+    if (typingContent === null) return;
+    const id = window.setInterval(() => {
+      setTyping((t) => {
+        if (!t || t.content !== typingContent) return t;
+        if (t.n >= t.content.length) return t;
+        return { ...t, n: Math.min(t.content.length, t.n + 5) };
+      });
+      bottomRef.current?.scrollIntoView({ block: "end" });
+    }, 16);
+    return () => window.clearInterval(id);
+  }, [typingContent]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -55,26 +92,64 @@ export default function ChatWindow({
           )}
 
           {empty && (
-            <div className="mt-10 text-center">
-              <h2 className="text-lg font-semibold">{uz.chat.emptyTitle}</h2>
-              <p className="mt-1 text-sm text-ink-faint">
-                {uz.chat.emptyHint}
-              </p>
-              <p className="mt-6 text-xs font-semibold text-ink-faint">
-                {uz.chat.samplesTitle}
-              </p>
-              <div className="mt-2 flex flex-wrap justify-center gap-2">
+            <div className="mt-[14vh] flex flex-col items-center text-center">
+              {/* terracotta spark — the same mark as the header logo */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                className="h-10 w-10 text-accent-ink"
+              >
+                <path d="M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" />
+              </svg>
+              <h2 className="mt-5 text-2xl font-semibold tracking-tight">
+                {firstName
+                  ? uz.chat.greeting.replace("{name}", firstName)
+                  : uz.chat.emptyTitle}
+              </h2>
+              <p className="mt-1.5 text-sm text-ink-faint">{uz.chat.emptyHint}</p>
+              <div className="mt-8 grid w-full max-w-2xl gap-2.5 sm:grid-cols-3">
                 {uz.chat.samples.map((sample) => (
                   <button
                     key={sample}
                     type="button"
                     onClick={() => onSend(sample)}
-                    className="rounded-full border border-line-strong px-3 py-1.5 text-xs hover:bg-raised"
+                    className="group flex flex-col justify-between gap-3 rounded-xl border border-line bg-surface p-3.5 text-left text-sm text-ink-soft transition-colors hover:border-accent-line hover:bg-raised"
                   >
-                    {sample}
+                    <span>{sample}</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-raised text-ink-faint transition-colors group-hover:bg-accent-soft group-hover:text-accent-ink">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3.5 w-3.5"
+                      >
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
                   </button>
                 ))}
               </div>
+              {/* Staff roles already have the Virtaks card in the dashboard
+                  rail — this contextual line is for students only. */}
+              {user?.role === "student" && (
+                <p className="mt-7 text-sm text-ink-faint">
+                  {uz.common.teacherHelpHint}{" "}
+                  <a
+                    href="https://twin.bmslab.uz/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-accent-ink hover:underline"
+                  >
+                    {uz.common.teacherHelpLink} ↗
+                  </a>
+                </p>
+              )}
             </div>
           )}
 
@@ -87,44 +162,69 @@ export default function ChatWindow({
               </div>
             ) : (
               <div key={message.key} className="flex justify-start">
-                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line px-4 py-3">
-                  {message.tools.length > 0 && (
-                    <div className="mb-1.5 flex flex-wrap gap-1">
-                      {message.tools.map((tool) => (
-                        <span
-                          key={tool}
-                          title={uz.chat.toolUsed}
-                          className="rounded bg-raised px-1.5 py-0.5 font-mono text-[10px] text-ink-soft"
-                        >
-                          {tool}
-                        </span>
+                {(() => {
+                  const isLast =
+                    messages[messages.length - 1]?.key === message.key;
+                  const inTyping =
+                    isLast &&
+                    typing !== null &&
+                    typing.content === message.content &&
+                    typing.n < typing.content.length;
+                  return (
+                    <div className="flex w-full max-w-[90%] flex-col gap-2">
+                      {message.tools.map((tool, index) => (
+                        <div key={`${message.key}-t${index}`} className="fade-up">
+                          <ToolCard name={tool.name} content={tool.content} />
+                        </div>
                       ))}
+                      <div className="fade-up rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-3">
+                        <Markdown
+                          text={
+                            inTyping
+                              ? typing.content.slice(0, typing.n) + " ▍"
+                              : message.content
+                          }
+                          breaks
+                          className="text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                        />
+                        {!inTyping && (
+                          <SourceChips
+                            sources={message.sources}
+                            onOpenDocument={onOpenDocument}
+                          />
+                        )}
+                        {!inTyping && disclaimer && (
+                          <p className="mt-2 border-t border-line pt-2 text-[11px] text-ink-faint">
+                            {disclaimer}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <Markdown
-                    text={message.content}
-                    breaks
-                    className="text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
-                  />
-                  <SourceChips
-                    sources={message.sources}
-                    onOpenDocument={onOpenDocument}
-                  />
-                  {disclaimer && (
-                    <p className="mt-2 border-t border-line pt-2 text-[11px] text-ink-faint">
-                      {disclaimer}
-                    </p>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             ),
           )}
 
           {sending && (
             <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-sm border border-line px-4 py-2 text-sm text-ink-faint">
-                <span className="inline-block animate-pulse">
-                  {uz.chat.waiting}
+              <div className="fade-up flex items-center gap-2.5 rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-2.5 text-sm text-ink-faint">
+                {/* the spark "thinks" while tools are being called */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  className="h-4 w-4 animate-spin text-accent-ink [animation-duration:2.5s]"
+                >
+                  <path d="M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" />
+                </svg>
+                <span>{uz.chat.waiting}</span>
+                <span className="flex gap-0.5">
+                  <span className="typing-dot">●</span>
+                  <span className="typing-dot [animation-delay:0.2s]">●</span>
+                  <span className="typing-dot [animation-delay:0.4s]">●</span>
                 </span>
               </div>
             </div>

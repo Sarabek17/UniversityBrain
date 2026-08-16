@@ -131,6 +131,17 @@ export default function LoginPage() {
             </button>
           ))}
         </div>
+        <p className="mt-6 text-xs text-ink-faint">
+          {uz.common.teacherHelpHint}{" "}
+          <a
+            href="https://twin.bmslab.uz/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent-ink hover:underline"
+          >
+            {uz.common.teacherHelpLink} ↗
+          </a>
+        </p>
       </div>
     </main>
   );

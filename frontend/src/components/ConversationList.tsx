@@ -22,9 +22,11 @@ export default function ConversationList({
   onNew: () => void;
 }) {
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-sidebar">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-sidebar md:flex">
       <div className="flex items-center justify-between px-3 py-3">
-        <h2 className="text-sm font-semibold">{uz.chat.conversations}</h2>
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+          {uz.chat.conversations}
+        </h2>
         <button
           type="button"
           onClick={onNew}
@@ -36,11 +38,23 @@ export default function ConversationList({
 
       <div className="flex-1 overflow-y-auto px-2 pb-3">
         {loading && (
-          <p className="px-1 text-xs text-ink-faint">{uz.common.loading}</p>
+          <div className="flex flex-col gap-1.5 px-1">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="animate-pulse rounded-md bg-raised p-2">
+                <div className="h-2.5 w-4/5 rounded bg-line" />
+                <div className="mt-1.5 h-2 w-2/5 rounded bg-line" />
+              </div>
+            ))}
+          </div>
         )}
         {error && <p className="px-1 text-xs text-bad">{error}</p>}
         {!loading && !error && conversations.length === 0 && (
-          <p className="px-1 text-xs text-ink-faint">{uz.chat.noConversations}</p>
+          <div className="px-1">
+            <p className="text-xs text-ink-faint">{uz.chat.noConversations}</p>
+            <p className="mt-1 text-[11px] text-ink-faint">
+              {uz.chat.noConversationsHint}
+            </p>
+          </div>
         )}
         <ul className="flex flex-col gap-1">
           {conversations.map((conversation) => (

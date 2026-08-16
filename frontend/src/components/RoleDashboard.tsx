@@ -313,6 +313,38 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
         </div>
       </div>
 
+      {/* Virtaks — the teacher's digital twin (external help resource) */}
+      <a
+        href="https://twin.bmslab.uz/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group mt-3 flex items-center gap-2.5 rounded-lg border border-line bg-surface px-3 py-2.5 transition-colors hover:border-accent-line hover:bg-raised"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-ink">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <path d="M12 4 2 9l10 5 10-5-10-5z" />
+            <path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5" />
+          </svg>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-ink">
+            {uz.common.teacherHelp}
+          </span>
+          <span className="block truncate text-[11px] text-ink-faint">
+            {uz.common.teacherHelpLink}
+          </span>
+        </span>
+        <span className="text-ink-faint group-hover:text-accent-ink">↗</span>
+      </a>
+
       <p className="mt-4 text-[11px] text-ink-faint">
         {uz.documents.panelHint}
       </p>

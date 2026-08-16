@@ -52,10 +52,23 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <header className="flex shrink-0 items-center justify-between border-b border-line px-6 py-3">
-        <div className="flex items-center gap-6">
-          <span className="font-bold">{uz.home.title}</span>
-          <nav className="flex items-center gap-1">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line px-3 py-2 md:px-6 md:py-3">
+        <div className="flex min-w-0 items-center gap-2 md:gap-6">
+          <span className="flex items-center gap-2 font-bold">
+            {/* terracotta spark mark — the product logo */}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              className="h-4.5 w-4.5 text-accent-ink"
+            >
+              <path d="M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" />
+            </svg>
+            {uz.home.title}
+          </span>
+          <nav className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
             {NAV.filter(
               (item) => item.roles === null || item.roles.includes(user.role),
             ).map((item) => (
@@ -74,10 +87,42 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Virtaks — the teacher's digital twin (external help resource) */}
+          <a
+            href="https://twin.bmslab.uz/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-ink-soft hover:bg-raised"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M12 4 2 9l10 5 10-5-10-5z" />
+              <path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5" />
+            </svg>
+            <span className="hidden md:inline">{uz.common.teacherHelp}</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3 w-3 text-ink-faint"
+            >
+              <path d="M7 17 17 7M9 7h8v8" />
+            </svg>
+          </a>
           <ThemeToggle />
           <NotifBell role={user.role} />
-          <span className="text-sm">
+          <span className="hidden text-sm md:inline">
             {user.full_name}
             <span className="ml-2 rounded-full bg-raised px-2 py-0.5 text-xs text-ink-soft">
               {uz.roles[user.role]}

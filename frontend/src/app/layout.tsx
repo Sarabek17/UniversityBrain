@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UniAgent",
+  title: "UniversityBrain",
   description: "Universitet uchun rol-asosli AI agentlar ekotizimi",
 };
 

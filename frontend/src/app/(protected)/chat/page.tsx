@@ -29,6 +29,12 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
 
   const [openDocumentId, setOpenDocumentId] = useState<number | null>(null);
+  // Which section to flash in the opened document (from a source chip).
+  // `seq` re-triggers the flash when the same chip is clicked again.
+  const [highlight, setHighlight] = useState<{
+    text: string;
+    seq: number;
+  } | null>(null);
 
   const refreshConversations = useCallback(
     () =>
@@ -121,7 +127,27 @@ export default function ChatPage() {
     user !== null && hasDashboard(user.role) && openDocumentId === null;
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      {/* mobile: conversations as a compact select bar */}
+      <div className="flex items-center gap-2 border-b border-line bg-sidebar px-3 py-2 md:hidden">
+        <select
+          value={activeId ?? ""}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "") startNewConversation();
+            else selectConversation(Number(v));
+          }}
+          aria-label={uz.chat.conversations}
+          className="min-w-0 flex-1 rounded-md border border-line-strong px-2 py-1.5 text-sm"
+        >
+          <option value="">+ {uz.chat.newConversation}</option>
+          {conversations.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title ?? uz.chat.untitled}
+            </option>
+          ))}
+        </select>
+      </div>
       <ConversationList
         conversations={conversations}
         activeId={activeId}
@@ -138,7 +164,14 @@ export default function ChatPage() {
         sending={sending}
         error={chatError}
         onSend={(text) => void send(text)}
-        onOpenDocument={(documentId) => setOpenDocumentId(documentId)}
+        onOpenDocument={(documentId, heading) => {
+          setOpenDocumentId(documentId);
+          setHighlight(
+            heading
+              ? { text: heading, seq: (highlight?.seq ?? 0) + 1 }
+              : null,
+          );
+        }}
       />
 
       {(openDocumentId !== null || showDashboard) && (
@@ -146,6 +179,7 @@ export default function ChatPage() {
           {openDocumentId !== null ? (
             <DocumentPanel
               documentId={openDocumentId}
+              highlight={highlight}
               onClose={() => setOpenDocumentId(null)}
             />
           ) : (

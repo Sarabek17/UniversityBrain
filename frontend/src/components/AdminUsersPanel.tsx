@@ -162,7 +162,7 @@ export default function AdminUsersPanel({
       )}
       {error && <p className="mt-2 text-xs text-bad">{error}</p>}
 
-      <div className="mt-3 max-h-80 overflow-y-auto rounded-md border border-line">
+      <div className="mt-3 max-h-80 overflow-x-auto overflow-y-auto rounded-md border border-line">
         <table className="w-full text-left text-xs">
           <thead className="sticky top-0 bg-raised text-ink-faint">
             <tr>

@@ -189,7 +189,7 @@ export default function AdminUploadPanel({
       {error && <p className="mt-2 text-xs text-bad">{error}</p>}
 
       <h3 className="mt-4 text-xs font-semibold">{uz.admin.documentsTitle}</h3>
-      <div className="mt-1.5 max-h-64 overflow-y-auto rounded-md border border-line">
+      <div className="mt-1.5 max-h-64 overflow-x-auto overflow-y-auto rounded-md border border-line">
         <table className="w-full text-left text-xs">
           <thead className="sticky top-0 bg-raised text-ink-faint">
             <tr>

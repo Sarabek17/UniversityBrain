@@ -27,7 +27,14 @@ export default function DocumentList({
       </h2>
       <div className="flex-1 overflow-y-auto px-2 pb-3">
         {loading && (
-          <p className="px-1 text-xs text-ink-faint">{uz.common.loading}</p>
+          <div className="flex flex-col gap-1.5 px-1">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse rounded-md bg-raised p-2">
+                <div className="h-2.5 w-5/6 rounded bg-line" />
+                <div className="mt-1.5 h-2 w-1/2 rounded bg-line" />
+              </div>
+            ))}
+          </div>
         )}
         {error && <p className="px-1 text-xs text-bad">{error}</p>}
         {!loading && !error && documents.length === 0 && (

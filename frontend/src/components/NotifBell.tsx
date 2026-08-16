@@ -70,6 +70,18 @@ export default function NotifBell({ role }: { role: UserRole }) {
   }, [open]);
 
   const unread = data?.unread_count ?? 0;
+
+  // The bell swings once whenever the unread counter grows (new event).
+  const [ringing, setRinging] = useState(false);
+  const prevUnreadRef = useRef(0);
+  useEffect(() => {
+    const grew = unread > prevUnreadRef.current;
+    prevUnreadRef.current = unread;
+    if (!grew) return;
+    Promise.resolve().then(() => setRinging(true));
+    const timer = window.setTimeout(() => setRinging(false), 1000);
+    return () => window.clearTimeout(timer);
+  }, [unread]);
   const rows = data
     ? unreadOnly
       ? data.rows.filter((row) => !row.is_read)
@@ -110,7 +122,7 @@ export default function NotifBell({ role }: { role: UserRole }) {
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-5 w-5"
+          className={"h-5 w-5" + (ringing ? " bell-ring" : "")}
           aria-hidden="true"
         >
           <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
