@@ -315,7 +315,7 @@ export default function RoleDashboard({ role }: { role: UserRole }) {
 
       {/* Virtaks — the teacher's digital twin (external help resource) */}
       <a
-        href="https://twin.bmslab.uz/"
+        href="https://twin.virtaks.uz"
         target="_blank"
         rel="noopener noreferrer"
         className="group mt-3 flex items-center gap-2.5 rounded-lg border border-line bg-surface px-3 py-2.5 transition-colors hover:border-accent-line hover:bg-raised"

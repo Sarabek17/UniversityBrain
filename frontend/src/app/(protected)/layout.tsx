@@ -90,7 +90,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2 md:gap-4">
           {/* Virtaks — the teacher's digital twin (external help resource) */}
           <a
-            href="https://twin.bmslab.uz/"
+            href="https://twin.virtaks.uz"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-ink-soft hover:bg-raised"

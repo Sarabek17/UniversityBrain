@@ -134,7 +134,7 @@ export default function LoginPage() {
         <p className="mt-6 text-xs text-ink-faint">
           {uz.common.teacherHelpHint}{" "}
           <a
-            href="https://twin.bmslab.uz/"
+            href="https://twin.virtaks.uz"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-accent-ink hover:underline"

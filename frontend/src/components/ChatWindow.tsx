@@ -151,7 +151,7 @@ export default function ChatWindow({
                 <p className="mt-7 text-sm text-ink-faint">
                   {uz.common.teacherHelpHint}{" "}
                   <a
-                    href="https://twin.bmslab.uz/"
+                    href="https://twin.virtaks.uz"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-accent-ink hover:underline"
